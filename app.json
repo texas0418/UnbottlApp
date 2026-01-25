@@ -1,0 +1,65 @@
+{
+  "expo": {
+    "name": "Unbottl",
+    "slug": "unbottl",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "unbottl",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#722F37"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.unbottl.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Unbottl needs camera access to scan wine labels and menus",
+        "NSPhotoLibraryUsageDescription": "Unbottl needs photo library access to select wine images",
+        "NSLocationWhenInUseUsageDescription": "Unbottl uses your location to find nearby wine shops",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#722F37"
+      },
+      "package": "com.unbottl.app"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Unbottl needs camera access to scan wine labels"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Unbottl needs access to your photos"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Unbottl uses your location to find nearby wine shops"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
