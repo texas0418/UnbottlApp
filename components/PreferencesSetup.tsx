@@ -109,9 +109,14 @@ export default function PreferencesSetup({
       occasions: selectedOccasions,
     };
     
-    await savePreferences(preferences);
-    if (Platform.OS !== 'web') {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    try {
+      await savePreferences(preferences);
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      // Still close the modal even if save fails - preferences are also stored in memory
     }
     onClose();
   }, [selectedTypes, priceRange, flavorProfile, avoidHighTannins, selectedOccasions, savePreferences, onClose]);

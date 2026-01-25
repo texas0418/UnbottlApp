@@ -65,14 +65,24 @@ export const [RecommendationsProvider, useRecommendations] = createContextHook((
 
   const savePreferencesMutation = useMutation({
     mutationFn: async (newPreferences: CustomerPreferences) => {
-      await AsyncStorage.setItem(
-        PREFERENCES_STORAGE_KEY,
-        JSON.stringify({ preferences: newPreferences })
-      );
+      try {
+        await AsyncStorage.setItem(
+          PREFERENCES_STORAGE_KEY,
+          JSON.stringify({ preferences: newPreferences })
+        );
+      } catch (storageError) {
+        console.warn('Failed to persist preferences to storage:', storageError);
+        // Continue anyway - we'll still update in-memory state
+      }
+      return newPreferences;
+    },
+    onSuccess: (newPreferences) => {
       setPreferences(newPreferences);
       setHasSetPreferences(true);
       queryClient.setQueryData(['preferences'], { preferences: newPreferences, hasSet: true });
-      return newPreferences;
+    },
+    onError: (error) => {
+      console.error('Failed to save preferences:', error);
     },
   });
 
