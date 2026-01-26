@@ -7,11 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "unbottl",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#722F37"
+      "backgroundColor": "#6C5CE7"
     },
     "ios": {
       "supportsTablet": true,
@@ -27,7 +27,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#722F37"
+        "backgroundColor": "#6C5CE7"
       },
       "package": "com.unbottl.app"
     },
