@@ -124,6 +124,17 @@ export default function HomeScreen() {
             <Text style={styles.quickActionTitle}>Scan Menu</Text>
             <Text style={styles.quickActionDesc}>Scan a restaurant's QR code</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.quickActionCard}
+            onPress={() => router.push('/menu-import')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: '#6C5CE7' + '15' }]}>
+            <Sparkles size={24} color="#6C5CE7" />
+            </View>
+            <Text style={styles.quickActionTitle}>AI Import</Text>
+            <Text style={styles.quickActionDesc}>Import menu with AI</Text>
+          </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.quickActionCard}
