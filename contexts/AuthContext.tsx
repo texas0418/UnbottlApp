@@ -1,134 +1,229 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
-
-const AUTH_STORAGE_KEY = '@unbottl_auth';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAgeVerified: boolean;
+  userType: 'consumer' | 'restaurant_owner' | 'staff';
 }
 
 export const [AuthProvider, useAuth] = createContextHook(() => {
   const queryClient = useQueryClient();
+  const [session, setSession] = useState<Session | null>(null);
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
     isLoading: true,
+    isAgeVerified: false,
+    userType: 'consumer',
   });
 
-  const authQuery = useQuery({
-    queryKey: ['auth'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-      if (stored) {
-        const user = JSON.parse(stored) as User;
-        return user;
-      }
-      return null;
-    },
-    staleTime: Infinity,
-  });
+  // Fetch user profile from Supabase
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-  useEffect(() => {
-    if (!authQuery.isLoading) {
-      setAuthState({
-        user: authQuery.data || null,
-        isAuthenticated: !!authQuery.data,
-        isLoading: false,
-      });
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching profile:', error);
     }
-  }, [authQuery.data, authQuery.isLoading]);
+    return data;
+  }, []);
+
+  // Initialize auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: profile?.display_name || session.user.email?.split('@')[0] || '',
+          restaurantIds: [],
+          currentRestaurantId: null,
+          createdAt: session.user.created_at,
+        };
+        
+        setAuthState({
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+          isAgeVerified: profile?.is_age_verified || false,
+          userType: profile?.user_type || 'consumer',
+        });
+      } else {
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          isAgeVerified: false,
+          userType: 'consumer',
+        });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          const user: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: profile?.display_name || session.user.email?.split('@')[0] || '',
+            restaurantIds: [],
+            currentRestaurantId: null,
+            createdAt: session.user.created_at,
+          };
+          
+          setAuthState({
+            user,
+            isAuthenticated: true,
+            isLoading: false,
+            isAgeVerified: profile?.is_age_verified || false,
+            userType: profile?.user_type || 'consumer',
+          });
+        } else {
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            isAgeVerified: false,
+            userType: 'consumer',
+          });
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      if (password.length < 6) {
-        throw new Error('Invalid credentials');
-      }
-
-      const user: User = {
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        restaurantIds: ['1'],
-        currentRestaurantId: '1',
-        createdAt: new Date().toISOString(),
-      };
-
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-      return user;
-    },
-    onSuccess: (user) => {
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
       });
-      queryClient.setQueryData(['auth'], user);
+
+      if (error) throw error;
+      return data.user;
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: async ({ email, password, name }: { email: string; password: string; name: string }) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const user: User = {
-        id: Date.now().toString(),
-        email,
-        name,
-        restaurantIds: [],
-        currentRestaurantId: null,
-        createdAt: new Date().toISOString(),
-      };
-
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-      return user;
-    },
-    onSuccess: (user) => {
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
+    mutationFn: async ({ 
+      email, 
+      password, 
+      name,
+      userType = 'consumer'
+    }: { 
+      email: string; 
+      password: string; 
+      name: string;
+      userType?: 'consumer' | 'restaurant_owner';
+    }) => {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: {
+            display_name: name,
+            user_type: userType,
+          },
+        },
       });
-      queryClient.setQueryData(['auth'], user);
+
+      if (error) throw error;
+      return data.user;
     },
   });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     },
     onSuccess: () => {
       setAuthState({
         user: null,
         isAuthenticated: false,
         isLoading: false,
+        isAgeVerified: false,
+        userType: 'consumer',
       });
-      queryClient.setQueryData(['auth'], null);
       queryClient.clear();
     },
   });
 
-  const updateUser = useCallback(async (updates: Partial<User>) => {
-    if (authState.user) {
-      const updatedUser = { ...authState.user, ...updates };
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
-      setAuthState(prev => ({ ...prev, user: updatedUser }));
-      queryClient.setQueryData(['auth'], updatedUser);
+  const verifyAge = useCallback(async (dateOfBirth: Date) => {
+    if (!session?.user) return { error: new Error('Not authenticated') };
+
+    const today = new Date();
+    const age = today.getFullYear() - dateOfBirth.getFullYear();
+    const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+    const isOver21 = age > 21 || (age === 21 && monthDiff >= 0);
+
+    if (!isOver21) {
+      return { error: new Error('You must be 21 or older') };
     }
-  }, [authState.user, queryClient]);
+
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({
+        date_of_birth: dateOfBirth.toISOString().split('T')[0],
+        is_age_verified: true,
+      })
+      .eq('id', session.user.id);
+
+    if (error) return { error };
+
+    setAuthState(prev => ({ ...prev, isAgeVerified: true }));
+    return { error: null };
+  }, [session]);
+
+  const updateUser = useCallback(async (updates: Partial<User>) => {
+    if (authState.user && session?.user) {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          display_name: updates.name,
+        })
+        .eq('id', session.user.id);
+
+      if (!error) {
+        const updatedUser = { ...authState.user, ...updates };
+        setAuthState(prev => ({ ...prev, user: updatedUser }));
+      }
+    }
+  }, [authState.user, session]);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'unbottl://auth/reset-password',
+    });
+    return { error };
+  }, []);
 
   return {
     ...authState,
+    session,
     login: loginMutation.mutateAsync,
     register: registerMutation.mutateAsync,
     logout: logoutMutation.mutate,
     updateUser,
+    verifyAge,
+    resetPassword,
     isLoginLoading: loginMutation.isPending,
     isRegisterLoading: registerMutation.isPending,
     loginError: loginMutation.error?.message || null,

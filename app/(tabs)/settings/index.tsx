@@ -9,8 +9,10 @@ import {
   Platform,
   Switch,
 } from 'react-native';
-import { Image } from 'expo-image';
 import {
+Image } from 'expo-image';
+import {
+  Users,
   Building2,
   User,
   Bell,
@@ -35,16 +37,21 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { useRestaurant } from '@/contexts/RestaurantContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { useNotifications } from '@/contexts/NotificationsContext';
-import { useRouter } from 'expo-router';
+import {
+useRestaurant } from '@/contexts/RestaurantContext';
+import {
+useAuth } from '@/contexts/AuthContext';
+import {
+useWishlist } from '@/contexts/WishlistContext';
+import {
+useNotifications } from '@/contexts/NotificationsContext';
+import {
+useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { restaurant } = useRestaurant();
-  const { user, logout } = useAuth();
+  const { user, logout, userType } = useAuth();
   const { wishlistCount } = useWishlist();
   const { preferences, unreadCount, updatePreferences } = useNotifications();
   const [darkMode, setDarkMode] = useState(false);
@@ -97,7 +104,7 @@ export default function SettingsScreen() {
   ];
 
   const accountItems = [
-    { icon: User, label: 'Profile', description: 'Edit your profile', chevron: true },
+    { icon: User, label: 'Profile', description: 'Edit your profile', chevron: true, route: '/login' },
     { icon: Heart, label: 'Favorites', description: 'Your saved items', chevron: true },
     { 
       icon: Bookmark, 
@@ -160,6 +167,13 @@ export default function SettingsScreen() {
       route: '/qr-menu',
       color: '#EC4899',
     },
+    { 
+      icon: Users, 
+      label: 'Team', 
+      description: 'Manage staff access', 
+      route: '/staff-management', 
+      color: '#06B6D4', 
+    },
   ];
 
   const supportItems = [
@@ -170,7 +184,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.profileSection}>
+      <TouchableOpacity style={styles.profileSection} onPress={() => !user && router.push('/login')}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatarPlaceholder}>
             <User size={32} color={Colors.primary} />
@@ -178,7 +192,7 @@ export default function SettingsScreen() {
         </View>
         <Text style={styles.userName}>{user?.name || 'Guest User'}</Text>
         <Text style={styles.userEmail}>{user?.email || 'Sign in to sync your data'}</Text>
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
@@ -248,7 +262,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
+      {userType === 'restaurant_owner' && (<View style={styles.section}>
         <View style={styles.managementHeader}>
           <View style={styles.managementTitleRow}>
             <Settings size={16} color={Colors.textMuted} />
@@ -272,7 +286,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      </View>)}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Support</Text>

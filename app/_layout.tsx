@@ -144,6 +144,20 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="staff-management"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="restaurant-setup"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="wishlist"
         options={{
           presentation: "modal",

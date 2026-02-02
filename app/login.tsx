@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Wine, Mail, Lock, User, Eye, EyeOff } from 'lucide-react-native';
+import { Wine, Mail, Lock, User, Eye, EyeOff, Building2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +25,7 @@ export default function LoginScreen() {
   
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [userType, setUserType] = useState<'consumer' | 'restaurant_owner'>('consumer');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -52,6 +53,7 @@ export default function LoginScreen() {
           email: formData.email.trim(),
           password: formData.password,
           name: formData.name.trim(),
+          userType: userType,
         });
       } else {
         await login({
@@ -81,7 +83,7 @@ export default function LoginScreen() {
       >
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+clear          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
@@ -94,6 +96,40 @@ export default function LoginScreen() {
             </Text>
           </View>
 
+          {isSignUp && (
+            <View style={styles.userTypeContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  userType === 'consumer' && styles.userTypeButtonActive,
+                ]}
+                onPress={() => setUserType('consumer')}
+              >
+                <User size={24} color={userType === 'consumer' ? Colors.primary : Colors.textMuted} />
+                <Text style={[
+                  styles.userTypeText,
+                  userType === 'consumer' && styles.userTypeTextActive,
+                ]}>Consumer</Text>
+                <Text style={styles.userTypeDesc}>Save favorites & track drinks</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.userTypeButton,
+                  userType === 'restaurant_owner' && styles.userTypeButtonActive,
+                ]}
+                onPress={() => setUserType('restaurant_owner')}
+              >
+                <Building2 size={24} color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted} />
+                <Text style={[
+                  styles.userTypeText,
+                  userType === 'restaurant_owner' && styles.userTypeTextActive,
+                ]}>Restaurant</Text>
+                <Text style={styles.userTypeDesc}>Manage your inventory</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={styles.form}>
             {isSignUp && (
               <View style={styles.inputContainer}>
@@ -104,7 +140,7 @@ export default function LoginScreen() {
                   style={styles.input}
                   value={formData.name}
                   onChangeText={(v) => handleChange('name', v)}
-                  placeholder="Full Name"
+                  placeholder={userType === 'restaurant_owner' ? 'Restaurant Name' : 'Full Name'}
                   placeholderTextColor={Colors.textMuted}
                   autoCapitalize="words"
                 />
@@ -210,7 +246,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
   logoContainer: {
     width: 100,
@@ -231,6 +267,39 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 17,
     color: Colors.textSecondary,
+  },
+  userTypeContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  userTypeButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+  },
+  userTypeButtonActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary + '08',
+  },
+  userTypeText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.textMuted,
+    marginTop: 8,
+  },
+  userTypeTextActive: {
+    color: Colors.primary,
+  },
+  userTypeDesc: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    marginTop: 4,
+    textAlign: 'center',
   },
   form: {
     marginBottom: 32,
