@@ -29,7 +29,13 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
       },
-      "package": "com.unbottl.app"
+      "package": "com.unbottl.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
@@ -56,10 +62,17 @@
         {
           "locationWhenInUsePermission": "Unbottl uses your location to find nearby wine shops"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fbe6f391-efaf-4335-8073-f132d591e945"
+      }
     }
   }
 }
