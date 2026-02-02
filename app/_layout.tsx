@@ -158,6 +158,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="pricing"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="wishlist"
         options={{
           presentation: "modal",

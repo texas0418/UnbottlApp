@@ -1,22 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import Stripe from 'https://esm.sh/stripe@13.0.0?target=deno';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-  apiVersion: '2023-10-16',
-});
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') || '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-);
-
-const PRICES: Record<string, string> = {
-  starter: 'price_1SwFoa05hN1XfEY0xq4lxyjN',
-  pro: 'price_1SwFqA05hN1XfEY0n0o6EEvt',
-  business: 'price_1SwFqc05hN1XfEY0M0qMlRje',
-  additionalLocation: 'price_1SwFr605hN1XfEY0BGGuy33f',
-};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,60 +11,127 @@ serve(async (req) => {
   }
 
   try {
-    const { restaurant_id, plan, addon_locations = 0 } = await req.json();
-
-    if (!restaurant_id || !plan || !PRICES[plan]) {
-      throw new Error('Missing required fields');
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!stripeKey || !supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing environment variables');
     }
 
-    const { data: restaurant } = await supabase
-      .from('restaurants')
-      .select('*, subscriptions(*)')
-      .eq('id', restaurant_id)
-      .single();
+    const PRICES: Record<string, string> = {
+      starter: 'price_1SwFoa05hN1XfEY0xq4lxyjN',
+      pro: 'price_1SwFqA05hN1XfEY0n0o6EEvt',
+      business: 'price_1SwFqc05hN1XfEY0M0qMlRje',
+      additionalLocation: 'price_1SwFr605hN1XfEY0BGGuy33f',
+    };
 
-    if (!restaurant) throw new Error('Restaurant not found');
+    const body = await req.json();
+    const { restaurant_id, plan, addon_locations = 0 } = body;
+
+    if (!restaurant_id || !plan || !PRICES[plan]) {
+      throw new Error('Invalid request parameters');
+    }
+
+    // Fetch restaurant using REST API directly
+    const restaurantRes = await fetch(
+      `${supabaseUrl}/rest/v1/restaurants?id=eq.${restaurant_id}&select=*,subscriptions(*)`,
+      {
+        headers: {
+          'apikey': supabaseServiceKey,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+      }
+    );
+
+    if (!restaurantRes.ok) {
+      throw new Error('Failed to fetch restaurant');
+    }
+
+    const restaurants = await restaurantRes.json();
+    const restaurant = restaurants[0];
+
+    if (!restaurant) {
+      throw new Error('Restaurant not found');
+    }
 
     let customerId = restaurant.subscriptions?.[0]?.stripe_customer_id;
 
+    // Create Stripe customer if needed
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: restaurant.email,
-        name: restaurant.name,
-        metadata: { restaurant_id },
+      const customerRes = await fetch('https://api.stripe.com/v1/customers', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${stripeKey}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          name: restaurant.name,
+          ...(restaurant.email && { email: restaurant.email }),
+          'metadata[restaurant_id]': restaurant_id,
+        }),
       });
+
+      if (!customerRes.ok) {
+        const err = await customerRes.text();
+        throw new Error(`Stripe customer error: ${err}`);
+      }
+
+      const customer = await customerRes.json();
       customerId = customer.id;
     }
 
-    const lineItems: Array<{price: string, quantity: number}> = [{ price: PRICES[plan], quantity: 1 }];
-    if (plan === 'business' && addon_locations > 0) {
-      lineItems.push({ price: PRICES.additionalLocation, quantity: addon_locations });
-    }
-
-    const session = await stripe.checkout.sessions.create({
+    // Use web-based success/cancel URLs
+    const baseUrl = 'https://unbottl.com';
+    
+    // Build checkout session params
+    const sessionParams = new URLSearchParams({
       customer: customerId,
       mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      success_url: 'unbottl://subscription/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'unbottl://subscription/cancel',
-      subscription_data: {
-        trial_period_days: 14,
-        metadata: { restaurant_id, plan, addon_locations: addon_locations.toString() },
-      },
-      metadata: { restaurant_id, plan },
-      allow_promotion_codes: true,
+      'payment_method_types[0]': 'card',
+      'line_items[0][price]': PRICES[plan],
+      'line_items[0][quantity]': '1',
+      success_url: `${baseUrl}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/subscription-cancel`,
+      'subscription_data[trial_period_days]': '14',
+      'subscription_data[metadata][restaurant_id]': restaurant_id,
+      'subscription_data[metadata][plan]': plan,
+      'metadata[restaurant_id]': restaurant_id,
+      'metadata[plan]': plan,
+      allow_promotion_codes: 'true',
     });
 
-    return new Response(JSON.stringify({ url: session.url, sessionId: session.id }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (plan === 'business' && addon_locations > 0) {
+      sessionParams.append('line_items[1][price]', PRICES.additionalLocation);
+      sessionParams.append('line_items[1][quantity]', addon_locations.toString());
+    }
+
+    const sessionRes = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${stripeKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: sessionParams,
     });
-  } catch (err: unknown) {
+
+    if (!sessionRes.ok) {
+      const err = await sessionRes.text();
+      throw new Error(`Stripe session error: ${err}`);
+    }
+
+    const session = await sessionRes.json();
+
+    return new Response(
+      JSON.stringify({ url: session.url, sessionId: session.id }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Checkout error:', message);
+    return new Response(
+      JSON.stringify({ error: message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 });

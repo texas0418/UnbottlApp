@@ -23,7 +23,6 @@ import {
   LogOut,
   Moon,
   Globe,
-  Star,
   Heart,
   Wine,
   BarChart3,
@@ -34,6 +33,8 @@ import {
   Package,
   Settings,
   Bookmark,
+  Star,
+  Zap,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -50,7 +51,7 @@ useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { restaurant } = useRestaurant();
+  const { restaurant, needsSetup } = useRestaurant();
   const { user, logout, userType } = useAuth();
   const { wishlistCount } = useWishlist();
   const { preferences, unreadCount, updatePreferences } = useNotifications();
@@ -168,6 +169,13 @@ export default function SettingsScreen() {
       color: '#EC4899',
     },
     { 
+      icon: Zap, 
+      label: 'Subscription', 
+      description: 'Manage your plan', 
+      route: '/pricing', 
+      color: '#F59E0B', 
+    },
+    { 
       icon: Users, 
       label: 'Team', 
       description: 'Manage staff access', 
@@ -263,6 +271,29 @@ export default function SettingsScreen() {
       </View>
 
       {userType === 'restaurant_owner' && (<View style={styles.section}>
+        {needsSetup && (
+          <TouchableOpacity style={styles.setupBanner} onPress={() => router.push('/restaurant-setup')}>
+            <Building2 size={24} color={Colors.primary} />
+            <View style={styles.setupBannerContent}>
+              <Text style={styles.setupBannerTitle}>Set Up Your Restaurant</Text>
+              <Text style={styles.setupBannerDesc}>Create your restaurant to start managing inventory</Text>
+            </View>
+            <ChevronRight size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        )}
+        {restaurant?.is_founding_member && restaurant?.founding_member_expires_at && (
+          <View style={styles.founderBadge}>
+            <View style={styles.founderBadgeIcon}>
+              <Star size={20} color="#F59E0B" fill="#F59E0B" />
+            </View>
+            <View style={styles.founderBadgeContent}>
+              <Text style={styles.founderBadgeTitle}>Founding Member #{restaurant.founding_member_number}</Text>
+              <Text style={styles.founderBadgeDesc}>
+                Pro features free until {new Date(restaurant.founding_member_expires_at).toLocaleDateString()}
+              </Text>
+            </View>
+          </View>
+        )}
         <View style={styles.managementHeader}>
           <View style={styles.managementTitleRow}>
             <Settings size={16} color={Colors.textMuted} />
@@ -475,6 +506,62 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     marginBottom: 20,
+  },
+  setupBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary + '12',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: Colors.primary + '30',
+  },
+  setupBannerContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  setupBannerTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  setupBannerDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  founderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#F59E0B' + '40',
+  },
+  founderBadgeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  founderBadgeContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  founderBadgeTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#B45309',
+  },
+  founderBadgeDesc: {
+    fontSize: 13,
+    color: '#92400E',
+    marginTop: 2,
   },
   bottomPadding: {
     height: 30,
