@@ -72,7 +72,6 @@ const nonAlcTypeFilters = [
 ];
 
 type PriceRange = 'all' | '$' | '$$' | '$$$';
-
 const priceRangeFilters: { label: string; value: PriceRange; min: number; max: number | null }[] = [
   { label: 'All', value: 'all', min: 0, max: null },
   { label: '$', value: '$', min: 0, max: 10 },
@@ -101,7 +100,7 @@ export default function CatalogScreen() {
   const router = useRouter();
   const { wines, isLoading: winesLoading } = useWines();
   const { beers, spirits, cocktails, nonAlcoholic, isLoading: beveragesLoading } = useBeverages();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BeverageCategory | 'all'>('all');
   const [selectedType, setSelectedType] = useState('all');
@@ -113,18 +112,24 @@ export default function CatalogScreen() {
 
   const getTypeFilters = () => {
     switch (selectedCategory) {
-      case 'wine': return wineTypeFilters;
-      case 'beer': return beerTypeFilters;
-      case 'spirit': return spiritTypeFilters;
-      case 'cocktail': return cocktailTypeFilters;
-      case 'non-alcoholic': return nonAlcTypeFilters;
-      default: return [];
+      case 'wine':
+        return wineTypeFilters;
+      case 'beer':
+        return beerTypeFilters;
+      case 'spirit':
+        return spiritTypeFilters;
+      case 'cocktail':
+        return cocktailTypeFilters;
+      case 'non-alcoholic':
+        return nonAlcTypeFilters;
+      default:
+        return [];
     }
   };
 
   const allItems = useMemo((): CatalogItem[] => {
     const items: CatalogItem[] = [];
-    
+
     wines.forEach(wine => {
       items.push({
         id: wine.id,
@@ -134,7 +139,7 @@ export default function CatalogScreen() {
         searchText: `${wine.name} ${wine.producer} ${wine.region} ${wine.grape} ${wine.type}`.toLowerCase(),
       });
     });
-    
+
     beers.forEach(beer => {
       items.push({
         id: beer.id,
@@ -144,7 +149,7 @@ export default function CatalogScreen() {
         searchText: `${beer.name} ${beer.brewery} ${beer.origin} ${beer.style} ${beer.type}`.toLowerCase(),
       });
     });
-    
+
     spirits.forEach(spirit => {
       items.push({
         id: spirit.id,
@@ -154,7 +159,7 @@ export default function CatalogScreen() {
         searchText: `${spirit.name} ${spirit.brand} ${spirit.origin} ${spirit.type}`.toLowerCase(),
       });
     });
-    
+
     cocktails.forEach(cocktail => {
       items.push({
         id: cocktail.id,
@@ -164,7 +169,7 @@ export default function CatalogScreen() {
         searchText: `${cocktail.name} ${cocktail.baseSpirit} ${cocktail.type} ${cocktail.ingredients.join(' ')}`.toLowerCase(),
       });
     });
-    
+
     nonAlcoholic.forEach(na => {
       items.push({
         id: na.id,
@@ -174,7 +179,7 @@ export default function CatalogScreen() {
         searchText: `${na.name} ${na.brand || ''} ${na.type}`.toLowerCase(),
       });
     });
-    
+
     return items;
   }, [wines, beers, spirits, cocktails, nonAlcoholic]);
 
@@ -182,12 +187,12 @@ export default function CatalogScreen() {
     return allItems.filter(item => {
       const matchesSearch = searchQuery === '' || item.searchText.includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-      
+
       let matchesType = true;
       if (selectedType !== 'all' && selectedCategory !== 'all') {
         matchesType = item.data.type === selectedType;
       }
-      
+
       let matchesPrice = true;
       if (selectedPriceRange !== 'all') {
         const priceFilter = priceRangeFilters.find(f => f.value === selectedPriceRange);
@@ -196,13 +201,13 @@ export default function CatalogScreen() {
           matchesPrice = itemPrice >= priceFilter.min && (priceFilter.max === null || itemPrice < priceFilter.max);
         }
       }
-      
+
       let matchesDietary = true;
       if (selectedDietaryTags.length > 0) {
         const itemTags = item.data.dietaryTags || [];
         matchesDietary = selectedDietaryTags.every(tag => itemTags.includes(tag));
       }
-      
+
       return matchesSearch && matchesCategory && matchesType && matchesPrice && matchesDietary;
     });
   }, [allItems, searchQuery, selectedCategory, selectedType, selectedPriceRange, selectedDietaryTags]);
@@ -225,8 +230,8 @@ export default function CatalogScreen() {
   };
 
   const toggleDietaryTag = (tag: DietaryTag) => {
-    setSelectedDietaryTags(prev => 
-      prev.includes(tag) 
+    setSelectedDietaryTags(prev =>
+      prev.includes(tag)
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
@@ -257,8 +262,8 @@ export default function CatalogScreen() {
   const stats = getCategoryStats();
 
   const renderCategoryTabs = () => (
-    <ScrollView 
-      horizontal 
+    <ScrollView
+      horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.categoryTabsContainer}
     >
@@ -338,8 +343,8 @@ export default function CatalogScreen() {
           </View>
         )}
       </View>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.dietaryChipsContainer}
       >
@@ -374,10 +379,10 @@ export default function CatalogScreen() {
   const renderTypeFilters = () => {
     const filters = getTypeFilters();
     if (filters.length === 0) return null;
-    
+
     return (
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.typeFiltersContainer}
       >
@@ -443,7 +448,6 @@ export default function CatalogScreen() {
         </View>
       );
     }
-    
     return (
       <View style={styles.cardContainer}>
         <BeverageCard
@@ -484,6 +488,7 @@ export default function CatalogScreen() {
           </View>
         }
         contentContainerStyle={styles.list}
+        contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
         numColumns={2}
         columnWrapperStyle={styles.row}
@@ -507,6 +512,7 @@ const styles = StyleSheet.create({
   header: {
     gap: 12,
     marginBottom: 8,
+    paddingTop: 8,
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -711,7 +717,6 @@ const styles = StyleSheet.create({
     color: Colors.error,
   },
   list: {
-    paddingTop: 16,
     paddingBottom: 24,
   },
   row: {

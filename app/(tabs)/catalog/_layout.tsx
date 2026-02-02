@@ -14,8 +14,9 @@ export default function CatalogLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: "Wine Catalog",
+          headerTitle: "Beverage Catalog",
           headerLargeTitle: true,
+          headerLargeTitleShadowVisible: false,
         }}
       />
     </Stack>
