@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		814CA428C43EC114C8BAAB2C /* libPods-Unbottl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E09D310CB0FB360823E80DA /* libPods-Unbottl.a */; };
-		81956ADBE64BD4133A4F6AF9 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 520D572BE9F5DC6A0D576230 /* ExpoModulesProvider.swift */; };
+		96944CA3C76926D41AB22384 /* libPods-Unbottl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B5D869C1E35246427A75A1C7 /* libPods-Unbottl.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		F0B044E68B1E4E304B933B5E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E50612E88E147F98D60711A9 /* PrivacyInfo.xcprivacy */; };
+		C2ED4DDC89586E560312CC55 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA4E70C2F974D7F8D583FC3 /* ExpoModulesProvider.swift */; };
+		E29EBFD2D85DFEBBA8802EAF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FA31B169EB30CF039C9AAE45 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		02BAF4594BDDD9A09C68AE71 /* Pods-Unbottl.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Unbottl.debug.xcconfig"; path = "Target Support Files/Pods-Unbottl/Pods-Unbottl.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Unbottl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Unbottl.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Unbottl/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Unbottl/Info.plist; sourceTree = "<group>"; };
-		43007847859BF126E8DA7D7F /* Pods-Unbottl.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Unbottl.release.xcconfig"; path = "Target Support Files/Pods-Unbottl/Pods-Unbottl.release.xcconfig"; sourceTree = "<group>"; };
-		520D572BE9F5DC6A0D576230 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Unbottl/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		8E09D310CB0FB360823E80DA /* libPods-Unbottl.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Unbottl.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3ADA465CD38DDB6128C3ECE5 /* Pods-Unbottl.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Unbottl.release.xcconfig"; path = "Target Support Files/Pods-Unbottl/Pods-Unbottl.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Unbottl/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B5D869C1E35246427A75A1C7 /* libPods-Unbottl.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Unbottl.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		E50612E88E147F98D60711A9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Unbottl/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		CDA4E70C2F974D7F8D583FC3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Unbottl/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		E3D6C2D4607978F5B1883030 /* Pods-Unbottl.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Unbottl.debug.xcconfig"; path = "Target Support Files/Pods-Unbottl/Pods-Unbottl.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Unbottl/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Unbottl-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Unbottl-Bridging-Header.h"; path = "Unbottl/Unbottl-Bridging-Header.h"; sourceTree = "<group>"; };
+		FA31B169EB30CF039C9AAE45 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Unbottl/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				814CA428C43EC114C8BAAB2C /* libPods-Unbottl.a in Frameworks */,
+				96944CA3C76926D41AB22384 /* libPods-Unbottl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,44 +53,36 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				E50612E88E147F98D60711A9 /* PrivacyInfo.xcprivacy */,
+				FA31B169EB30CF039C9AAE45 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Unbottl;
-			sourceTree = "<group>";
-		};
-		17B8C153354532B96BD3B13B /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				02BAF4594BDDD9A09C68AE71 /* Pods-Unbottl.debug.xcconfig */,
-				43007847859BF126E8DA7D7F /* Pods-Unbottl.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				8E09D310CB0FB360823E80DA /* libPods-Unbottl.a */,
+				B5D869C1E35246427A75A1C7 /* libPods-Unbottl.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		517DCA825D4804565E49F9F3 /* ExpoModulesProviders */ = {
+		3057B9868A4E03972BCB9940 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				734F1FCE1FF3527DA17045E1 /* Unbottl */,
+				9311BFFD0E2CFC7622B813BB /* Unbottl */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
-		734F1FCE1FF3527DA17045E1 /* Unbottl */ = {
+		3C8B0CC241F308DC6ED9C943 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				520D572BE9F5DC6A0D576230 /* ExpoModulesProvider.swift */,
+				E3D6C2D4607978F5B1883030 /* Pods-Unbottl.debug.xcconfig */,
+				3ADA465CD38DDB6128C3ECE5 /* Pods-Unbottl.release.xcconfig */,
 			);
-			name = Unbottl;
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -107,8 +99,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				17B8C153354532B96BD3B13B /* Pods */,
-				517DCA825D4804565E49F9F3 /* ExpoModulesProviders */,
+				3C8B0CC241F308DC6ED9C943 /* Pods */,
+				3057B9868A4E03972BCB9940 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -121,6 +113,14 @@
 				13B07F961A680F5B00A75B9A /* Unbottl.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9311BFFD0E2CFC7622B813BB /* Unbottl */ = {
+			isa = PBXGroup;
+			children = (
+				CDA4E70C2F974D7F8D583FC3 /* ExpoModulesProvider.swift */,
+			);
+			name = Unbottl;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Unbottl" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				56730D72131784C461BB1DEC /* [Expo] Configure project */,
+				7565F5015E58398AFDE162CF /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				0E60F67015500CFBC9964A91 /* [CP] Embed Pods Frameworks */,
+				5FFA686A32657C5CE425A08F /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				F0B044E68B1E4E304B933B5E /* PrivacyInfo.xcprivacy in Resources */,
+				E29EBFD2D85DFEBBA8802EAF /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,7 +242,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		0E60F67015500CFBC9964A91 /* [CP] Embed Pods Frameworks */ = {
+		5FFA686A32657C5CE425A08F /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -264,7 +264,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Unbottl/Pods-Unbottl-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		56730D72131784C461BB1DEC /* [Expo] Configure project */ = {
+		7565F5015E58398AFDE162CF /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -334,7 +334,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				81956ADBE64BD4133A4F6AF9 /* ExpoModulesProvider.swift in Sources */,
+				C2ED4DDC89586E560312CC55 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -343,7 +343,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 02BAF4594BDDD9A09C68AE71 /* Pods-Unbottl.debug.xcconfig */;
+			baseConfigurationReference = E3D6C2D4607978F5B1883030 /* Pods-Unbottl.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -379,7 +379,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 43007847859BF126E8DA7D7F /* Pods-Unbottl.release.xcconfig */;
+			baseConfigurationReference = 3ADA465CD38DDB6128C3ECE5 /* Pods-Unbottl.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;

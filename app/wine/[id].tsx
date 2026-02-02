@@ -39,7 +39,7 @@ export default function WineDetailScreen() {
   const { getWineById, deleteWine, toggleStock } = useWines();
   const { isInWishlist, addToWishlist, removeByBeverageId, isAdding } = useWishlist();
   const { restaurant } = useRestaurant();
-  
+
   const wine = getWineById(id || '');
   const isWishlisted = wine ? isInWishlist(wine.id) : false;
 
@@ -125,9 +125,9 @@ export default function WineDetailScreen() {
                 style={styles.headerButton}
                 disabled={isAdding}
               >
-                <Bookmark 
-                  size={20} 
-                  color={isWishlisted ? Colors.primary : Colors.textMuted} 
+                <Bookmark
+                  size={20}
+                  color={isWishlisted ? Colors.primary : Colors.textMuted}
                   fill={isWishlisted ? Colors.primary : 'none'}
                 />
               </TouchableOpacity>
@@ -144,7 +144,11 @@ export default function WineDetailScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={[styles.heroSection, { backgroundColor: typeColor + '15' }]}>
           {wine.imageUrl ? (
-            <Image source={{ uri: wine.imageUrl }} style={styles.heroImage} contentFit="cover" />
+            <Image
+              source={{ uri: wine.imageUrl }}
+              style={styles.heroImage}
+              contentFit="cover"
+            />
           ) : (
             <Wine size={80} color={typeColor} strokeWidth={1} />
           )}
@@ -163,7 +167,7 @@ export default function WineDetailScreen() {
                 {wineTypeLabels[wine.type]}
               </Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.stockBadge, !wine.inStock && styles.outOfStockBadge]}
               onPress={handleToggleStock}
             >
@@ -215,7 +219,8 @@ export default function WineDetailScreen() {
             </View>
           )}
 
-          {wine.foodPairings.length > 0 && (
+          {/* FIX: Added null-safe check for foodPairings */}
+          {wine.foodPairings && wine.foodPairings.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Utensils size={18} color={Colors.primary} />

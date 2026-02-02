@@ -38,18 +38,20 @@ export default function SommelierChatScreen() {
   const { beers, spirits, cocktails, nonAlcoholic } = useBeverages();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  // FIX: Add null-safe fallbacks to prevent "Cannot read property 'map' of undefined"
   const allBeverages = [
-    ...wines.map(w => ({ ...w, category: 'wine' as const })),
-    ...beers.map(b => ({ ...b, category: 'beer' as const })),
-    ...spirits.map(s => ({ ...s, category: 'spirit' as const })),
-    ...cocktails.map(c => ({ ...c, category: 'cocktail' as const })),
-    ...nonAlcoholic.map(n => ({ ...n, category: 'non-alcoholic' as const })),
+    ...(wines || []).map(w => ({ ...w, category: 'wine' as const })),
+    ...(beers || []).map(b => ({ ...b, category: 'beer' as const })),
+    ...(spirits || []).map(s => ({ ...s, category: 'spirit' as const })),
+    ...(cocktails || []).map(c => ({ ...c, category: 'cocktail' as const })),
+    ...(nonAlcoholic || []).map(n => ({ ...n, category: 'non-alcoholic' as const })),
   ];
 
   const beverageContext = allBeverages.map(b => {
     if (b.category === 'wine') {
       const wine = b as WineType & { category: 'wine' };
-      return `Wine: ${wine.name} by ${wine.producer} - ${wine.type}, ${wine.region}, ${wine.country}. ${wine.tastingNotes}. Price: $${wine.price}. Pairs with: ${wine.foodPairings.join(', ')}. ${wine.inStock ? 'In stock' : 'Out of stock'}`;
+      // FIX: Add null-safe fallback for foodPairings.join()
+      return `Wine: ${wine.name} by ${wine.producer} - ${wine.type}, ${wine.region}, ${wine.country}. ${wine.tastingNotes}. Price: $${wine.price}. Pairs with: ${(wine.foodPairings || []).join(', ')}. ${wine.inStock ? 'In stock' : 'Out of stock'}`;
     }
     if (b.category === 'beer') {
       return `Beer: ${b.name} by ${b.brewery} - ${b.type} ${b.style}. ABV: ${b.abv}%. ${b.description}. Price: $${b.price}. ${b.inStock ? 'In stock' : 'Out of stock'}`;
@@ -127,7 +129,6 @@ Guidelines:
 
   const renderMessage = (message: typeof messages[0], index: number) => {
     const isUser = message.role === 'user';
-    
     return (
       <View
         key={message.id || index}
@@ -205,7 +206,6 @@ Guidelines:
                 <Text style={styles.welcomeText}>
                   Tell me what you&apos;re in the mood for, what you&apos;re eating, or ask for recommendations. I&apos;ll help you find the perfect drink!
                 </Text>
-                
                 <View style={styles.quickPromptsContainer}>
                   <Text style={styles.quickPromptsTitle}>Try asking:</Text>
                   <View style={styles.quickPrompts}>
