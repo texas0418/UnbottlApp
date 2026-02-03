@@ -85,8 +85,8 @@ export default function SettingsScreen() {
       label: 'Dark Mode', 
       description: 'Switch to dark theme',
       toggle: true,
-      value: darkMode,
-      onToggle: setDarkMode,
+      value: darkMode, onPress: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
+      onToggle: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
     },
     { 
       icon: Bell, 
@@ -100,7 +100,7 @@ export default function SettingsScreen() {
       icon: Globe, 
       label: 'Language', 
       description: 'English',
-      chevron: true,
+      chevron: true, onPress: () => Alert.alert('Language', 'More languages coming soon!'),
     },
   ];
 
@@ -209,7 +209,7 @@ export default function SettingsScreen() {
             <React.Fragment key={item.label}>
               <TouchableOpacity 
                 style={styles.menuItem}
-                onPress={() => (item as any).route && router.push((item as any).route)}
+                onPress={() => (item as any).onPress ? (item as any).onPress() : (item as any).route && router.push((item as any).route)}
                 disabled={!!(item as any).toggle}
               >
                 <View style={[styles.menuIcon, { backgroundColor: Colors.primary + '12' }]}>
@@ -248,7 +248,7 @@ export default function SettingsScreen() {
             <React.Fragment key={item.label}>
               <TouchableOpacity 
                 style={styles.menuItem}
-                onPress={() => (item as any).route && router.push((item as any).route)}
+                onPress={() => (item as any).onPress ? (item as any).onPress() : (item as any).route && router.push((item as any).route)}
               >
                 <View style={[styles.menuIcon, { backgroundColor: Colors.secondary + '15' }]}>
                   <item.icon size={18} color={Colors.secondary} />
