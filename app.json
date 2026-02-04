@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.unbottl.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSCameraUsageDescription": "Unbottl needs camera access to scan wine labels and menus",
         "NSPhotoLibraryUsageDescription": "Unbottl needs photo library access to select wine images",
