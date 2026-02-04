@@ -13,12 +13,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import { 
-  Camera, 
-  Image as ImageIcon, 
-  Sparkles, 
-  Check, 
-  X, 
+import {
+  Camera,
+  Image as ImageIcon,
+  Sparkles,
+  Check,
+  X,
   ChevronLeft,
   Wine,
   Beer,
@@ -41,7 +41,7 @@ export default function MenuImportScreen() {
   const router = useRouter();
   const { addWine } = useWines();
   const { addBeverage } = useBeverages();
-  
+
   const [step, setStep] = useState<ImportStep>('capture');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [extractedItems, setExtractedItems] = useState<ExtractedBeverage[]>([]);
@@ -83,7 +83,6 @@ export default function MenuImportScreen() {
 
   const processImage = async (uri: string, base64?: string | null) => {
     setStep('processing');
-    
     try {
       const items = await analyzeMenuImage(uri, base64 || undefined);
       setExtractedItems(items);
@@ -128,18 +127,17 @@ export default function MenuImportScreen() {
 
   const importItems = async () => {
     const itemsToImport = extractedItems.filter(item => selectedItems.has(item.id));
-    
     if (itemsToImport.length === 0) {
       Alert.alert('No items selected', 'Please select at least one item to import.');
       return;
     }
 
     setStep('importing');
-    
+
     for (let i = 0; i < itemsToImport.length; i++) {
       const item = itemsToImport[i];
       setImportProgress(((i + 1) / itemsToImport.length) * 100);
-      
+
       try {
         if (item.category === 'wine') {
           await addWine({
@@ -172,11 +170,11 @@ export default function MenuImportScreen() {
       } catch (error) {
         console.error('Error importing item:', item.name, error);
       }
-      
+
       // Small delay for visual feedback
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-    
+
     setStep('complete');
   };
 
@@ -198,7 +196,11 @@ export default function MenuImportScreen() {
   };
 
   const renderCaptureStep = () => (
-    <View style={styles.captureContainer}>
+    <ScrollView 
+      style={styles.captureContainer}
+      contentContainerStyle={styles.captureContentContainer}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.captureHeader}>
         <View style={styles.iconContainer}>
           <Sparkles size={48} color={Colors.primary} />
@@ -234,7 +236,7 @@ export default function MenuImportScreen() {
         <Text style={styles.tipText}>• Capture one page at a time</Text>
         <Text style={styles.tipText}>• Include prices if visible</Text>
       </View>
-    </View>
+    </ScrollView>
   );
 
   const renderProcessingStep = () => (
@@ -387,6 +389,7 @@ export default function MenuImportScreen() {
           <Camera size={20} color={Colors.primary} />
           <Text style={styles.retakeButtonText}>Retake</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.importButton,
@@ -450,7 +453,7 @@ export default function MenuImportScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -498,7 +501,10 @@ const styles = StyleSheet.create({
   },
   captureContainer: {
     flex: 1,
+  },
+  captureContentContainer: {
     padding: 24,
+    paddingBottom: 40,
   },
   captureHeader: {
     alignItems: 'center',
