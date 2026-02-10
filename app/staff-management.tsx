@@ -12,12 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { 
-  X, 
-  UserPlus, 
-  Mail, 
-  Crown, 
-  Shield, 
+import {
+  X,
+  UserPlus,
+  Mail,
+  Crown,
+  Shield,
   User,
   Trash2,
   Copy,
@@ -26,16 +26,17 @@ import {
 import Colors from '@/constants/colors';
 import { useStaff } from '@/hooks/useStaff';
 import { useRestaurant } from '@/contexts/RestaurantContext';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function StaffManagementScreen() {
   const router = useRouter();
   const { restaurant } = useRestaurant();
-  const { 
-    staff, 
-    invitations, 
-    loading, 
+  const {
+    staff,
+    invitations,
+    loading,
     isOwner,
-    inviteStaff, 
+    inviteStaff,
     cancelInvitation,
     updateStaffRole,
     removeStaff,
@@ -90,13 +91,13 @@ export default function StaffManagementScreen() {
       `Are you sure you want to remove ${name} from the team?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Remove', 
+        {
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
             const { error } = await removeStaff(staffId);
             if (error) Alert.alert('Error', error.message);
-          }
+          },
         },
       ]
     );
@@ -108,13 +109,13 @@ export default function StaffManagementScreen() {
       `Cancel invitation for ${email}?`,
       [
         { text: 'No', style: 'cancel' },
-        { 
-          text: 'Yes', 
+        {
+          text: 'Yes',
           style: 'destructive',
           onPress: async () => {
             const { error } = await cancelInvitation(inviteId);
             if (error) Alert.alert('Error', error.message);
-          }
+          },
         },
       ]
     );
@@ -136,188 +137,187 @@ export default function StaffManagementScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <X size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Team Management</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Current Staff */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Team Members ({staff.length})</Text>
-          
-          {staff.map((member) => {
-            const RoleIcon = getRoleIcon(member.role);
-            const roleColor = getRoleColor(member.role);
-            const displayName = member.display_name || 'Unknown';
-            const email = member.email || '';
-            
-            return (
-              <View key={member.id} style={styles.staffCard}>
-                <View style={[styles.roleIcon, { backgroundColor: roleColor + '20' }]}>
-                  <RoleIcon size={20} color={roleColor} />
-                </View>
-                <View style={styles.staffInfo}>
-                  <Text style={styles.staffName}>{displayName}</Text>
-                  <Text style={styles.staffEmail}>{email}</Text>
-                  <Text style={[styles.staffRole, { color: roleColor }]}>
-                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                  </Text>
-                </View>
-                {isOwner && member.role !== 'owner' && (
-                  <TouchableOpacity 
-                    style={styles.removeButton}
-                    onPress={() => handleRemoveStaff(member.id, displayName)}
-                  >
-                    <Trash2 size={18} color={Colors.error} />
-                  </TouchableOpacity>
-                )}
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Pending Invitations */}
-        {invitations.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Pending Invitations ({invitations.length})</Text>
-            
-            {invitations.map((invite) => (
-              <View key={invite.id} style={styles.inviteCard}>
-                <View style={[styles.roleIcon, { backgroundColor: Colors.secondary + '20' }]}>
-                  <Mail size={20} color={Colors.secondary} />
-                </View>
-                <View style={styles.staffInfo}>
-                  <Text style={styles.staffName}>{invite.email}</Text>
-                  <Text style={styles.staffRole}>
-                    Invited as {invite.role}
-                  </Text>
-                </View>
-                <View style={styles.inviteActions}>
-                  <TouchableOpacity 
-                    style={styles.copyButton}
-                    onPress={() => copyInviteLink(invite.token)}
-                  >
-                    <Copy size={16} color={Colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.removeButton}
-                    onPress={() => handleCancelInvite(invite.id, invite.email)}
-                  >
-                    <Trash2 size={18} color={Colors.error} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
+    <AuthGuard requiredUserType="restaurant_owner">
+      {loading ? (
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
           </View>
-        )}
+        </SafeAreaView>
+      ) : (
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+              <X size={24} color={Colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Team Management</Text>
+            <View style={styles.placeholder} />
+          </View>
 
-        {/* Invite Form */}
-        {isOwner && (
-          <View style={styles.section}>
-            {!showInviteForm ? (
-              <TouchableOpacity 
-                style={styles.inviteButton}
-                onPress={() => setShowInviteForm(true)}
-              >
-                <UserPlus size={20} color={Colors.white} />
-                <Text style={styles.inviteButtonText}>Invite Team Member</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.inviteForm}>
-                <Text style={styles.formTitle}>Invite New Member</Text>
-                
-                <View style={styles.inputContainer}>
-                  <Mail size={20} color={Colors.textMuted} />
-                  <TextInput
-                    style={styles.input}
-                    value={inviteEmail}
-                    onChangeText={setInviteEmail}
-                    placeholder="Email address"
-                    placeholderTextColor={Colors.textMuted}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Current Staff */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Team Members ({staff.length})</Text>
 
-                <View style={styles.roleSelector}>
-                  <TouchableOpacity
-                    style={[
-                      styles.roleOption,
-                      inviteRole === 'manager' && styles.roleOptionActive,
-                    ]}
-                    onPress={() => setInviteRole('manager')}
-                  >
-                    <Shield size={18} color={inviteRole === 'manager' ? Colors.primary : Colors.textMuted} />
-                    <Text style={[
-                      styles.roleOptionText,
-                      inviteRole === 'manager' && styles.roleOptionTextActive,
-                    ]}>Manager</Text>
-                    <Text style={styles.roleDesc}>Can edit inventory</Text>
-                  </TouchableOpacity>
+              {staff.map((member) => {
+                const RoleIcon = getRoleIcon(member.role);
+                const roleColor = getRoleColor(member.role);
+                const displayName = member.display_name || 'Unknown';
+                const email = member.email || '';
 
-                  <TouchableOpacity
-                    style={[
-                      styles.roleOption,
-                      inviteRole === 'staff' && styles.roleOptionActive,
-                    ]}
-                    onPress={() => setInviteRole('staff')}
-                  >
-                    <User size={18} color={inviteRole === 'staff' ? Colors.primary : Colors.textMuted} />
-                    <Text style={[
-                      styles.roleOptionText,
-                      inviteRole === 'staff' && styles.roleOptionTextActive,
-                    ]}>Staff</Text>
-                    <Text style={styles.roleDesc}>View only</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.formButtons}>
-                  <TouchableOpacity 
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      setShowInviteForm(false);
-                      setInviteEmail('');
-                    }}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                    style={[styles.sendButton, inviting && styles.sendButtonDisabled]}
-                    onPress={handleInvite}
-                    disabled={inviting}
-                  >
-                    {inviting ? (
-                      <ActivityIndicator size="small" color={Colors.white} />
-                    ) : (
-                      <Text style={styles.sendButtonText}>Send Invite</Text>
+                return (
+                  <View key={member.id} style={styles.staffCard}>
+                    <View style={[styles.roleIcon, { backgroundColor: roleColor + '20' }]}>
+                      <RoleIcon size={20} color={roleColor} />
+                    </View>
+                    <View style={styles.staffInfo}>
+                      <Text style={styles.staffName}>{displayName}</Text>
+                      <Text style={styles.staffEmail}>{email}</Text>
+                      <Text style={[styles.staffRole, { color: roleColor }]}>
+                        {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                      </Text>
+                    </View>
+                    {isOwner && member.role !== 'owner' && (
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => handleRemoveStaff(member.id, displayName)}
+                      >
+                        <Trash2 size={18} color={Colors.error} />
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* Pending Invitations */}
+            {invitations.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Pending Invitations ({invitations.length})</Text>
+
+                {invitations.map((invite) => (
+                  <View key={invite.id} style={styles.inviteCard}>
+                    <View style={[styles.roleIcon, { backgroundColor: Colors.secondary + '20' }]}>
+                      <Mail size={20} color={Colors.secondary} />
+                    </View>
+                    <View style={styles.staffInfo}>
+                      <Text style={styles.staffName}>{invite.email}</Text>
+                      <Text style={styles.staffRole}>
+                        Invited as {invite.role}
+                      </Text>
+                    </View>
+                    <View style={styles.inviteActions}>
+                      <TouchableOpacity
+                        style={styles.copyButton}
+                        onPress={() => copyInviteLink(invite.token)}
+                      >
+                        <Copy size={16} color={Colors.primary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() => handleCancelInvite(invite.id, invite.email)}
+                      >
+                        <Trash2 size={18} color={Colors.error} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
               </View>
             )}
-          </View>
-        )}
 
-        <View style={styles.bottomPadding} />
-      </ScrollView>
-    </SafeAreaView>
+            {/* Invite Form */}
+            {isOwner && (
+              <View style={styles.section}>
+                {!showInviteForm ? (
+                  <TouchableOpacity
+                    style={styles.inviteButton}
+                    onPress={() => setShowInviteForm(true)}
+                  >
+                    <UserPlus size={20} color={Colors.white} />
+                    <Text style={styles.inviteButtonText}>Invite Team Member</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.inviteForm}>
+                    <Text style={styles.formTitle}>Invite New Member</Text>
+
+                    <View style={styles.inputContainer}>
+                      <Mail size={20} color={Colors.textMuted} />
+                      <TextInput
+                        style={styles.input}
+                        value={inviteEmail}
+                        onChangeText={setInviteEmail}
+                        placeholder="Email address"
+                        placeholderTextColor={Colors.textMuted}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                      />
+                    </View>
+
+                    <View style={styles.roleSelector}>
+                      <TouchableOpacity
+                        style={[
+                          styles.roleOption,
+                          inviteRole === 'manager' && styles.roleOptionActive,
+                        ]}
+                        onPress={() => setInviteRole('manager')}
+                      >
+                        <Shield size={18} color={inviteRole === 'manager' ? Colors.primary : Colors.textMuted} />
+                        <Text style={[
+                          styles.roleOptionText,
+                          inviteRole === 'manager' && styles.roleOptionTextActive,
+                        ]}>Manager</Text>
+                        <Text style={styles.roleDesc}>Can edit inventory</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.roleOption,
+                          inviteRole === 'staff' && styles.roleOptionActive,
+                        ]}
+                        onPress={() => setInviteRole('staff')}
+                      >
+                        <User size={18} color={inviteRole === 'staff' ? Colors.primary : Colors.textMuted} />
+                        <Text style={[
+                          styles.roleOptionText,
+                          inviteRole === 'staff' && styles.roleOptionTextActive,
+                        ]}>Staff</Text>
+                        <Text style={styles.roleDesc}>View only</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.formButtons}>
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => {
+                          setShowInviteForm(false);
+                          setInviteEmail('');
+                        }}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.sendButton, inviting && styles.sendButtonDisabled]}
+                        onPress={handleInvite}
+                        disabled={inviting}
+                      >
+                        {inviting ? (
+                          <ActivityIndicator size="small" color={Colors.white} />
+                        ) : (
+                          <Text style={styles.sendButtonText}>Send Invite</Text>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
+            <View style={styles.bottomPadding} />
+          </ScrollView>
+        </SafeAreaView>
+      )}
+    </AuthGuard>
   );
 }
 

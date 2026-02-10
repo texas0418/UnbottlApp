@@ -33,6 +33,7 @@ import Colors from '@/constants/colors';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { BeverageCategory } from '@/types';
+import AuthGuard from '@/components/AuthGuard';
 
 type ImportCategory = BeverageCategory;
 
@@ -151,11 +152,7 @@ export default function CSVImportScreen() {
         }
       }
 
-      rows.push({
-        data,
-        errors,
-        isValid: errors.length === 0,
-      });
+      rows.push({ data, errors, isValid: errors.length === 0 });
     }
 
     return rows;
@@ -254,7 +251,6 @@ export default function CSVImportScreen() {
           dietaryTags: [],
         });
         break;
-
       case 'beer':
         await addBeer({
           name: data.name,
@@ -276,7 +272,6 @@ export default function CSVImportScreen() {
           dietaryTags: [],
         });
         break;
-
       case 'spirit':
         await addSpirit({
           name: data.name,
@@ -297,7 +292,6 @@ export default function CSVImportScreen() {
           dietaryTags: [],
         });
         break;
-
       case 'cocktail':
         await addCocktail({
           name: data.name,
@@ -315,7 +309,6 @@ export default function CSVImportScreen() {
           dietaryTags: [],
         });
         break;
-
       case 'non-alcoholic':
         await addNonAlcoholic({
           name: data.name,
@@ -346,514 +339,283 @@ export default function CSVImportScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <X size={24} color={Colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <FileSpreadsheet size={24} color={Colors.primary} />
-          <Text style={styles.headerTitle}>CSV Import</Text>
-        </View>
-        <View style={styles.headerRight} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select Category</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.categoryRow}>
-              {(Object.keys(categoryConfig) as ImportCategory[]).map((cat) => {
-                const cfg = categoryConfig[cat];
-                const isSelected = selectedCategory === cat;
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.categoryChip,
-                      isSelected && { backgroundColor: cfg.color },
-                    ]}
-                    onPress={() => {
-                      setSelectedCategory(cat);
-                      setParsedData([]);
-                      setImportResult(null);
-                    }}
-                  >
-                    {React.cloneElement(cfg.icon as React.ReactElement<{ color: string }>, {
-                      color: isSelected ? Colors.white : cfg.color,
-                    })}
-                    <Text style={[
-                      styles.categoryChipText,
-                      isSelected && styles.categoryChipTextSelected,
-                    ]}>
-                      {cfg.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </ScrollView>
-        </View>
-
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.templateHeader}
-            onPress={() => setShowTemplate(!showTemplate)}
-          >
-            <Text style={styles.sectionTitle}>CSV Template</Text>
-            {showTemplate ? (
-              <ChevronUp size={20} color={Colors.textSecondary} />
-            ) : (
-              <ChevronDown size={20} color={Colors.textSecondary} />
-            )}
+    <AuthGuard requiredUserType="restaurant_owner">
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <X size={24} color={Colors.text} />
           </TouchableOpacity>
-          
-          {showTemplate && (
-            <View style={styles.templateContainer}>
-              <View style={styles.templateInfo}>
-                <Text style={styles.templateLabel}>Required fields:</Text>
-                <Text style={styles.templateFields}>
-                  {config.requiredFields.join(', ')}
-                </Text>
-                <Text style={[styles.templateLabel, { marginTop: 8 }]}>Optional fields:</Text>
-                <Text style={styles.templateFields}>
-                  {config.optionalFields.join(', ')}
-                </Text>
-                <Text style={[styles.templateLabel, { marginTop: 8 }]}>Note:</Text>
-                <Text style={styles.templateFields}>
-                  Use | to separate multiple values (e.g., "Beef|Lamb|Cheese")
-                </Text>
-              </View>
-              <View style={styles.templateBox}>
-                <ScrollView horizontal>
-                  <Text style={styles.templateText} selectable>
-                    {config.template}
-                  </Text>
-                </ScrollView>
-              </View>
-              <TouchableOpacity style={styles.copyButton} onPress={handleCopyTemplate}>
-                <Copy size={16} color={Colors.primary} />
-                <Text style={styles.copyButtonText}>Copy Template</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.headerCenter}>
+            <FileSpreadsheet size={24} color={Colors.primary} />
+            <Text style={styles.headerTitle}>CSV Import</Text>
+          </View>
+          <View style={styles.headerRight} />
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Paste CSV Data</Text>
-            {csvText.length > 0 && (
-              <TouchableOpacity onPress={handleClearData}>
-                <Trash2 size={18} color={Colors.error} />
-              </TouchableOpacity>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Select Category</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.categoryRow}>
+                {(Object.keys(categoryConfig) as ImportCategory[]).map((cat) => {
+                  const cfg = categoryConfig[cat];
+                  const isSelected = selectedCategory === cat;
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.categoryChip,
+                        isSelected && { backgroundColor: cfg.color },
+                      ]}
+                      onPress={() => {
+                        setSelectedCategory(cat);
+                        setParsedData([]);
+                        setImportResult(null);
+                      }}
+                    >
+                      {React.cloneElement(cfg.icon as React.ReactElement<{ color: string }>, {
+                        color: isSelected ? Colors.white : cfg.color,
+                      })}
+                      <Text style={[
+                        styles.categoryChipText,
+                        isSelected && styles.categoryChipTextSelected,
+                      ]}>
+                        {cfg.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.templateHeader}
+              onPress={() => setShowTemplate(!showTemplate)}
+            >
+              <Text style={styles.sectionTitle}>CSV Template</Text>
+              {showTemplate ? (
+                <ChevronUp size={20} color={Colors.textSecondary} />
+              ) : (
+                <ChevronDown size={20} color={Colors.textSecondary} />
+              )}
+            </TouchableOpacity>
+
+            {showTemplate && (
+              <View style={styles.templateContainer}>
+                <View style={styles.templateInfo}>
+                  <Text style={styles.templateLabel}>Required fields:</Text>
+                  <Text style={styles.templateFields}>
+                    {config.requiredFields.join(', ')}
+                  </Text>
+                  <Text style={[styles.templateLabel, { marginTop: 8 }]}>Optional fields:</Text>
+                  <Text style={styles.templateFields}>
+                    {config.optionalFields.join(', ')}
+                  </Text>
+                  <Text style={[styles.templateLabel, { marginTop: 8 }]}>Note:</Text>
+                  <Text style={styles.templateFields}>
+                    Use | to separate multiple values (e.g., "Beef|Lamb|Cheese")
+                  </Text>
+                </View>
+                <View style={styles.templateBox}>
+                  <ScrollView horizontal>
+                    <Text style={styles.templateText} selectable>
+                      {config.template}
+                    </Text>
+                  </ScrollView>
+                </View>
+                <TouchableOpacity style={styles.copyTemplateButton} onPress={handleCopyTemplate}>
+                  <Copy size={16} color={Colors.primary} />
+                  <Text style={styles.copyButtonText}>Copy Template</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
-          <TextInput
-            style={styles.textArea}
-            multiline
-            numberOfLines={8}
-            placeholder={`Paste your ${config.label.toLowerCase()} CSV data here...`}
-            placeholderTextColor={Colors.textMuted}
-            value={csvText}
-            onChangeText={setCsvText}
-            textAlignVertical="top"
-          />
-          <TouchableOpacity
-            style={[styles.parseButton, !csvText.trim() && styles.parseButtonDisabled]}
-            onPress={handleParse}
-            disabled={!csvText.trim()}
-          >
-            <Text style={styles.parseButtonText}>Parse CSV</Text>
-          </TouchableOpacity>
-        </View>
 
-        {parsedData.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preview ({parsedData.length} rows)</Text>
-            
-            <View style={styles.statsRow}>
-              <View style={[styles.statBadge, styles.statBadgeValid]}>
-                <Check size={14} color="#16A34A" />
-                <Text style={styles.statBadgeTextValid}>{validCount} valid</Text>
-              </View>
-              {invalidCount > 0 && (
-                <View style={[styles.statBadge, styles.statBadgeInvalid]}>
-                  <AlertCircle size={14} color={Colors.error} />
-                  <Text style={styles.statBadgeTextInvalid}>{invalidCount} invalid</Text>
-                </View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Paste CSV Data</Text>
+              {csvText.length > 0 && (
+                <TouchableOpacity onPress={handleClearData}>
+                  <Trash2 size={18} color={Colors.error} />
+                </TouchableOpacity>
               )}
             </View>
+            <TextInput
+              style={styles.textArea}
+              multiline
+              numberOfLines={8}
+              placeholder={`Paste your ${config.label.toLowerCase()} CSV data here...`}
+              placeholderTextColor={Colors.textMuted}
+              value={csvText}
+              onChangeText={setCsvText}
+              textAlignVertical="top"
+            />
+            <TouchableOpacity
+              style={[styles.parseButton, !csvText.trim() && styles.parseButtonDisabled]}
+              onPress={handleParse}
+              disabled={!csvText.trim()}
+            >
+              <Text style={styles.parseButtonText}>Parse CSV</Text>
+            </TouchableOpacity>
+          </View>
 
-            <View style={styles.previewList}>
-              {parsedData.slice(0, 10).map((row, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.previewItem,
-                    !row.isValid && styles.previewItemInvalid,
-                  ]}
-                >
-                  <View style={styles.previewItemHeader}>
-                    <Text style={styles.previewItemName} numberOfLines={1}>
-                      {row.data.name || 'Unnamed'}
-                    </Text>
-                    {row.isValid ? (
-                      <Check size={16} color="#16A34A" />
-                    ) : (
-                      <AlertCircle size={16} color={Colors.error} />
+          {parsedData.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Preview ({parsedData.length} rows)</Text>
+              <View style={styles.statsRow}>
+                <View style={[styles.statBadge, styles.statBadgeValid]}>
+                  <Check size={14} color="#16A34A" />
+                  <Text style={styles.statBadgeTextValid}>{validCount} valid</Text>
+                </View>
+                {invalidCount > 0 && (
+                  <View style={[styles.statBadge, styles.statBadgeInvalid]}>
+                    <AlertCircle size={14} color={Colors.error} />
+                    <Text style={styles.statBadgeTextInvalid}>{invalidCount} invalid</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.previewList}>
+                {parsedData.slice(0, 10).map((row, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.previewItem,
+                      !row.isValid && styles.previewItemInvalid,
+                    ]}
+                  >
+                    <View style={styles.previewItemHeader}>
+                      <Text style={styles.previewItemName} numberOfLines={1}>
+                        {row.data.name || 'Unnamed'}
+                      </Text>
+                      {row.isValid ? (
+                        <Check size={16} color="#16A34A" />
+                      ) : (
+                        <AlertCircle size={16} color={Colors.error} />
+                      )}
+                    </View>
+                    {row.data.type && (
+                      <Text style={styles.previewItemType}>{row.data.type}</Text>
+                    )}
+                    {row.errors.length > 0 && (
+                      <View style={styles.errorList}>
+                        {row.errors.map((error, errIndex) => (
+                          <Text key={errIndex} style={styles.errorText}>
+                            • {error}
+                          </Text>
+                        ))}
+                      </View>
                     )}
                   </View>
-                  {row.data.type && (
-                    <Text style={styles.previewItemType}>{row.data.type}</Text>
-                  )}
-                  {row.errors.length > 0 && (
-                    <View style={styles.errorList}>
-                      {row.errors.map((error, errIndex) => (
-                        <Text key={errIndex} style={styles.errorText}>
-                          • {error}
-                        </Text>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              ))}
-              {parsedData.length > 10 && (
-                <Text style={styles.moreText}>
-                  +{parsedData.length - 10} more items...
-                </Text>
-              )}
+                ))}
+                {parsedData.length > 10 && (
+                  <Text style={styles.moreText}>
+                    +{parsedData.length - 10} more items...
+                  </Text>
+                )}
+              </View>
             </View>
+          )}
+
+          {importResult && (
+            <View style={styles.section}>
+              <View style={[styles.resultBox, importResult.failed > 0 && styles.resultBoxWarning]}>
+                <Text style={styles.resultTitle}>
+                  Import {importResult.failed === 0 ? 'Successful' : 'Completed with Errors'}
+                </Text>
+                <Text style={styles.resultText}>
+                  {importResult.success} items imported successfully
+                </Text>
+                {importResult.failed > 0 && (
+                  <Text style={styles.resultTextError}>
+                    {importResult.failed} items failed
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
+
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+
+        {parsedData.length > 0 && validCount > 0 && !importResult && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.importButton, isImporting && styles.importButtonDisabled]}
+              onPress={handleImport}
+              disabled={isImporting}
+            >
+              {isImporting ? (
+                <ActivityIndicator color={Colors.white} size="small" />
+              ) : (
+                <>
+                  <Upload size={20} color={Colors.white} />
+                  <Text style={styles.importButtonText}>
+                    Import {validCount} {config.label}{validCount !== 1 ? 's' : ''}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
           </View>
         )}
-
-        {importResult && (
-          <View style={styles.section}>
-            <View style={[styles.resultBox, importResult.failed > 0 && styles.resultBoxWarning]}>
-              <Text style={styles.resultTitle}>
-                Import {importResult.failed === 0 ? 'Successful' : 'Completed with Errors'}
-              </Text>
-              <Text style={styles.resultText}>
-                {importResult.success} items imported successfully
-              </Text>
-              {importResult.failed > 0 && (
-                <Text style={styles.resultTextError}>
-                  {importResult.failed} items failed
-                </Text>
-              )}
-            </View>
-          </View>
-        )}
-
-        <View style={styles.bottomPadding} />
-      </ScrollView>
-
-      {parsedData.length > 0 && validCount > 0 && !importResult && (
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.importButton, isImporting && styles.importButtonDisabled]}
-            onPress={handleImport}
-            disabled={isImporting}
-          >
-            {isImporting ? (
-              <ActivityIndicator color={Colors.white} size="small" />
-            ) : (
-              <>
-                <Upload size={20} color={Colors.white} />
-                <Text style={styles.importButtonText}>
-                  Import {validCount} {config.label}{validCount !== 1 ? 's' : ''}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </AuthGuard>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCenter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  headerRight: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 12,
-  },
-  categoryRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 8,
-  },
-  categoryChipText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: Colors.text,
-  },
-  categoryChipTextSelected: {
-    color: Colors.white,
-  },
-  templateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  templateContainer: {
-    marginTop: 4,
-  },
-  templateInfo: {
-    backgroundColor: Colors.surface,
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-  templateLabel: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  templateFields: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  templateBox: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-  },
-  templateText: {
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    fontSize: 11,
-    color: '#A9DC76',
-    lineHeight: 18,
-  },
-  copyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: Colors.primary + '15',
-    gap: 6,
-  },
-  copyButtonText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: Colors.primary,
-  },
-  textArea: {
-    backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 14,
-    minHeight: 160,
-    fontSize: 13,
-    color: Colors.text,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  parseButton: {
-    backgroundColor: Colors.accent,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  parseButtonDisabled: {
-    opacity: 0.5,
-  },
-  parseButtonText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.white,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  statBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
-  },
-  statBadgeValid: {
-    backgroundColor: '#DCFCE7',
-  },
-  statBadgeInvalid: {
-    backgroundColor: '#FEE2E2',
-  },
-  statBadgeTextValid: {
-    fontSize: 13,
-    fontWeight: '500' as const,
-    color: '#16A34A',
-  },
-  statBadgeTextInvalid: {
-    fontSize: 13,
-    fontWeight: '500' as const,
-    color: Colors.error,
-  },
-  previewList: {
-    gap: 10,
-  },
-  previewItem: {
-    backgroundColor: Colors.surface,
-    padding: 14,
-    borderRadius: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: '#16A34A',
-  },
-  previewItemInvalid: {
-    borderLeftColor: Colors.error,
-    backgroundColor: '#FEF2F2',
-  },
-  previewItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  previewItemName: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    flex: 1,
-    marginRight: 8,
-  },
-  previewItemType: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 4,
-    textTransform: 'capitalize',
-  },
-  errorList: {
-    marginTop: 8,
-    padding: 8,
-    backgroundColor: '#FEE2E2',
-    borderRadius: 6,
-  },
-  errorText: {
-    fontSize: 12,
-    color: Colors.error,
-    lineHeight: 18,
-  },
-  moreText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    paddingVertical: 8,
-  },
-  resultBox: {
-    backgroundColor: '#DCFCE7',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  resultBoxWarning: {
-    backgroundColor: '#FEF3C7',
-  },
-  resultTitle: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  resultText: {
-    fontSize: 14,
-    color: '#16A34A',
-  },
-  resultTextError: {
-    fontSize: 14,
-    color: Colors.error,
-    marginTop: 2,
-  },
-  bottomPadding: {
-    height: 100,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  importButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  importButtonDisabled: {
-    opacity: 0.7,
-  },
-  importButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.white,
-  },
+  container: { flex: 1, backgroundColor: Colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  closeButton: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerTitle: { fontSize: 18, fontWeight: '600' as const, color: Colors.text },
+  headerRight: { width: 40 },
+  content: { flex: 1 },
+  section: { padding: 20, borderBottomWidth: 1, borderBottomColor: Colors.border },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '600' as const, color: Colors.text, marginBottom: 12 },
+  categoryRow: { flexDirection: 'row', gap: 10 },
+  categoryChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border, gap: 8 },
+  categoryChipText: { fontSize: 14, fontWeight: '500' as const, color: Colors.text },
+  categoryChipTextSelected: { color: Colors.white },
+  templateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  templateContainer: { marginTop: 4 },
+  templateInfo: { backgroundColor: Colors.surface, padding: 12, borderRadius: 10, marginBottom: 12 },
+  templateLabel: { fontSize: 13, fontWeight: '600' as const, color: Colors.text },
+  templateFields: { fontSize: 12, color: Colors.textSecondary, marginTop: 2, lineHeight: 18 },
+  templateBox: { backgroundColor: '#1E1E1E', borderRadius: 10, padding: 12, marginBottom: 12 },
+  templateText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11, color: '#A9DC76', lineHeight: 18 },
+  copyTemplateButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, borderRadius: 8, backgroundColor: Colors.primary + '15', gap: 6 },
+  copyButtonText: { fontSize: 14, fontWeight: '500' as const, color: Colors.primary },
+  textArea: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, minHeight: 160, fontSize: 13, color: Colors.text, borderWidth: 1, borderColor: Colors.border, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  parseButton: { backgroundColor: Colors.accent, paddingVertical: 12, borderRadius: 10, alignItems: 'center', marginTop: 12 },
+  parseButtonDisabled: { opacity: 0.5 },
+  parseButtonText: { fontSize: 15, fontWeight: '600' as const, color: Colors.white },
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  statBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, gap: 4 },
+  statBadgeValid: { backgroundColor: '#DCFCE7' },
+  statBadgeInvalid: { backgroundColor: '#FEE2E2' },
+  statBadgeTextValid: { fontSize: 13, fontWeight: '500' as const, color: '#16A34A' },
+  statBadgeTextInvalid: { fontSize: 13, fontWeight: '500' as const, color: Colors.error },
+  previewList: { gap: 10 },
+  previewItem: { backgroundColor: Colors.surface, padding: 14, borderRadius: 10, borderLeftWidth: 3, borderLeftColor: '#16A34A' },
+  previewItemInvalid: { borderLeftColor: Colors.error, backgroundColor: '#FEF2F2' },
+  previewItemHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  previewItemName: { fontSize: 14, fontWeight: '600' as const, color: Colors.text, flex: 1, marginRight: 8 },
+  previewItemType: { fontSize: 12, color: Colors.textSecondary, marginTop: 4, textTransform: 'capitalize' },
+  errorList: { marginTop: 8, padding: 8, backgroundColor: '#FEE2E2', borderRadius: 6 },
+  errorText: { fontSize: 12, color: Colors.error, lineHeight: 18 },
+  moreText: { fontSize: 13, color: Colors.textSecondary, textAlign: 'center', paddingVertical: 8 },
+  resultBox: { backgroundColor: '#DCFCE7', padding: 16, borderRadius: 12, alignItems: 'center' },
+  resultBoxWarning: { backgroundColor: '#FEF3C7' },
+  resultTitle: { fontSize: 16, fontWeight: '600' as const, color: Colors.text, marginBottom: 4 },
+  resultText: { fontSize: 14, color: '#16A34A' },
+  resultTextError: { fontSize: 14, color: Colors.error, marginTop: 2 },
+  bottomPadding: { height: 100 },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: Colors.background, borderTopWidth: 1, borderTopColor: Colors.border },
+  importButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.primary, paddingVertical: 16, borderRadius: 12, gap: 8 },
+  importButtonDisabled: { opacity: 0.7 },
+  importButtonText: { fontSize: 16, fontWeight: '600' as const, color: Colors.white },
 });

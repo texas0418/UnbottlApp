@@ -17,6 +17,7 @@ import { Building2, Mail, Phone, MapPin } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function RestaurantSetupScreen() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function RestaurantSetupScreen() {
     }
 
     setLoading(true);
+
     try {
       // Create restaurant using the function we created
       const { data, error } = await supabase.rpc('create_restaurant_with_owner', {
@@ -80,106 +82,108 @@ export default function RestaurantSetupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <AuthGuard requiredUserType="restaurant_owner">
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <Building2 size={48} color={Colors.primary} />
-            </View>
-            <Text style={styles.title}>Set Up Your Restaurant</Text>
-            <Text style={styles.subtitle}>
-              Tell us about your establishment to get started
-            </Text>
-          </View>
-
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Building2 size={20} color={Colors.textMuted} />
-              </View>
-              <TextInput
-                style={styles.input}
-                value={formData.name}
-                onChangeText={(v) => handleChange('name', v)}
-                placeholder="Restaurant Name *"
-                placeholderTextColor={Colors.textMuted}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Mail size={20} color={Colors.textMuted} />
-              </View>
-              <TextInput
-                style={styles.input}
-                value={formData.email}
-                onChangeText={(v) => handleChange('email', v)}
-                placeholder="Business Email (optional)"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <Phone size={20} color={Colors.textMuted} />
-              </View>
-              <TextInput
-                style={styles.input}
-                value={formData.phone}
-                onChangeText={(v) => handleChange('phone', v)}
-                placeholder="Phone Number (optional)"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <View style={styles.inputIcon}>
-                <MapPin size={20} color={Colors.textMuted} />
-              </View>
-              <TextInput
-                style={styles.input}
-                value={formData.address}
-                onChangeText={(v) => handleChange('address', v)}
-                placeholder="Address (optional)"
-                placeholderTextColor={Colors.textMuted}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <TouchableOpacity 
-              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color={Colors.white} />
-              ) : (
-                <Text style={styles.submitButtonText}>Create Restaurant</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.skipButton}
-            onPress={() => router.back()}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.skipText}>I'll do this later</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <View style={styles.header}>
+              <View style={styles.iconContainer}>
+                <Building2 size={48} color={Colors.primary} />
+              </View>
+              <Text style={styles.title}>Set Up Your Restaurant</Text>
+              <Text style={styles.subtitle}>
+                Tell us about your establishment to get started
+              </Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Building2 size={20} color={Colors.textMuted} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={formData.name}
+                  onChangeText={(v) => handleChange('name', v)}
+                  placeholder="Restaurant Name *"
+                  placeholderTextColor={Colors.textMuted}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Mail size={20} color={Colors.textMuted} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={formData.email}
+                  onChangeText={(v) => handleChange('email', v)}
+                  placeholder="Business Email (optional)"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <Phone size={20} color={Colors.textMuted} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={formData.phone}
+                  onChangeText={(v) => handleChange('phone', v)}
+                  placeholder="Phone Number (optional)"
+                  placeholderTextColor={Colors.textMuted}
+                  keyboardType="phone-pad"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.inputIcon}>
+                  <MapPin size={20} color={Colors.textMuted} />
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={formData.address}
+                  onChangeText={(v) => handleChange('address', v)}
+                  placeholder="Address (optional)"
+                  placeholderTextColor={Colors.textMuted}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={Colors.white} />
+                ) : (
+                  <Text style={styles.submitButtonText}>Create Restaurant</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.skipButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.skipText}>I'll do this later</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AuthGuard>
   );
 }
 
