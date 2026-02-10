@@ -17,12 +17,13 @@ import { Wine, Mail, Lock, User, Eye, EyeOff, Building2 } from 'lucide-react-nat
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, register, isLoginLoading, isRegisterLoading, loginError, registerError } = useAuth();
-  
+  const { login, register, resetPassword, isLoginLoading, isRegisterLoading, loginError, registerError } = useAuth();
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<'consumer' | 'restaurant_owner'>('consumer');
@@ -34,6 +35,43 @@ export default function LoginScreen() {
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleForgotPassword = async () => {
+    const email = formData.email.trim();
+
+    if (!email) {
+      Alert.prompt(
+        'Reset Password',
+        'Enter your email address to receive a password reset link.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Send',
+            onPress: async (inputEmail) => {
+              if (inputEmail?.trim()) {
+                const { error } = await resetPassword(inputEmail.trim());
+                if (error) {
+                  Alert.alert('Error', error.message);
+                } else {
+                  Alert.alert('Check Your Email', 'A password reset link has been sent to your email address.');
+                }
+              }
+            },
+          },
+        ],
+        'plain-text',
+        '',
+        'email-address'
+      );
+    } else {
+      const { error } = await resetPassword(email);
+      if (error) {
+        Alert.alert('Error', error.message);
+      } else {
+        Alert.alert('Check Your Email', `A password reset link has been sent to ${email}.`);
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -55,19 +93,64 @@ export default function LoginScreen() {
           name: formData.name.trim(),
           userType: userType,
         });
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
+        // For sign-up, we know the userType from the form selection
+        if (userType === 'restaurant_owner') {
+          // New restaurant owners always need to set up their restaurant
+          router.replace('/restaurant-setup');
+        } else {
+          // Consumers go to the Home tab
+          router.replace('/');
+        }
       } else {
-        await login({
+        // Login — we need to determine the user type from their profile
+        const user = await login({
           email: formData.email.trim(),
           password: formData.password,
         });
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
+        // Fetch the user's profile to check their type
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.user_type === 'restaurant_owner') {
+          // Check if they already have a restaurant set up
+          const { data: restaurants } = await supabase
+            .from('restaurants')
+            .select('id')
+            .eq('owner_id', user.id)
+            .limit(1);
+
+          if (restaurants && restaurants.length > 0) {
+            // Restaurant already set up — go to Profile/Settings tab
+            router.replace('/(tabs)/settings');
+          } else {
+            // No restaurant yet — go to setup
+            router.replace('/restaurant-setup');
+          }
+        } else {
+          // Consumer — go to Home tab
+          router.replace('/');
+        }
       }
-      
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      router.replace('/');
     } catch (error) {
-      Alert.alert('Error', isSignUp ? registerError || 'Registration failed' : loginError || 'Login failed');
+      Alert.alert(
+        'Error',
+        isSignUp
+          ? registerError || 'Registration failed'
+          : loginError || 'Login failed'
+      );
     }
   };
 
@@ -77,13 +160,14 @@ export default function LoginScreen() {
         colors={[Colors.primary + '15', Colors.background]}
         style={styles.gradient}
       />
+
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
-clear          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
@@ -105,7 +189,10 @@ clear          showsVerticalScrollIndicator={false}
                 ]}
                 onPress={() => setUserType('consumer')}
               >
-                <User size={24} color={userType === 'consumer' ? Colors.primary : Colors.textMuted} />
+                <User
+                  size={24}
+                  color={userType === 'consumer' ? Colors.primary : Colors.textMuted}
+                />
                 <Text style={[
                   styles.userTypeText,
                   userType === 'consumer' && styles.userTypeTextActive,
@@ -120,7 +207,10 @@ clear          showsVerticalScrollIndicator={false}
                 ]}
                 onPress={() => setUserType('restaurant_owner')}
               >
-                <Building2 size={24} color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted} />
+                <Building2
+                  size={24}
+                  color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted}
+                />
                 <Text style={[
                   styles.userTypeText,
                   userType === 'restaurant_owner' && styles.userTypeTextActive,
@@ -176,7 +266,7 @@ clear          showsVerticalScrollIndicator={false}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.eyeButton}
                 onPress={() => setShowPassword(!showPassword)}
               >
@@ -189,7 +279,10 @@ clear          showsVerticalScrollIndicator={false}
             </View>
 
             {!isSignUp && (
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={handleForgotPassword}
+              >
                 <Text style={styles.forgotPasswordText}>Forgot password?</Text>
               </TouchableOpacity>
             )}
@@ -216,7 +309,7 @@ clear          showsVerticalScrollIndicator={false}
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.skipButton}
             onPress={() => router.replace('/')}
           >

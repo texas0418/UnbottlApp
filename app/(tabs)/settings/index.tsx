@@ -8,9 +8,9 @@ import {
   Alert,
   Platform,
   Switch,
+  Linking,
 } from 'react-native';
-import {
-Image } from 'expo-image';
+import { Image } from 'expo-image';
 import {
   Users,
   Building2,
@@ -38,21 +38,19 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import {
-useRestaurant } from '@/contexts/RestaurantContext';
-import {
-useAuth } from '@/contexts/AuthContext';
-import {
-useWishlist } from '@/contexts/WishlistContext';
-import {
-useNotifications } from '@/contexts/NotificationsContext';
-import {
-useRouter } from 'expo-router';
+import { useRestaurant } from '@/contexts/RestaurantContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { useNotifications } from '@/contexts/NotificationsContext';
+import { useRouter } from 'expo-router';
+
+const PRIVACY_POLICY_URL = 'https://unbottl.com/privacy-policy.html';
+const TERMS_OF_SERVICE_URL = 'https://unbottl.com/terms-of-service.html';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { restaurant, needsSetup } = useRestaurant();
-  const { user, logout, userType } = useAuth();
+  const { user, isAuthenticated, logout, userType } = useAuth();
   const { wishlistCount } = useWishlist();
   const { preferences, unreadCount, updatePreferences } = useNotifications();
   const [darkMode, setDarkMode] = useState(false);
@@ -63,11 +61,7 @@ export default function SettingsScreen() {
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
-          style: 'destructive',
-          onPress: () => logout()
-        },
+        { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
       ]
     );
   };
@@ -79,38 +73,53 @@ export default function SettingsScreen() {
     router.push(route as any);
   };
 
+  const handleOpenURL = async (url: string) => {
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Unable to open this link.');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong opening this link.');
+    }
+  };
+
   const preferencesItems = [
-    { 
-      icon: Moon, 
-      label: 'Dark Mode', 
+    {
+      icon: Moon,
+      label: 'Dark Mode',
       description: 'Switch to dark theme',
       toggle: true,
-      value: darkMode, onPress: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
+      value: darkMode,
+      onPress: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
       onToggle: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
     },
-    { 
-      icon: Bell, 
-      label: 'Notifications', 
+    {
+      icon: Bell,
+      label: 'Notifications',
       description: unreadCount > 0 ? `${unreadCount} unread` : 'Push notifications',
       chevron: true,
       route: '/notifications',
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
-    { 
-      icon: Globe, 
-      label: 'Language', 
+    {
+      icon: Globe,
+      label: 'Language',
       description: 'English',
-      chevron: true, onPress: () => Alert.alert('Language', 'More languages coming soon!'),
+      chevron: true,
+      onPress: () => Alert.alert('Language', 'More languages coming soon!'),
     },
   ];
 
   const accountItems = [
     { icon: User, label: 'Profile', description: 'Edit your profile', chevron: true, route: '/login' },
     { icon: Heart, label: 'Favorites', description: 'Your saved items', chevron: true },
-    { 
-      icon: Bookmark, 
-      label: 'Wishlist', 
-      description: `${wishlistCount} items to try`, 
+    {
+      icon: Bookmark,
+      label: 'Wishlist',
+      description: `${wishlistCount} items to try`,
       chevron: true,
       route: '/wishlist',
       badge: wishlistCount > 0 ? wishlistCount : undefined,
@@ -119,80 +128,109 @@ export default function SettingsScreen() {
   ];
 
   const managementItems = [
-    { 
-      icon: Plus, 
-      label: 'Add Beverage', 
-      description: 'Add wines, beers, cocktails', 
-      route: '/beverage/add',
-      color: Colors.primary,
-    },
-    { 
-      icon: Package, 
-      label: 'Inventory', 
-      description: 'Manage stock & availability', 
-      route: '/(tabs)/catalog',
-      color: '#3B82F6',
-    },
-    { 
-      icon: QrCode, 
-      label: 'QR Menu', 
-      description: 'Generate customer QR codes', 
-      route: '/qr-menu',
-      color: Colors.secondary,
-    },
-    { 
-      icon: FileSpreadsheet, 
-      label: 'Import CSV', 
-      description: 'Bulk import from spreadsheet', 
-      route: '/csv-import',
-      color: '#10B981',
-    },
-    { 
-      icon: ScanBarcode, 
-      label: 'Scan Labels', 
-      description: 'Scan wine/beer labels to add', 
-      route: '/wine-scanner',
-      color: '#8B5CF6',
-    },
-    { 
-      icon: BarChart3, 
-      label: 'Analytics', 
-      description: 'View menu performance', 
-      route: '/qr-menu',
-      color: '#F59E0B',
-    },
-    { 
-      icon: Building2, 
-      label: 'Restaurant Details', 
-      description: 'Update restaurant info', 
-      route: '/qr-menu',
-      color: '#EC4899',
-    },
-    { 
-      icon: Zap, 
-      label: 'Subscription', 
-      description: 'Manage your plan', 
-      route: '/pricing', 
-      color: '#F59E0B', 
-    },
-    { 
-      icon: Users, 
-      label: 'Team', 
-      description: 'Manage staff access', 
-      route: '/staff-management', 
-      color: '#06B6D4', 
-    },
+    { icon: Plus, label: 'Add Beverage', description: 'Add wines, beers, cocktails', route: '/beverage/add', color: Colors.primary },
+    { icon: Package, label: 'Inventory', description: 'Manage stock & availability', route: '/(tabs)/catalog', color: '#3B82F6' },
+    { icon: QrCode, label: 'QR Menu', description: 'Generate customer QR codes', route: '/qr-menu', color: Colors.secondary },
+    { icon: FileSpreadsheet, label: 'Import CSV', description: 'Bulk import from spreadsheet', route: '/csv-import', color: '#10B981' },
+    { icon: ScanBarcode, label: 'Scan Labels', description: 'Scan wine/beer labels to add', route: '/wine-scanner', color: '#8B5CF6' },
+    { icon: BarChart3, label: 'Analytics', description: 'View menu performance', route: '/qr-menu', color: '#F59E0B' },
+    { icon: Building2, label: 'Restaurant Details', description: 'Update restaurant info', route: '/qr-menu', color: '#EC4899' },
+    { icon: Zap, label: 'Subscription', description: 'Manage your plan', route: '/pricing', color: '#F59E0B' },
+    { icon: Users, label: 'Team', description: 'Manage staff access', route: '/staff-management', color: '#06B6D4' },
   ];
 
   const supportItems = [
-    { icon: HelpCircle, label: 'Help & Support', description: 'Get help', chevron: true },
-    { icon: FileText, label: 'Terms of Service', description: 'Legal information', chevron: true },
-    { icon: Shield, label: 'Privacy Policy', description: 'Your data & privacy', chevron: true },
+    {
+      icon: HelpCircle,
+      label: 'Help & Support',
+      description: 'Get help',
+      chevron: true,
+      onPress: () => Alert.alert('Help & Support', 'Need help? Email us at support@unbottl.com'),
+    },
+    {
+      icon: FileText,
+      label: 'Terms of Service',
+      description: 'Legal information',
+      chevron: true,
+      onPress: () => handleOpenURL(TERMS_OF_SERVICE_URL),
+    },
+    {
+      icon: Shield,
+      label: 'Privacy Policy',
+      description: 'Your data & privacy',
+      chevron: true,
+      onPress: () => handleOpenURL(PRIVACY_POLICY_URL),
+    },
   ];
 
+  // ──────────────────────────────────────────────
+  // Guest view: sign-in card + support section only
+  // ──────────────────────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Sign-in card */}
+        <View style={styles.guestCardContainer}>
+          <View style={styles.guestCard}>
+            <View style={styles.guestLogoContainer}>
+              <Wine size={48} color={Colors.primary} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.guestTitle}>Welcome to Unbottl</Text>
+            <Text style={styles.guestSubtitle}>
+              Sign in to save favorites, track your tastings, and get personalized recommendations.
+            </Text>
+            <TouchableOpacity
+              style={styles.guestSignInButton}
+              onPress={() => router.push('/login')}
+            >
+              <Text style={styles.guestSignInText}>Sign In</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.guestCreateButton}
+              onPress={() => router.push('/login')}
+            >
+              <Text style={styles.guestCreateText}>Create Account</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Support section — always visible for all users */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Support</Text>
+          <View style={styles.menuCard}>
+            {supportItems.map((item, index) => (
+              <React.Fragment key={item.label}>
+                <TouchableOpacity style={styles.menuItem} onPress={item.onPress}>
+                  <View style={[styles.menuIcon, { backgroundColor: Colors.textMuted + '15' }]}>
+                    <item.icon size={18} color={Colors.textMuted} />
+                  </View>
+                  <View style={styles.menuContent}>
+                    <Text style={styles.menuLabel}>{item.label}</Text>
+                    <Text style={styles.menuDescription}>{item.description}</Text>
+                  </View>
+                  {item.chevron && <ChevronRight size={18} color={Colors.textMuted} />}
+                </TouchableOpacity>
+                {index < supportItems.length - 1 && <View style={styles.menuDivider} />}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        <Text style={styles.version}>Unbottl v1.0.0</Text>
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+    );
+  }
+
+  // ──────────────────────────────────────────────
+  // Authenticated view: full settings
+  // ──────────────────────────────────────────────
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <TouchableOpacity style={styles.profileSection} onPress={() => !user && router.push('/login')}>
+      <TouchableOpacity
+        style={styles.profileSection}
+        onPress={() => !user && router.push('/login')}
+      >
         <View style={styles.avatarContainer}>
           <View style={styles.avatarPlaceholder}>
             <User size={32} color={Colors.primary} />
@@ -207,9 +245,13 @@ export default function SettingsScreen() {
         <View style={styles.menuCard}>
           {preferencesItems.map((item, index) => (
             <React.Fragment key={item.label}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => (item as any).onPress ? (item as any).onPress() : (item as any).route && router.push((item as any).route)}
+                onPress={() =>
+                  (item as any).onPress
+                    ? (item as any).onPress()
+                    : (item as any).route && router.push((item as any).route)
+                }
                 disabled={!!(item as any).toggle}
               >
                 <View style={[styles.menuIcon, { backgroundColor: Colors.primary + '12' }]}>
@@ -246,9 +288,13 @@ export default function SettingsScreen() {
         <View style={styles.menuCard}>
           {accountItems.map((item, index) => (
             <React.Fragment key={item.label}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => (item as any).onPress ? (item as any).onPress() : (item as any).route && router.push((item as any).route)}
+                onPress={() =>
+                  (item as any).onPress
+                    ? (item as any).onPress()
+                    : (item as any).route && router.push((item as any).route)
+                }
               >
                 <View style={[styles.menuIcon, { backgroundColor: Colors.secondary + '15' }]}>
                   <item.icon size={18} color={Colors.secondary} />
@@ -270,61 +316,77 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {userType === 'restaurant_owner' && (<View style={styles.section}>
-        {needsSetup && (
-          <TouchableOpacity style={styles.setupBanner} onPress={() => router.push('/restaurant-setup')}>
-            <Building2 size={24} color={Colors.primary} />
-            <View style={styles.setupBannerContent}>
-              <Text style={styles.setupBannerTitle}>Set Up Your Restaurant</Text>
-              <Text style={styles.setupBannerDesc}>Create your restaurant to start managing inventory</Text>
-            </View>
-            <ChevronRight size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        )}
-        {restaurant?.is_founding_member && restaurant?.founding_member_expires_at && (
-          <View style={styles.founderBadge}>
-            <View style={styles.founderBadgeIcon}>
-              <Star size={20} color="#F59E0B" fill="#F59E0B" />
-            </View>
-            <View style={styles.founderBadgeContent}>
-              <Text style={styles.founderBadgeTitle}>Founding Member #{restaurant.founding_member_number}</Text>
-              <Text style={styles.founderBadgeDesc}>
-                Pro features free until {new Date(restaurant.founding_member_expires_at).toLocaleDateString()}
-              </Text>
-            </View>
-          </View>
-        )}
-        <View style={styles.managementHeader}>
-          <View style={styles.managementTitleRow}>
-            <Settings size={16} color={Colors.textMuted} />
-            <Text style={styles.sectionTitle}>Restaurant Management</Text>
-          </View>
-          <Text style={styles.managementSubtitle}>For owners & managers only</Text>
-        </View>
-        <View style={styles.managementGrid}>
-          {managementItems.map((item) => (
+      {userType === 'restaurant_owner' && (
+        <View style={styles.section}>
+          {needsSetup && (
             <TouchableOpacity
-              key={item.label}
-              style={styles.managementCard}
-              onPress={() => handleManagementOption(item.route)}
-              activeOpacity={0.7}
+              style={styles.setupBanner}
+              onPress={() => router.push('/restaurant-setup')}
             >
-              <View style={[styles.managementIcon, { backgroundColor: item.color + '15' }]}>
-                <item.icon size={22} color={item.color} />
+              <Building2 size={24} color={Colors.primary} />
+              <View style={styles.setupBannerContent}>
+                <Text style={styles.setupBannerTitle}>Set Up Your Restaurant</Text>
+                <Text style={styles.setupBannerDesc}>
+                  Create your restaurant to start managing inventory
+                </Text>
               </View>
-              <Text style={styles.managementLabel}>{item.label}</Text>
-              <Text style={styles.managementDesc} numberOfLines={1}>{item.description}</Text>
+              <ChevronRight size={20} color={Colors.primary} />
             </TouchableOpacity>
-          ))}
+          )}
+
+          {restaurant?.is_founding_member &&
+            restaurant?.founding_member_expires_at && (
+              <View style={styles.founderBadge}>
+                <View style={styles.founderBadgeIcon}>
+                  <Star size={20} color="#F59E0B" fill="#F59E0B" />
+                </View>
+                <View style={styles.founderBadgeContent}>
+                  <Text style={styles.founderBadgeTitle}>
+                    Founding Member #{restaurant.founding_member_number}
+                  </Text>
+                  <Text style={styles.founderBadgeDesc}>
+                    Pro features free until{' '}
+                    {new Date(restaurant.founding_member_expires_at).toLocaleDateString()}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+          <View style={styles.managementHeader}>
+            <View style={styles.managementTitleRow}>
+              <Settings size={16} color={Colors.textMuted} />
+              <Text style={styles.sectionTitle}>Restaurant Management</Text>
+            </View>
+            <Text style={styles.managementSubtitle}>For owners & managers only</Text>
+          </View>
+
+          <View style={styles.managementGrid}>
+            {managementItems.map((item) => (
+              <TouchableOpacity
+                key={item.label}
+                style={styles.managementCard}
+                onPress={() => handleManagementOption(item.route)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.managementIcon, { backgroundColor: item.color + '15' }]}>
+                  <item.icon size={22} color={item.color} />
+                </View>
+                <Text style={styles.managementLabel}>{item.label}</Text>
+                <Text style={styles.managementDesc} numberOfLines={1}>
+                  {item.description}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>)}
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Support</Text>
         <View style={styles.menuCard}>
           {supportItems.map((item, index) => (
             <React.Fragment key={item.label}>
-              <TouchableOpacity style={styles.menuItem}>
+              <TouchableOpacity style={styles.menuItem} onPress={item.onPress}>
                 <View style={[styles.menuIcon, { backgroundColor: Colors.textMuted + '15' }]}>
                   <item.icon size={18} color={Colors.textMuted} />
                 </View>
@@ -348,7 +410,6 @@ export default function SettingsScreen() {
       </View>
 
       <Text style={styles.version}>Unbottl v1.0.0</Text>
-
       <View style={styles.bottomPadding} />
     </ScrollView>
   );
@@ -359,6 +420,75 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  // ── Guest card styles ──
+  guestCardContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 12,
+  },
+  guestCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    shadowColor: Colors.cardShadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  guestLogoContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    backgroundColor: Colors.primary + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  guestTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  guestSubtitle: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+    paddingHorizontal: 8,
+  },
+  guestSignInButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 12,
+  },
+  guestSignInText: {
+    color: Colors.white,
+    fontSize: 17,
+    fontWeight: '600' as const,
+  },
+  guestCreateButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    width: '100%',
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  guestCreateText: {
+    color: Colors.primary,
+    fontSize: 17,
+    fontWeight: '600' as const,
+  },
+  // ── Authenticated styles ──
   profileSection: {
     alignItems: 'center',
     paddingVertical: 24,
