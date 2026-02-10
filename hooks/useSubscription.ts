@@ -1,10 +1,13 @@
 // hooks/useSubscription.ts
-// Add to your UnbottlApp project
+// Updated: Replaced YOUR_BACKEND_URL with actual Supabase Edge Function URL
 
 import { useState, useEffect, useCallback } from 'react';
 import { Alert, Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { STRIPE_CONFIG } from '../config/stripe-config';
+
+// Supabase Edge Function base URL
+const FUNCTIONS_URL = 'https://desocidpjwgxbuydwvwk.supabase.co/functions/v1';
 
 export interface Subscription {
   id: string;
@@ -77,7 +80,7 @@ export function useSubscription(restaurantId: string | null) {
       // Determine limits based on plan
       const planType = subData?.plan_type || 'free';
       const plan = STRIPE_CONFIG.plans[planType as keyof typeof STRIPE_CONFIG.plans];
-      
+
       let locationLimit = 1;
       if (subData) {
         locationLimit = subData.location_limit + (subData.addon_locations || 0);
@@ -108,7 +111,6 @@ export function useSubscription(restaurantId: string | null) {
         planType,
         isActive: subData?.status === 'active' || planType === 'free',
       });
-
     } catch (err: any) {
       console.error('Error fetching subscription:', err);
       setError(err.message);
@@ -153,10 +155,15 @@ export function useSubscription(restaurantId: string | null) {
     }
 
     try {
-      // Call your backend to create a Stripe Checkout session
-      const response = await fetch('YOUR_BACKEND_URL/create-checkout-session', {
+      // Get the current user's session token for auth
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(`${FUNCTIONS_URL}/create-checkout-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
         body: JSON.stringify({
           restaurant_id: restaurantId,
           plan: planKey,
@@ -190,18 +197,21 @@ export function useSubscription(restaurantId: string | null) {
     }
 
     try {
-      const response = await fetch('YOUR_BACKEND_URL/create-portal-session', {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(`${FUNCTIONS_URL}/create-portal-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
         body: JSON.stringify({
           customer_id: subscription.stripe_customer_id,
         }),
       });
 
       const { url, error } = await response.json();
-
       if (error) throw new Error(error);
-
       await Linking.openURL(url);
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to open billing portal');
@@ -225,7 +235,7 @@ export function useCanAdd(restaurantId: string | null) {
 
   const checkCanAddBeverage = useCallback(() => {
     if (loading || !limits) return true; // Allow during loading
-    
+
     if (!limits.canAddBeverage) {
       Alert.alert(
         'Limit Reached',
@@ -242,7 +252,7 @@ export function useCanAdd(restaurantId: string | null) {
 
   const checkCanAddLocation = useCallback(() => {
     if (loading || !limits) return true;
-    
+
     if (!limits.canAddLocation) {
       Alert.alert(
         'Location Limit Reached',

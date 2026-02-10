@@ -1,163 +1,174 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+// supabase/functions/stripe-webhook/index.ts
+// Deploy with: supabase functions deploy stripe-webhook --no-verify-jwt
+//
+// After deploying, add the webhook URL in Stripe Dashboard → Developers → Webhooks:
+//   https://desocidpjwgxbuydwvwk.supabase.co/functions/v1/stripe-webhook
+//
+// Events to listen for:
+//   - checkout.session.completed
+//   - customer.subscription.updated
+//   - customer.subscription.deleted
+//   - invoice.payment_succeeded
+//   - invoice.payment_failed
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@13.6.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
+  apiVersion: "2023-10-16",
+});
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+const WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
+
+// Map plan names to location limits
+const PLAN_LIMITS: Record<string, number> = {
+  starter: 1,
+  pro: 5,
+  business: 10,
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  const signature = req.headers.get("stripe-signature");
+  if (!signature) {
+    return new Response("No signature", { status: 400 });
   }
 
+  const body = await req.text();
+
+  let event: Stripe.Event;
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing environment variables');
-    }
+    event = stripe.webhooks.constructEvent(body, signature, WEBHOOK_SECRET);
+  } catch (err: any) {
+    console.error("Webhook signature verification failed:", err.message);
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  }
 
-    const body = await req.text();
-    const event = JSON.parse(body);
-    
-    console.log('Received webhook event:', event.type);
+  console.log(`Processing event: ${event.type}`);
 
-    // Handle the event types we care about
+  try {
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object;
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
         const restaurantId = session.metadata?.restaurant_id;
-        const plan = session.metadata?.plan;
-        const customerId = session.customer;
-        const subscriptionId = session.subscription;
+        const plan = session.metadata?.plan || "starter";
+        const addonLocations = parseInt(session.metadata?.addon_locations || "0");
 
-        if (restaurantId && subscriptionId) {
-          // Create or update subscription in database
-          const subscriptionData = {
+        if (!restaurantId) {
+          console.error("No restaurant_id in session metadata");
+          break;
+        }
+
+        // Retrieve the subscription to get period details
+        const subscription = await stripe.subscriptions.retrieve(
+          session.subscription as string
+        );
+
+        const { error } = await supabase.from("subscriptions").upsert(
+          {
             restaurant_id: restaurantId,
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            plan_type: plan || 'starter',
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          };
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+            plan_type: plan,
+            location_limit: PLAN_LIMITS[plan] || 1,
+            addon_locations: addonLocations,
+            status: subscription.status === "trialing" ? "trialing" : "active",
+            current_period_end: new Date(
+              subscription.current_period_end * 1000
+            ).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+          },
+          { onConflict: "restaurant_id" }
+        );
 
-          const upsertRes = await fetch(
-            `${supabaseUrl}/rest/v1/subscriptions`,
-            {
-              method: 'POST',
-              headers: {
-                'apikey': supabaseServiceKey,
-                'Authorization': `Bearer ${supabaseServiceKey}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'resolution=merge-duplicates',
-              },
-              body: JSON.stringify(subscriptionData),
-            }
-          );
-
-          if (!upsertRes.ok) {
-            const err = await upsertRes.text();
-            console.error('Failed to upsert subscription:', err);
-          } else {
-            console.log('Subscription created for restaurant:', restaurantId);
-          }
-        }
+        if (error) console.error("Upsert error:", error);
+        else console.log(`Subscription created for restaurant ${restaurantId}`);
         break;
       }
 
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
-        const subscriptionId = subscription.id;
-        const status = subscription.status;
-        const cancelAt = subscription.cancel_at;
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const restaurantId = subscription.metadata?.restaurant_id;
 
-        // Update subscription status
-        const updateRes = await fetch(
-          `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${subscriptionId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'apikey': supabaseServiceKey,
-              'Authorization': `Bearer ${supabaseServiceKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              status: status === 'canceled' ? 'canceled' : status,
-              cancel_at: cancelAt ? new Date(cancelAt * 1000).toISOString() : null,
-            }),
-          }
+        if (!restaurantId) {
+          console.error("No restaurant_id in subscription metadata");
+          break;
+        }
+
+        const plan = subscription.metadata?.plan || "starter";
+        const addonLocations = parseInt(
+          subscription.metadata?.addon_locations || "0"
         );
 
-        if (!updateRes.ok) {
-          const err = await updateRes.text();
-          console.error('Failed to update subscription:', err);
-        } else {
-          console.log('Subscription updated:', subscriptionId, status);
-        }
+        const { error } = await supabase
+          .from("subscriptions")
+          .update({
+            plan_type: plan,
+            location_limit: PLAN_LIMITS[plan] || 1,
+            addon_locations: addonLocations,
+            status: subscription.status as string,
+            current_period_end: new Date(
+              subscription.current_period_end * 1000
+            ).toISOString(),
+            cancel_at_period_end: subscription.cancel_at_period_end,
+          })
+          .eq("restaurant_id", restaurantId);
+
+        if (error) console.error("Update error:", error);
+        else console.log(`Subscription updated for restaurant ${restaurantId}`);
         break;
       }
 
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object;
-        const subscriptionId = invoice.subscription;
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const restaurantId = subscription.metadata?.restaurant_id;
 
-        // Update subscription status to past_due
-        const updateRes = await fetch(
-          `${supabaseUrl}/rest/v1/subscriptions?stripe_subscription_id=eq.${subscriptionId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'apikey': supabaseServiceKey,
-              'Authorization': `Bearer ${supabaseServiceKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'past_due' }),
-          }
-        );
+        if (!restaurantId) break;
 
-        if (!updateRes.ok) {
-          console.error('Failed to update subscription to past_due');
-        }
+        const { error } = await supabase
+          .from("subscriptions")
+          .update({
+            status: "canceled",
+            cancel_at_period_end: false,
+          })
+          .eq("restaurant_id", restaurantId);
+
+        if (error) console.error("Delete error:", error);
+        else console.log(`Subscription canceled for restaurant ${restaurantId}`);
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string;
+
+        if (!subscriptionId) break;
+
+        const { error } = await supabase
+          .from("subscriptions")
+          .update({ status: "past_due" })
+          .eq("stripe_subscription_id", subscriptionId);
+
+        if (error) console.error("Payment failed update error:", error);
+        else console.log(`Payment failed for subscription ${subscriptionId}`);
         break;
       }
 
       default:
-        console.log('Unhandled event type:', event.type);
+        console.log(`Unhandled event type: ${event.type}`);
     }
-
-    // Log the event for idempotency
-    await fetch(
-      `${supabaseUrl}/rest/v1/stripe_events`,
-      {
-        method: 'POST',
-        headers: {
-          'apikey': supabaseServiceKey,
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=ignore-duplicates',
-        },
-        body: JSON.stringify({
-          event_id: event.id,
-          event_type: event.type,
-          processed_at: new Date().toISOString(),
-        }),
-      }
-    );
-
-    return new Response(JSON.stringify({ received: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Webhook Error:', message);
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+  } catch (err: any) {
+    console.error("Error processing webhook:", err);
+    return new Response(`Webhook handler error: ${err.message}`, { status: 500 });
   }
+
+  return new Response(JSON.stringify({ received: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });
