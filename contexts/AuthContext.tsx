@@ -35,6 +35,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching profile:', error);
     }
+
     return data;
   }, []);
 
@@ -42,7 +43,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      
       if (session?.user) {
         const profile = await fetchProfile(session.user.id);
         const user: User = {
@@ -53,7 +53,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           currentRestaurantId: null,
           createdAt: session.user.created_at,
         };
-        
         setAuthState({
           user,
           isAuthenticated: true,
@@ -75,7 +74,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session);
-        
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
           const user: User = {
@@ -86,7 +84,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             currentRestaurantId: null,
             createdAt: session.user.created_at,
           };
-          
           setAuthState({
             user,
             isAuthenticated: true,
@@ -115,21 +112,20 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         email: email.trim().toLowerCase(),
         password,
       });
-
       if (error) throw error;
       return data.user;
     },
   });
 
   const registerMutation = useMutation({
-    mutationFn: async ({ 
-      email, 
-      password, 
+    mutationFn: async ({
+      email,
+      password,
       name,
-      userType = 'consumer'
-    }: { 
-      email: string; 
-      password: string; 
+      userType = 'consumer',
+    }: {
+      email: string;
+      password: string;
       name: string;
       userType?: 'consumer' | 'restaurant_owner';
     }) => {
@@ -143,7 +139,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           },
         },
       });
-
       if (error) throw error;
       return data.user;
     },
@@ -215,6 +210,42 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     return { error };
   }, []);
 
+  // ── Delete Account ──
+  // Calls the Supabase RPC function to remove all user data,
+  // then signs out locally.
+  const deleteAccount = useCallback(async () => {
+    if (!session?.user) {
+      return { error: new Error('Not authenticated') };
+    }
+
+    try {
+      // Call the database function to delete all user data
+      const { error: rpcError } = await supabase.rpc('delete_user_account');
+
+      if (rpcError) {
+        console.error('Error deleting account:', rpcError);
+        return { error: rpcError };
+      }
+
+      // Sign out locally after successful deletion
+      await supabase.auth.signOut();
+
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        isAgeVerified: false,
+        userType: 'consumer',
+      });
+      queryClient.clear();
+
+      return { error: null };
+    } catch (err) {
+      console.error('Delete account error:', err);
+      return { error: err as Error };
+    }
+  }, [session, queryClient]);
+
   return {
     ...authState,
     session,
@@ -224,6 +255,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     updateUser,
     verifyAge,
     resetPassword,
+    deleteAccount,
     isLoginLoading: loginMutation.isPending,
     isRegisterLoading: registerMutation.isPending,
     loginError: loginMutation.error?.message || null,

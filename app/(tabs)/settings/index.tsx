@@ -9,6 +9,7 @@ import {
   Platform,
   Switch,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import { Image } from 'expo-image';
 import {
@@ -36,6 +37,7 @@ import {
   Star,
   Zap,
   MessageSquarePlus,
+  Trash2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -51,10 +53,11 @@ const TERMS_OF_SERVICE_URL = 'https://unbottl.com/terms-of-service.html';
 export default function SettingsScreen() {
   const router = useRouter();
   const { restaurant, needsSetup } = useRestaurant();
-  const { user, isAuthenticated, logout, userType } = useAuth();
+  const { user, isAuthenticated, logout, userType, deleteAccount } = useAuth();
   const { wishlistCount } = useWishlist();
   const { preferences, unreadCount, updatePreferences } = useNotifications();
   const [darkMode, setDarkMode] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -63,6 +66,64 @@ export default function SettingsScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    const accountType = userType === 'restaurant_owner' ? 'restaurant owner' : 'consumer';
+    const extraWarning = userType === 'restaurant_owner'
+      ? '\n\nThis will also permanently delete your restaurant, all beverage inventory, menus, staff accounts, and analytics data.'
+      : '';
+
+    Alert.alert(
+      'Delete Account',
+      `Are you sure you want to permanently delete your ${accountType} account? This action cannot be undone.${extraWarning}\n\nAll your data including favorites, tastings, and preferences will be permanently removed.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete My Account',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              'Final Confirmation',
+              'This is irreversible. Type is not required but please confirm you understand all your data will be permanently deleted.',
+              [
+                { text: 'Go Back', style: 'cancel' },
+                {
+                  text: 'Permanently Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    setIsDeletingAccount(true);
+                    try {
+                      const { error } = await deleteAccount();
+                      if (error) {
+                        Alert.alert(
+                          'Error',
+                          'We couldn\'t delete your account right now. Please try again or contact support@unbottl.com for assistance.'
+                        );
+                      } else {
+                        Alert.alert(
+                          'Account Deleted',
+                          'Your account and all associated data have been permanently deleted.',
+                          [{ text: 'OK', onPress: () => router.replace('/') }]
+                        );
+                      }
+                    } catch (err) {
+                      Alert.alert(
+                        'Error',
+                        'Something went wrong. Please contact support@unbottl.com for help.'
+                      );
+                    } finally {
+                      setIsDeletingAccount(false);
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
       ]
     );
   };
@@ -171,9 +232,9 @@ export default function SettingsScreen() {
     },
   ];
 
-  // ──────────────────────────────────────────────
+  // ────────────────────────────────────────────────
   // Guest view: sign-in card + support section only
-  // ──────────────────────────────────────────────
+  // ────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -230,9 +291,9 @@ export default function SettingsScreen() {
     );
   }
 
-  // ──────────────────────────────────────────────
+  // ────────────────────────────────────────────────
   // Authenticated view: full settings
-  // ──────────────────────────────────────────────
+  // ────────────────────────────────────────────────
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <TouchableOpacity
@@ -409,10 +470,26 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Sign Out & Delete Account */}
       <View style={styles.section}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LogOut size={18} color={Colors.error} />
           <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountButton}
+          onPress={handleDeleteAccount}
+          disabled={isDeletingAccount}
+        >
+          {isDeletingAccount ? (
+            <ActivityIndicator size="small" color={Colors.error} />
+          ) : (
+            <>
+              <Trash2 size={16} color={Colors.textMuted} />
+              <Text style={styles.deleteAccountText}>Delete Account</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -637,6 +714,20 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.error,
+  },
+  deleteAccountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 6,
+    marginTop: 12,
+  },
+  deleteAccountText: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: Colors.textMuted,
   },
   version: {
     textAlign: 'center',
