@@ -35,6 +35,7 @@ import {
   Bookmark,
   Star,
   Zap,
+  MessageSquarePlus,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -140,6 +141,13 @@ export default function SettingsScreen() {
   ];
 
   const supportItems = [
+    {
+      icon: MessageSquarePlus,
+      label: 'Send Feedback',
+      description: 'Report bugs or request features',
+      chevron: true,
+      onPress: () => router.push('/feedback' as any),
+    },
     {
       icon: HelpCircle,
       label: 'Help & Support',
@@ -334,23 +342,22 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           )}
 
-          {restaurant?.is_founding_member &&
-            restaurant?.founding_member_expires_at && (
-              <View style={styles.founderBadge}>
-                <View style={styles.founderBadgeIcon}>
-                  <Star size={20} color="#F59E0B" fill="#F59E0B" />
-                </View>
-                <View style={styles.founderBadgeContent}>
-                  <Text style={styles.founderBadgeTitle}>
-                    Founding Member #{restaurant.founding_member_number}
-                  </Text>
-                  <Text style={styles.founderBadgeDesc}>
-                    Pro features free until{' '}
-                    {new Date(restaurant.founding_member_expires_at).toLocaleDateString()}
-                  </Text>
-                </View>
+          {restaurant?.is_founding_member && restaurant?.founding_member_expires_at && (
+            <View style={styles.founderBadge}>
+              <View style={styles.founderBadgeIcon}>
+                <Star size={20} color="#F59E0B" fill="#F59E0B" />
               </View>
-            )}
+              <View style={styles.founderBadgeContent}>
+                <Text style={styles.founderBadgeTitle}>
+                  Founding Member #{restaurant.founding_member_number}
+                </Text>
+                <Text style={styles.founderBadgeDesc}>
+                  Pro features free until{' '}
+                  {new Date(restaurant.founding_member_expires_at).toLocaleDateString()}
+                </Text>
+              </View>
+            </View>
+          )}
 
           <View style={styles.managementHeader}>
             <View style={styles.managementTitleRow}>

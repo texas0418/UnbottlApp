@@ -178,6 +178,13 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="feedback"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
@@ -194,8 +201,8 @@ export default function RootLayout() {
           <WineProvider>
             <BeverageProvider>
               <FavoritesProvider>
-              <JournalProvider>
-                <ComparisonProvider>
+                <JournalProvider>
+                  <ComparisonProvider>
                     <AnalyticsProvider>
                       <RecommendationsProvider>
                         <OfflineProvider>
@@ -211,9 +218,9 @@ export default function RootLayout() {
                       </RecommendationsProvider>
                     </AnalyticsProvider>
                   </ComparisonProvider>
-              </JournalProvider>
-            </FavoritesProvider>
-              </BeverageProvider>
+                </JournalProvider>
+              </FavoritesProvider>
+            </BeverageProvider>
           </WineProvider>
         </RestaurantProvider>
       </AuthProvider>
