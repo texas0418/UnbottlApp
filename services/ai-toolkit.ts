@@ -113,6 +113,64 @@ async function generateTextMock(prompt: string): Promise<string> {
 
   const lowerPrompt = prompt.toLowerCase();
 
+  // Food pairing suggestions (check FIRST — pairing prompts contain category
+  // keywords like "wine", "beer", etc. that would otherwise match the
+  // description checks below and return tasting notes instead of pairings)
+  if (lowerPrompt.includes('pairing') || lowerPrompt.includes('pair')) {
+    if (lowerPrompt.includes('wine') || lowerPrompt.includes('red') || lowerPrompt.includes('white') || lowerPrompt.includes('rosé') || lowerPrompt.includes('sparkling')) {
+      const winePairings = [
+        'Grilled Ribeye, Aged Gouda, Mushroom Risotto, Dark Chocolate Truffles, Lamb Chops',
+        'Pan-Seared Salmon, Goat Cheese Salad, Lemon Pasta, Roasted Chicken, Bruschetta',
+        'Charcuterie Board, Brie & Crackers, Grilled Shrimp, Caesar Salad, Herb-Crusted Pork',
+        'Filet Mignon, Truffle Fries, Braised Short Ribs, Manchego Cheese, Roasted Vegetables',
+      ];
+      return winePairings[Math.floor(Math.random() * winePairings.length)];
+    }
+
+    if (lowerPrompt.includes('beer') || lowerPrompt.includes('ipa') || lowerPrompt.includes('lager') || lowerPrompt.includes('stout')) {
+      const beerPairings = [
+        'BBQ Ribs, Fish Tacos, Soft Pretzels, Spicy Wings, Sharp Cheddar',
+        'Burgers, Pizza Margherita, Fried Calamari, Bratwurst, Mac & Cheese',
+        'Pulled Pork Sliders, Fish & Chips, Nachos, Grilled Corn, Jalapeño Poppers',
+        'Korean Fried Chicken, Street Tacos, Onion Rings, Buffalo Cauliflower, Loaded Fries',
+      ];
+      return beerPairings[Math.floor(Math.random() * beerPairings.length)];
+    }
+
+    if (lowerPrompt.includes('whiskey') || lowerPrompt.includes('spirit') || lowerPrompt.includes('vodka') || lowerPrompt.includes('gin') || lowerPrompt.includes('rum') || lowerPrompt.includes('tequila') || lowerPrompt.includes('brandy') || lowerPrompt.includes('mezcal')) {
+      const spiritPairings = [
+        'Dark Chocolate, Smoked Salmon, Blue Cheese, Grilled Peaches, Charcuterie',
+        'Seared Scallops, Crème Brûlée, Wagyu Beef, Foie Gras, Roasted Nuts',
+        'Ceviche, Guacamole, Grilled Pineapple, Spicy Shrimp, Citrus Salad',
+        'Oysters, Cucumber Bites, Smoked Trout, Herb Crackers, Marinated Olives',
+      ];
+      return spiritPairings[Math.floor(Math.random() * spiritPairings.length)];
+    }
+
+    if (lowerPrompt.includes('cocktail')) {
+      const cocktailPairings = [
+        'Shrimp Ceviche, Bruschetta, Oysters, Spicy Tuna Roll, Caprese Salad',
+        'Truffle Fries, Crab Cakes, Beef Sliders, Spring Rolls, Stuffed Mushrooms',
+        'Lobster Bites, Tuna Tartare, Grilled Flatbread, Prosciutto Wrapped Melon, Edamame',
+        'Mini Tacos, Coconut Shrimp, Bao Buns, Arancini, Grilled Halloumi',
+      ];
+      return cocktailPairings[Math.floor(Math.random() * cocktailPairings.length)];
+    }
+
+    if (lowerPrompt.includes('non-alcoholic') || lowerPrompt.includes('coffee') || lowerPrompt.includes('tea') || lowerPrompt.includes('juice')) {
+      const naPairings = [
+        'Croissant, Fruit Tart, Granola Bowl, Scones, Avocado Toast',
+        'Banana Bread, Açaí Bowl, Greek Yogurt Parfait, Overnight Oats, Fresh Berries',
+        'Lemon Cake, Macarons, Cucumber Sandwiches, Mini Quiche, Cheese Scones',
+        'Pancakes, Waffles, Cinnamon Roll, Eggs Benedict, French Toast',
+      ];
+      return naPairings[Math.floor(Math.random() * naPairings.length)];
+    }
+
+    // Generic pairing fallback
+    return 'Grilled Steak, Artisan Cheese, Roasted Vegetables, Fresh Seafood, Dark Chocolate';
+  }
+
   // Wine descriptions
   if (lowerPrompt.includes('wine') && lowerPrompt.includes('tasting')) {
     const wineNotes = [

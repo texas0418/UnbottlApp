@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { X, Plus, Check, Sparkles, Wine, Beer, GlassWater, Martini, Coffee } from 'lucide-react-native';
+import { X, Plus, Check, Sparkles, Wine, Beer, GlassWater, Martini, Coffee, Utensils } from 'lucide-react-native';
 import { generateText } from '@/services/ai-toolkit';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
@@ -86,30 +86,27 @@ export default function AddBeverageScreen() {
   const initialCategory = (params.category as BeverageCategory) || 'wine';
   const [selectedCategory, setSelectedCategory] = useState<BeverageCategory>(initialCategory);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingPairings, setIsGeneratingPairings] = useState(false);
 
   const [wineForm, setWineForm] = useState({
     name: '', producer: '', type: 'red' as WineType, vintage: '', region: '', country: '',
     grape: '', alcoholContent: '', price: '', glassPrice: '', tastingNotes: '', quantity: '', imageUrl: '',
   });
-
   const [beerForm, setBeerForm] = useState({
     name: '', brewery: '', type: 'lager' as BeerType, style: '', abv: '', ibu: '',
     origin: '', price: '', servingSize: '16oz', description: '', quantity: '', imageUrl: '',
   });
-
   const [spiritForm, setSpiritForm] = useState({
     name: '', brand: '', type: 'whiskey' as SpiritType, origin: '', age: '', abv: '',
     price: '', shotPrice: '', description: '', quantity: '', imageUrl: '',
   });
-
   const [cocktailForm, setCocktailForm] = useState({
     name: '', type: 'signature' as CocktailType, baseSpirit: '', garnish: '', glassType: '',
     price: '', description: '', isSignature: false, imageUrl: '',
   });
-
   const [nonAlcForm, setNonAlcForm] = useState({
-    name: '', brand: '', type: 'coffee' as NonAlcoholicType, description: '',
-    price: '', servingSize: '', calories: '', quantity: '', imageUrl: '',
+    name: '', brand: '', type: 'coffee' as NonAlcoholicType, description: '', price: '',
+    servingSize: '', calories: '', quantity: '', imageUrl: '',
   });
 
   const [foodPairings, setFoodPairings] = useState<string[]>([]);
@@ -122,41 +119,25 @@ export default function AddBeverageScreen() {
 
   const handleGenerateDescription = async () => {
     let prompt = '';
-    
     switch (selectedCategory) {
       case 'wine':
-        if (!wineForm.name && !wineForm.grape && !wineForm.type) {
-          Alert.alert('Missing Info', 'Please add wine details first.');
-          return;
-        }
+        if (!wineForm.name && !wineForm.grape && !wineForm.type) { Alert.alert('Missing Info', 'Please add wine details first.'); return; }
         prompt = `Write a brief tasting note (2-3 sentences) for: ${wineForm.name || 'Unknown'} ${wineForm.type} wine from ${wineForm.region || 'Unknown'}, ${wineForm.country || 'Unknown'}. Grape: ${wineForm.grape || 'Unknown'}. Describe aromas and flavors.`;
         break;
       case 'beer':
-        if (!beerForm.name && !beerForm.type) {
-          Alert.alert('Missing Info', 'Please add beer details first.');
-          return;
-        }
+        if (!beerForm.name && !beerForm.type) { Alert.alert('Missing Info', 'Please add beer details first.'); return; }
         prompt = `Write a brief description (2-3 sentences) for: ${beerForm.name || 'Unknown'} ${beerForm.type} ${beerForm.style || ''} from ${beerForm.brewery || 'Unknown'}. ABV: ${beerForm.abv || 'Unknown'}%. Describe taste and character.`;
         break;
       case 'spirit':
-        if (!spiritForm.name && !spiritForm.type) {
-          Alert.alert('Missing Info', 'Please add spirit details first.');
-          return;
-        }
+        if (!spiritForm.name && !spiritForm.type) { Alert.alert('Missing Info', 'Please add spirit details first.'); return; }
         prompt = `Write a brief tasting note (2-3 sentences) for: ${spiritForm.name || 'Unknown'} ${spiritForm.type} from ${spiritForm.origin || 'Unknown'}. Age: ${spiritForm.age || 'Unaged'}. Describe nose, palate, and finish.`;
         break;
       case 'cocktail':
-        if (!cocktailForm.name) {
-          Alert.alert('Missing Info', 'Please add cocktail name first.');
-          return;
-        }
+        if (!cocktailForm.name) { Alert.alert('Missing Info', 'Please add cocktail name first.'); return; }
         prompt = `Write a brief enticing description (2-3 sentences) for a cocktail called "${cocktailForm.name}" made with ${cocktailForm.baseSpirit || 'spirits'}. Ingredients: ${ingredients.join(', ') || 'various'}. Make it sound appealing.`;
         break;
       case 'non-alcoholic':
-        if (!nonAlcForm.name) {
-          Alert.alert('Missing Info', 'Please add beverage name first.');
-          return;
-        }
+        if (!nonAlcForm.name) { Alert.alert('Missing Info', 'Please add beverage name first.'); return; }
         prompt = `Write a brief description (2-3 sentences) for: ${nonAlcForm.name || 'Unknown'} (${nonAlcForm.type}). Make it sound refreshing and appealing.`;
         break;
     }
@@ -165,25 +146,13 @@ export default function AddBeverageScreen() {
     try {
       const result = await generateText(prompt);
       switch (selectedCategory) {
-        case 'wine':
-          setWineForm(prev => ({ ...prev, tastingNotes: result }));
-          break;
-        case 'beer':
-          setBeerForm(prev => ({ ...prev, description: result }));
-          break;
-        case 'spirit':
-          setSpiritForm(prev => ({ ...prev, description: result }));
-          break;
-        case 'cocktail':
-          setCocktailForm(prev => ({ ...prev, description: result }));
-          break;
-        case 'non-alcoholic':
-          setNonAlcForm(prev => ({ ...prev, description: result }));
-          break;
+        case 'wine': setWineForm(prev => ({ ...prev, tastingNotes: result })); break;
+        case 'beer': setBeerForm(prev => ({ ...prev, description: result })); break;
+        case 'spirit': setSpiritForm(prev => ({ ...prev, description: result })); break;
+        case 'cocktail': setCocktailForm(prev => ({ ...prev, description: result })); break;
+        case 'non-alcoholic': setNonAlcForm(prev => ({ ...prev, description: result })); break;
       }
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
+      if (Platform.OS !== 'web') { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }
     } catch (error) {
       console.log('Error generating description:', error);
       Alert.alert('Error', 'Failed to generate description.');
@@ -192,33 +161,97 @@ export default function AddBeverageScreen() {
     }
   };
 
+  // ── NEW: AI Food Pairing Generation ──────────────────────────────
+  const handleGeneratePairings = async () => {
+    let prompt = '';
+    switch (selectedCategory) {
+      case 'wine':
+        if (!wineForm.name && !wineForm.grape && !wineForm.type) {
+          Alert.alert('Missing Info', 'Please add wine details first so we can suggest pairings.');
+          return;
+        }
+        prompt = `Suggest exactly 5 specific food pairings for: ${wineForm.name || 'a'} ${wineForm.type} wine${wineForm.grape ? ` made from ${wineForm.grape}` : ''}${wineForm.region ? ` from ${wineForm.region}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Grilled Ribeye, Aged Gouda, Mushroom Risotto, Dark Chocolate, Lamb Chops`;
+        break;
+      case 'beer':
+        if (!beerForm.name && !beerForm.type) {
+          Alert.alert('Missing Info', 'Please add beer details first so we can suggest pairings.');
+          return;
+        }
+        prompt = `Suggest exactly 5 specific food pairings for: ${beerForm.name || 'a'} ${beerForm.type} ${beerForm.style || 'beer'}${beerForm.brewery ? ` from ${beerForm.brewery}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: BBQ Ribs, Fish Tacos, Pretzels, Spicy Wings, Cheddar Cheese`;
+        break;
+      case 'spirit':
+        if (!spiritForm.name && !spiritForm.type) {
+          Alert.alert('Missing Info', 'Please add spirit details first so we can suggest pairings.');
+          return;
+        }
+        prompt = `Suggest exactly 5 specific food pairings for: ${spiritForm.name || 'a'} ${spiritForm.type}${spiritForm.origin ? ` from ${spiritForm.origin}` : ''}${spiritForm.age ? `, aged ${spiritForm.age}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Dark Chocolate, Smoked Salmon, Blue Cheese, Grilled Peaches, Charcuterie`;
+        break;
+      case 'cocktail':
+        if (!cocktailForm.name) {
+          Alert.alert('Missing Info', 'Please add cocktail name first so we can suggest pairings.');
+          return;
+        }
+        prompt = `Suggest exactly 5 specific food pairings for a cocktail called "${cocktailForm.name}"${cocktailForm.baseSpirit ? ` made with ${cocktailForm.baseSpirit}` : ''}${ingredients.length > 0 ? `, ingredients: ${ingredients.join(', ')}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Shrimp Ceviche, Bruschetta, Oysters, Spicy Tuna Roll, Caprese Salad`;
+        break;
+      case 'non-alcoholic':
+        if (!nonAlcForm.name) {
+          Alert.alert('Missing Info', 'Please add beverage name first so we can suggest pairings.');
+          return;
+        }
+        prompt = `Suggest exactly 5 specific food pairings for: ${nonAlcForm.name || 'a'} (${nonAlcForm.type} beverage). Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Croissant, Fruit Tart, Granola Bowl, Scones, Avocado Toast`;
+        break;
+    }
+
+    setIsGeneratingPairings(true);
+    try {
+      const result = await generateText(prompt);
+      // Parse the comma-separated response into individual pairing items
+      const pairings = result
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0 && item.length < 50) // Filter out empty or absurdly long entries
+        .map(item => {
+          // Remove numbering like "1.", "1)", leading dashes, etc.
+          return item.replace(/^\d+[\.\)]\s*/, '').replace(/^[-–—]\s*/, '').trim();
+        })
+        .filter(item => item.length > 0);
+
+      if (pairings.length > 0) {
+        // Add to existing pairings without duplicates
+        setFoodPairings(prev => {
+          const existing = new Set(prev.map(p => p.toLowerCase()));
+          const newPairings = pairings.filter(p => !existing.has(p.toLowerCase()));
+          return [...prev, ...newPairings];
+        });
+      } else {
+        Alert.alert('Hmm', 'Could not parse pairing suggestions. Try again or add them manually.');
+      }
+
+      if (Platform.OS !== 'web') { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }
+    } catch (error) {
+      console.log('Error generating pairings:', error);
+      Alert.alert('Error', 'Failed to generate food pairings.');
+    } finally {
+      setIsGeneratingPairings(false);
+    }
+  };
+  // ── END: AI Food Pairing Generation ──────────────────────────────
+
   const handleAddListItem = (list: 'pairings' | 'ingredients' | 'mixers') => {
     if (!newItem.trim()) return;
     switch (list) {
-      case 'pairings':
-        setFoodPairings(prev => [...prev, newItem.trim()]);
-        break;
-      case 'ingredients':
-        setIngredients(prev => [...prev, newItem.trim()]);
-        break;
-      case 'mixers':
-        setMixers(prev => [...prev, newItem.trim()]);
-        break;
+      case 'pairings': setFoodPairings(prev => [...prev, newItem.trim()]); break;
+      case 'ingredients': setIngredients(prev => [...prev, newItem.trim()]); break;
+      case 'mixers': setMixers(prev => [...prev, newItem.trim()]); break;
     }
     setNewItem('');
   };
 
   const handleRemoveListItem = (list: 'pairings' | 'ingredients' | 'mixers', index: number) => {
     switch (list) {
-      case 'pairings':
-        setFoodPairings(prev => prev.filter((_, i) => i !== index));
-        break;
-      case 'ingredients':
-        setIngredients(prev => prev.filter((_, i) => i !== index));
-        break;
-      case 'mixers':
-        setMixers(prev => prev.filter((_, i) => i !== index));
-        break;
+      case 'pairings': setFoodPairings(prev => prev.filter((_, i) => i !== index)); break;
+      case 'ingredients': setIngredients(prev => prev.filter((_, i) => i !== index)); break;
+      case 'mixers': setMixers(prev => prev.filter((_, i) => i !== index)); break;
     }
   };
 
@@ -227,130 +260,79 @@ export default function AddBeverageScreen() {
       switch (selectedCategory) {
         case 'wine':
           if (!wineForm.name.trim() || !wineForm.producer.trim() || !wineForm.price.trim()) {
-            Alert.alert('Error', 'Name, producer, and price are required');
-            return;
+            Alert.alert('Error', 'Name, producer, and price are required'); return;
           }
           await addWine({
-            name: wineForm.name.trim(),
-            producer: wineForm.producer.trim(),
-            type: wineForm.type,
+            name: wineForm.name.trim(), producer: wineForm.producer.trim(), type: wineForm.type,
             vintage: wineForm.vintage ? parseInt(wineForm.vintage, 10) : null,
-            region: wineForm.region.trim(),
-            country: wineForm.country.trim(),
-            grape: wineForm.grape.trim(),
+            region: wineForm.region.trim(), country: wineForm.country.trim(), grape: wineForm.grape.trim(),
             alcoholContent: parseFloat(wineForm.alcoholContent) || 0,
             price: parseFloat(wineForm.price) || 0,
             glassPrice: wineForm.glassPrice ? parseFloat(wineForm.glassPrice) : null,
-            tastingNotes: wineForm.tastingNotes.trim(),
-            foodPairings,
-            inStock: true,
+            tastingNotes: wineForm.tastingNotes.trim(), foodPairings, inStock: true,
             quantity: parseInt(wineForm.quantity, 10) || 0,
-            imageUrl: wineForm.imageUrl.trim() || null,
-            featured,
-            flavorProfile: { body: 3, sweetness: 2, tannins: 3, acidity: 3 },
-            dietaryTags: [],
+            imageUrl: wineForm.imageUrl.trim() || null, featured,
+            flavorProfile: { body: 3, sweetness: 2, tannins: 3, acidity: 3 }, dietaryTags: [],
           });
           break;
-
         case 'beer':
           if (!beerForm.name.trim() || !beerForm.brewery.trim() || !beerForm.price.trim()) {
-            Alert.alert('Error', 'Name, brewery, and price are required');
-            return;
+            Alert.alert('Error', 'Name, brewery, and price are required'); return;
           }
           await addBeer({
-            name: beerForm.name.trim(),
-            brewery: beerForm.brewery.trim(),
-            type: beerForm.type,
-            style: beerForm.style.trim(),
-            abv: parseFloat(beerForm.abv) || 0,
-            ibu: beerForm.ibu ? parseInt(beerForm.ibu, 10) : null,
-            origin: beerForm.origin.trim(),
-            price: parseFloat(beerForm.price) || 0,
-            servingSize: beerForm.servingSize.trim(),
-            description: beerForm.description.trim(),
-            foodPairings,
-            inStock: true,
+            name: beerForm.name.trim(), brewery: beerForm.brewery.trim(), type: beerForm.type,
+            style: beerForm.style.trim(), abv: parseFloat(beerForm.abv) || 0,
+            ibu: beerForm.ibu ? parseInt(beerForm.ibu, 10) : null, origin: beerForm.origin.trim(),
+            price: parseFloat(beerForm.price) || 0, servingSize: beerForm.servingSize.trim(),
+            description: beerForm.description.trim(), foodPairings, inStock: true,
             quantity: parseInt(beerForm.quantity, 10) || 0,
-            imageUrl: beerForm.imageUrl.trim() || null,
-            featured,
-            beerProfile: { bitterness: 3, maltiness: 3, hoppy: 3, body: 3 },
-            dietaryTags: [],
+            imageUrl: beerForm.imageUrl.trim() || null, featured,
+            beerProfile: { bitterness: 3, maltiness: 3, hoppy: 3, body: 3 }, dietaryTags: [],
           });
           break;
-
         case 'spirit':
           if (!spiritForm.name.trim() || !spiritForm.brand.trim() || !spiritForm.price.trim()) {
-            Alert.alert('Error', 'Name, brand, and price are required');
-            return;
+            Alert.alert('Error', 'Name, brand, and price are required'); return;
           }
           await addSpirit({
-            name: spiritForm.name.trim(),
-            brand: spiritForm.brand.trim(),
-            type: spiritForm.type,
-            origin: spiritForm.origin.trim(),
-            age: spiritForm.age.trim() || null,
-            abv: parseFloat(spiritForm.abv) || 0,
-            price: parseFloat(spiritForm.price) || 0,
+            name: spiritForm.name.trim(), brand: spiritForm.brand.trim(), type: spiritForm.type,
+            origin: spiritForm.origin.trim(), age: spiritForm.age.trim() || null,
+            abv: parseFloat(spiritForm.abv) || 0, price: parseFloat(spiritForm.price) || 0,
             shotPrice: spiritForm.shotPrice ? parseFloat(spiritForm.shotPrice) : null,
-            description: spiritForm.description.trim(),
-            mixers,
-            inStock: true,
+            description: spiritForm.description.trim(), mixers, inStock: true,
             quantity: parseInt(spiritForm.quantity, 10) || 0,
-            imageUrl: spiritForm.imageUrl.trim() || null,
-            featured,
-            spiritProfile: { smoothness: 3, complexity: 3, sweetness: 2, intensity: 3 },
-            dietaryTags: [],
+            imageUrl: spiritForm.imageUrl.trim() || null, featured,
+            spiritProfile: { smoothness: 3, complexity: 3, sweetness: 2, intensity: 3 }, dietaryTags: [],
           });
           break;
-
         case 'cocktail':
           if (!cocktailForm.name.trim() || !cocktailForm.price.trim()) {
-            Alert.alert('Error', 'Name and price are required');
-            return;
+            Alert.alert('Error', 'Name and price are required'); return;
           }
           await addCocktail({
-            name: cocktailForm.name.trim(),
-            type: cocktailForm.type,
-            baseSpirit: cocktailForm.baseSpirit.trim(),
-            ingredients,
-            garnish: cocktailForm.garnish.trim(),
-            glassType: cocktailForm.glassType.trim(),
-            price: parseFloat(cocktailForm.price) || 0,
-            description: cocktailForm.description.trim(),
-            isSignature: cocktailForm.isSignature,
-            isAvailable: true,
-            imageUrl: cocktailForm.imageUrl.trim() || null,
-            featured,
-            dietaryTags: [],
+            name: cocktailForm.name.trim(), type: cocktailForm.type,
+            baseSpirit: cocktailForm.baseSpirit.trim(), ingredients,
+            garnish: cocktailForm.garnish.trim(), glassType: cocktailForm.glassType.trim(),
+            price: parseFloat(cocktailForm.price) || 0, description: cocktailForm.description.trim(),
+            isSignature: cocktailForm.isSignature, isAvailable: true,
+            imageUrl: cocktailForm.imageUrl.trim() || null, featured, dietaryTags: [],
           });
           break;
-
         case 'non-alcoholic':
           if (!nonAlcForm.name.trim() || !nonAlcForm.price.trim()) {
-            Alert.alert('Error', 'Name and price are required');
-            return;
+            Alert.alert('Error', 'Name and price are required'); return;
           }
           await addNonAlcoholic({
-            name: nonAlcForm.name.trim(),
-            brand: nonAlcForm.brand.trim() || null,
-            type: nonAlcForm.type,
-            description: nonAlcForm.description.trim(),
-            price: parseFloat(nonAlcForm.price) || 0,
-            servingSize: nonAlcForm.servingSize.trim(),
+            name: nonAlcForm.name.trim(), brand: nonAlcForm.brand.trim() || null,
+            type: nonAlcForm.type, description: nonAlcForm.description.trim(),
+            price: parseFloat(nonAlcForm.price) || 0, servingSize: nonAlcForm.servingSize.trim(),
             calories: nonAlcForm.calories ? parseInt(nonAlcForm.calories, 10) : null,
-            ingredients,
-            inStock: true,
-            quantity: parseInt(nonAlcForm.quantity, 10) || 0,
-            imageUrl: nonAlcForm.imageUrl.trim() || null,
-            featured,
-            dietaryTags: [],
+            ingredients, inStock: true, quantity: parseInt(nonAlcForm.quantity, 10) || 0,
+            imageUrl: nonAlcForm.imageUrl.trim() || null, featured, dietaryTags: [],
           });
           break;
       }
-
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
+      if (Platform.OS !== 'web') { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }
       router.back();
     } catch (error) {
       console.log('Error adding beverage:', error);
@@ -382,21 +364,11 @@ export default function AddBeverageScreen() {
 
   const setCurrentType = (value: string) => {
     switch (selectedCategory) {
-      case 'wine':
-        setWineForm(prev => ({ ...prev, type: value as WineType }));
-        break;
-      case 'beer':
-        setBeerForm(prev => ({ ...prev, type: value as BeerType }));
-        break;
-      case 'spirit':
-        setSpiritForm(prev => ({ ...prev, type: value as SpiritType }));
-        break;
-      case 'cocktail':
-        setCocktailForm(prev => ({ ...prev, type: value as CocktailType }));
-        break;
-      case 'non-alcoholic':
-        setNonAlcForm(prev => ({ ...prev, type: value as NonAlcoholicType }));
-        break;
+      case 'wine': setWineForm(prev => ({ ...prev, type: value as WineType })); break;
+      case 'beer': setBeerForm(prev => ({ ...prev, type: value as BeerType })); break;
+      case 'spirit': setSpiritForm(prev => ({ ...prev, type: value as SpiritType })); break;
+      case 'cocktail': setCocktailForm(prev => ({ ...prev, type: value as CocktailType })); break;
+      case 'non-alcoholic': setNonAlcForm(prev => ({ ...prev, type: value as NonAlcoholicType })); break;
     }
   };
 
@@ -407,19 +379,13 @@ export default function AddBeverageScreen() {
         {categories.map((cat) => (
           <TouchableOpacity
             key={cat.value}
-            style={[
-              styles.categoryCard,
-              selectedCategory === cat.value && styles.categoryCardSelected,
-            ]}
+            style={[styles.categoryCard, selectedCategory === cat.value && styles.categoryCardSelected]}
             onPress={() => setSelectedCategory(cat.value)}
           >
             {React.cloneElement(cat.icon as React.ReactElement<{ color: string }>, {
               color: selectedCategory === cat.value ? Colors.white : categoryColors[cat.value],
             })}
-            <Text style={[
-              styles.categoryLabel,
-              selectedCategory === cat.value && styles.categoryLabelSelected,
-            ]}>
+            <Text style={[styles.categoryLabel, selectedCategory === cat.value && styles.categoryLabelSelected]}>
               {cat.label}
             </Text>
           </TouchableOpacity>
@@ -435,16 +401,10 @@ export default function AddBeverageScreen() {
         {getTypeOptions().map((type) => (
           <TouchableOpacity
             key={type.value}
-            style={[
-              styles.typeChip,
-              getCurrentType() === type.value && styles.typeChipSelected,
-            ]}
+            style={[styles.typeChip, getCurrentType() === type.value && styles.typeChipSelected]}
             onPress={() => setCurrentType(type.value)}
           >
-            <Text style={[
-              styles.typeChipText,
-              getCurrentType() === type.value && styles.typeChipTextSelected,
-            ]}>
+            <Text style={[styles.typeChipText, getCurrentType() === type.value && styles.typeChipTextSelected]}>
               {type.label}
             </Text>
           </TouchableOpacity>
@@ -452,6 +412,49 @@ export default function AddBeverageScreen() {
       </View>
     </View>
   );
+
+  // ── Reusable Food Pairings Section with AI Generate ──────────────
+  const renderFoodPairingsSection = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Food Pairings</Text>
+      <View style={styles.formCard}>
+        <View style={styles.listInput}>
+          <TextInput
+            style={[styles.input, styles.flex1]}
+            value={newItem}
+            onChangeText={setNewItem}
+            placeholder="Add food pairing"
+            placeholderTextColor={Colors.textMuted}
+            onSubmitEditing={() => handleAddListItem('pairings')}
+          />
+          <TouchableOpacity style={styles.addItemButton} onPress={() => handleAddListItem('pairings')}>
+            <Plus size={20} color={Colors.white} />
+          </TouchableOpacity>
+        </View>
+        {foodPairings.length > 0 && (
+          <View style={styles.chipContainer}>
+            {foodPairings.map((item, index) => (
+              <TouchableOpacity key={index} style={styles.chip} onPress={() => handleRemoveListItem('pairings', index)}>
+                <Text style={styles.chipText}>{item}</Text>
+                <X size={14} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+        <TouchableOpacity
+          style={[styles.generateButton, isGeneratingPairings && styles.generateButtonDisabled]}
+          onPress={handleGeneratePairings}
+          disabled={isGeneratingPairings}
+        >
+          <Utensils size={18} color={isGeneratingPairings ? Colors.textMuted : Colors.primary} />
+          <Text style={[styles.generateButtonText, isGeneratingPairings && styles.generateButtonTextDisabled]}>
+            {isGeneratingPairings ? 'Generating Pairings...' : 'Suggest Pairings with AI'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+  // ── END: Reusable Food Pairings Section ──────────────────────────
 
   const renderWineForm = () => (
     <>
@@ -841,7 +844,7 @@ export default function AddBeverageScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {renderCategorySelector()}
           {renderForm()}
-          
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Options</Text>
             <View style={styles.formCard}>
@@ -854,33 +857,19 @@ export default function AddBeverageScreen() {
             </View>
           </View>
 
-          {(selectedCategory === 'wine' || selectedCategory === 'beer') && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Food Pairings</Text>
-              <View style={styles.formCard}>
-                <View style={styles.listInput}>
-                  <TextInput style={[styles.input, styles.flex1]} value={newItem} onChangeText={setNewItem} placeholder="Add food pairing" placeholderTextColor={Colors.textMuted} onSubmitEditing={() => handleAddListItem('pairings')} />
-                  <TouchableOpacity style={styles.addItemButton} onPress={() => handleAddListItem('pairings')}>
-                    <Plus size={20} color={Colors.white} />
-                  </TouchableOpacity>
-                </View>
-                {foodPairings.length > 0 && (
-                  <View style={styles.chipContainer}>
-                    {foodPairings.map((item, index) => (
-                      <TouchableOpacity key={index} style={styles.chip} onPress={() => handleRemoveListItem('pairings', index)}>
-                        <Text style={styles.chipText}>{item}</Text>
-                        <X size={14} color={Colors.textSecondary} />
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-              </View>
-            </View>
-          )}
+          {/* Food Pairings — now available for ALL categories with AI generation */}
+          {renderFoodPairingsSection()}
 
           <View style={styles.submitSection}>
-            <Button title={`Add ${selectedCategory === 'non-alcoholic' ? 'Beverage' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`} onPress={handleSubmit} loading={isSubmitting} fullWidth size="large" />
+            <Button
+              title={`Add ${selectedCategory === 'non-alcoholic' ? 'Beverage' : selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}`}
+              onPress={handleSubmit}
+              loading={isSubmitting}
+              fullWidth
+              size="large"
+            />
           </View>
+
           <View style={styles.bottomPadding} />
         </ScrollView>
       </KeyboardAvoidingView>
