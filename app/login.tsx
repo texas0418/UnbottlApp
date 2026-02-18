@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Wine, Mail, Lock, User, Eye, EyeOff, Building2, CheckCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -22,9 +22,10 @@ import Button from '@/components/Button';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { login, register, resetPassword, isLoginLoading, isRegisterLoading, loginError, registerError } = useAuth();
 
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(mode === 'signup');
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<'consumer' | 'restaurant_owner'>('consumer');
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
@@ -81,7 +82,6 @@ export default function LoginScreen() {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
-
     if (isSignUp && !formData.name.trim()) {
       Alert.alert('Error', 'Please enter your name');
       return;
@@ -104,7 +104,6 @@ export default function LoginScreen() {
         // instead of navigating immediately
         setConfirmedEmail(formData.email.trim());
         setShowEmailConfirmation(true);
-
       } else {
         // Login — user has already confirmed their email
         const user = await login({
@@ -165,12 +164,10 @@ export default function LoginScreen() {
           </View>
 
           <Text style={styles.confirmationTitle}>Check Your Email</Text>
-
           <Text style={styles.confirmationSubtitle}>
             We sent a confirmation link to
           </Text>
           <Text style={styles.confirmationEmail}>{confirmedEmail}</Text>
-
           <Text style={styles.confirmationBody}>
             Tap the link in the email to verify your account, then come back here to sign in.
           </Text>
@@ -248,7 +245,10 @@ export default function LoginScreen() {
                 ]}
                 onPress={() => setUserType('consumer')}
               >
-                <User size={24} color={userType === 'consumer' ? Colors.primary : Colors.textMuted} />
+                <User
+                  size={24}
+                  color={userType === 'consumer' ? Colors.primary : Colors.textMuted}
+                />
                 <Text style={[
                   styles.userTypeText,
                   userType === 'consumer' && styles.userTypeTextActive,
@@ -263,7 +263,10 @@ export default function LoginScreen() {
                 ]}
                 onPress={() => setUserType('restaurant_owner')}
               >
-                <Building2 size={24} color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted} />
+                <Building2
+                  size={24}
+                  color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted}
+                />
                 <Text style={[
                   styles.userTypeText,
                   userType === 'restaurant_owner' && styles.userTypeTextActive,

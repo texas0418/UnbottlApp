@@ -65,7 +65,14 @@ export default function SettingsScreen() {
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            router.replace('/');
+          },
+        },
       ]
     );
   };
@@ -85,7 +92,6 @@ export default function SettingsScreen() {
           text: 'Delete My Account',
           style: 'destructive',
           onPress: () => {
-            // Second confirmation
             Alert.alert(
               'Final Confirmation',
               'This is irreversible. Type is not required but please confirm you understand all your data will be permanently deleted.',
@@ -238,7 +244,6 @@ export default function SettingsScreen() {
   if (!isAuthenticated) {
     return (
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Sign-in card */}
         <View style={styles.guestCardContainer}>
           <View style={styles.guestCard}>
             <View style={styles.guestLogoContainer}>
@@ -256,14 +261,13 @@ export default function SettingsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.guestCreateButton}
-              onPress={() => router.push('/login')}
+              onPress={() => router.push('/login?mode=signup')}
             >
               <Text style={styles.guestCreateText}>Create Account</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Support section — always visible for all users */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.menuCard}>
@@ -504,7 +508,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  // ── Guest card styles ──
   guestCardContainer: {
     paddingHorizontal: 20,
     paddingTop: 40,
@@ -572,7 +575,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600' as const,
   },
-  // ── Authenticated styles ──
   profileSection: {
     alignItems: 'center',
     paddingVertical: 24,
