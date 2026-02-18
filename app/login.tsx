@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Wine, Mail, Lock, User, Eye, EyeOff, Building2 } from 'lucide-react-native';
+import { Wine, Mail, Lock, User, Eye, EyeOff, Building2, CheckCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +27,8 @@ export default function LoginScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<'consumer' | 'restaurant_owner'>('consumer');
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [confirmedEmail, setConfirmedEmail] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -98,16 +100,13 @@ export default function LoginScreen() {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         }
 
-        // For sign-up, we know the userType from the form selection
-        if (userType === 'restaurant_owner') {
-          // New restaurant owners always need to set up their restaurant
-          router.replace('/restaurant-setup');
-        } else {
-          // Consumers go to the Home tab
-          router.replace('/');
-        }
+        // Email confirmation is now required — show the confirmation screen
+        // instead of navigating immediately
+        setConfirmedEmail(formData.email.trim());
+        setShowEmailConfirmation(true);
+
       } else {
-        // Login — we need to determine the user type from their profile
+        // Login — user has already confirmed their email
         const user = await login({
           email: formData.email.trim(),
           password: formData.password,
@@ -147,20 +146,80 @@ export default function LoginScreen() {
     } catch (error) {
       Alert.alert(
         'Error',
-        isSignUp
-          ? registerError || 'Registration failed'
-          : loginError || 'Login failed'
+        isSignUp ? registerError || 'Registration failed' : loginError || 'Login failed'
       );
     }
   };
 
+  // ─── Email Confirmation Screen ───────────────────────────────────
+  if (showEmailConfirmation) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <LinearGradient
+          colors={[Colors.primary + '15', Colors.background]}
+          style={styles.gradient}
+        />
+        <View style={styles.confirmationContainer}>
+          <View style={styles.confirmationIconContainer}>
+            <CheckCircle size={64} color={Colors.primary} strokeWidth={1.5} />
+          </View>
+
+          <Text style={styles.confirmationTitle}>Check Your Email</Text>
+
+          <Text style={styles.confirmationSubtitle}>
+            We sent a confirmation link to
+          </Text>
+          <Text style={styles.confirmationEmail}>{confirmedEmail}</Text>
+
+          <Text style={styles.confirmationBody}>
+            Tap the link in the email to verify your account, then come back here to sign in.
+          </Text>
+
+          <View style={styles.confirmationActions}>
+            <Button
+              title="Go to Sign In"
+              onPress={() => {
+                setShowEmailConfirmation(false);
+                setIsSignUp(false);
+                // Keep the email pre-filled for easy login after confirmation
+              }}
+              fullWidth
+              size="large"
+            />
+
+            <TouchableOpacity
+              style={styles.resendButton}
+              onPress={async () => {
+                try {
+                  const { error } = await supabase.auth.resend({
+                    type: 'signup',
+                    email: confirmedEmail,
+                  });
+                  if (error) {
+                    Alert.alert('Error', error.message);
+                  } else {
+                    Alert.alert('Email Sent', 'A new confirmation link has been sent to your email.');
+                  }
+                } catch (e) {
+                  Alert.alert('Error', 'Failed to resend confirmation email. Please try again.');
+                }
+              }}
+            >
+              <Text style={styles.resendText}>Didn't receive it? Resend email</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ─── Login / Sign Up Form ────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <LinearGradient
         colors={[Colors.primary + '15', Colors.background]}
         style={styles.gradient}
       />
-
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -189,10 +248,7 @@ export default function LoginScreen() {
                 ]}
                 onPress={() => setUserType('consumer')}
               >
-                <User
-                  size={24}
-                  color={userType === 'consumer' ? Colors.primary : Colors.textMuted}
-                />
+                <User size={24} color={userType === 'consumer' ? Colors.primary : Colors.textMuted} />
                 <Text style={[
                   styles.userTypeText,
                   userType === 'consumer' && styles.userTypeTextActive,
@@ -207,10 +263,7 @@ export default function LoginScreen() {
                 ]}
                 onPress={() => setUserType('restaurant_owner')}
               >
-                <Building2
-                  size={24}
-                  color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted}
-                />
+                <Building2 size={24} color={userType === 'restaurant_owner' ? Colors.primary : Colors.textMuted} />
                 <Text style={[
                   styles.userTypeText,
                   userType === 'restaurant_owner' && styles.userTypeTextActive,
@@ -459,6 +512,62 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 15,
     color: Colors.textMuted,
+    fontWeight: '500' as const,
+  },
+  // ─── Email Confirmation Styles ─────────────────────────────────
+  confirmationContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  confirmationIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: Colors.primary + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  confirmationTitle: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: Colors.primary,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  confirmationSubtitle: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  confirmationEmail: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  confirmationBody: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 36,
+    paddingHorizontal: 16,
+  },
+  confirmationActions: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  resendButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+  },
+  resendText: {
+    fontSize: 14,
+    color: Colors.primary,
     fontWeight: '500' as const,
   },
 });
