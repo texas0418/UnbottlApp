@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Wine, Mail, Lock, User, Eye, EyeOff, Building2, CheckCircle, X } from 'lucide-react-native';
+import { Wine, Mail, Lock, User, Eye, EyeOff, Building2, CheckCircle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
@@ -157,15 +157,9 @@ export default function LoginScreen() {
         <LinearGradient
           colors={[Colors.primary + '15', Colors.background]}
           style={styles.gradient}
+          pointerEvents="none"
         />
         <View style={styles.confirmationContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => router.back()}
-          >
-            <X size={24} color={Colors.textMuted} />
-          </TouchableOpacity>
-
           <View style={styles.confirmationIconContainer}>
             <CheckCircle size={64} color={Colors.primary} strokeWidth={1.5} />
           </View>
@@ -223,18 +217,12 @@ export default function LoginScreen() {
       <LinearGradient
         colors={[Colors.primary + '15', Colors.background]}
         style={styles.gradient}
+        pointerEvents="none"
       />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={() => router.back()}
-        >
-          <X size={24} color={Colors.textMuted} />
-        </TouchableOpacity>
-
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -406,13 +394,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 24,
     justifyContent: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 12,
-    left: 16,
-    padding: 8,
-    zIndex: 10,
   },
   header: {
     alignItems: 'center',
