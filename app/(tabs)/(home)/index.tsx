@@ -10,13 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
-import { 
-  Wine, 
+import {
+  Wine,
   Beer,
   GlassWater,
   Martini,
   Coffee,
-  Star, 
+  Star,
   ArrowRight,
   Sparkles,
   Settings2,
@@ -34,6 +34,7 @@ import WineCard from '@/components/WineCard';
 import BeverageCard from '@/components/BeverageCard';
 import { useRecommendations } from '@/contexts/RecommendationsContext';
 import PreferencesSetup from '@/components/PreferencesSetup';
+import AgeVerificationModal from '@/components/AgeVerificationModal';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -41,6 +42,7 @@ export default function HomeScreen() {
   const { beers, spirits, cocktails, nonAlcoholic, featuredBeers, featuredSpirits, featuredCocktails } = useBeverages();
   const { restaurant } = useRestaurant();
   const { topPicks, recommendations, hasSetPreferences, learnedPreferences } = useRecommendations();
+
   const [refreshing, setRefreshing] = React.useState(false);
   const [showPreferences, setShowPreferences] = React.useState(false);
 
@@ -62,6 +64,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <AgeVerificationModal />
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -78,7 +81,7 @@ export default function HomeScreen() {
               <Text style={styles.greeting}>Welcome to</Text>
               <Text style={styles.title}>Unbottl</Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.scanButton}
               onPress={() => router.push('/menu-scanner')}
             >
@@ -89,7 +92,7 @@ export default function HomeScreen() {
         </View>
 
         {/* AI Sommelier Banner */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.sommelierBanner}
           onPress={() => router.push('/sommelier-chat')}
           activeOpacity={0.9}
@@ -114,7 +117,7 @@ export default function HomeScreen() {
 
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.quickActionCard}
             onPress={() => router.push('/menu-scanner')}
           >
@@ -125,18 +128,18 @@ export default function HomeScreen() {
             <Text style={styles.quickActionDesc}>Scan a restaurant's QR code</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.quickActionCard}
             onPress={() => router.push('/menu-import')}
           >
             <View style={[styles.quickActionIcon, { backgroundColor: '#6C5CE7' + '15' }]}>
-            <Sparkles size={24} color="#6C5CE7" />
+              <Sparkles size={24} color="#6C5CE7" />
             </View>
             <Text style={styles.quickActionTitle}>AI Import</Text>
             <Text style={styles.quickActionDesc}>Import menu with AI</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.quickActionCard}
             onPress={() => router.push('/(tabs)/catalog')}
           >
@@ -158,15 +161,15 @@ export default function HomeScreen() {
               <View>
                 <Text style={styles.recommendationsTitleText}>For You</Text>
                 <Text style={styles.recommendationsSubtitle}>
-                  {hasSetPreferences 
-                    ? 'Based on your preferences' 
+                  {hasSetPreferences
+                    ? 'Based on your preferences'
                     : learnedPreferences.preferredTypes.length > 0
-                      ? 'Based on your favorites'
-                      : 'Personalized picks'}
+                    ? 'Based on your favorites'
+                    : 'Personalized picks'}
                 </Text>
               </View>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.preferencesButton}
               onPress={() => setShowPreferences(true)}
             >
@@ -222,7 +225,7 @@ export default function HomeScreen() {
               )}
             </ScrollView>
           ) : (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.setupPreferencesCard}
               onPress={() => setShowPreferences(true)}
             >
@@ -248,8 +251,12 @@ export default function HomeScreen() {
               <Text style={styles.sectionTitle}>Browse by Category</Text>
             </View>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryList}>
-            <TouchableOpacity 
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryList}
+          >
+            <TouchableOpacity
               style={[styles.categoryCard, { borderLeftColor: '#722F37' }]}
               onPress={() => router.push('/(tabs)/catalog')}
             >
@@ -257,7 +264,7 @@ export default function HomeScreen() {
               <Text style={styles.categoryCardValue}>{categoryStats.wine}</Text>
               <Text style={styles.categoryCardLabel}>Wines</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.categoryCard, { borderLeftColor: '#C67A3C' }]}
               onPress={() => router.push('/(tabs)/catalog')}
             >
@@ -265,7 +272,7 @@ export default function HomeScreen() {
               <Text style={styles.categoryCardValue}>{categoryStats.beer}</Text>
               <Text style={styles.categoryCardLabel}>Beers</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.categoryCard, { borderLeftColor: '#A0522D' }]}
               onPress={() => router.push('/(tabs)/catalog')}
             >
@@ -273,7 +280,7 @@ export default function HomeScreen() {
               <Text style={styles.categoryCardValue}>{categoryStats.spirit}</Text>
               <Text style={styles.categoryCardLabel}>Spirits</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.categoryCard, { borderLeftColor: '#9B59B6' }]}
               onPress={() => router.push('/(tabs)/catalog')}
             >
@@ -281,7 +288,7 @@ export default function HomeScreen() {
               <Text style={styles.categoryCardValue}>{categoryStats.cocktail}</Text>
               <Text style={styles.categoryCardLabel}>Cocktails</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.categoryCard, { borderLeftColor: '#3498DB' }]}
               onPress={() => router.push('/(tabs)/catalog')}
             >
@@ -299,7 +306,7 @@ export default function HomeScreen() {
                 <Star size={18} color={Colors.secondary} fill={Colors.secondary} />
                 <Text style={styles.sectionTitle}>Featured Selections</Text>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.seeAllButton}
                 onPress={() => router.push('/(tabs)/catalog')}
               >
@@ -314,37 +321,22 @@ export default function HomeScreen() {
             >
               {featuredWines.slice(0, 3).map((wine) => (
                 <View key={wine.id} style={styles.featuredCard}>
-                  <WineCard
-                    wine={wine}
-                    onPress={() => router.push(`/wine/${wine.id}`)}
-                  />
+                  <WineCard wine={wine} onPress={() => router.push(`/wine/${wine.id}`)} />
                 </View>
               ))}
               {featuredBeers.slice(0, 2).map((beer) => (
                 <View key={beer.id} style={styles.featuredCard}>
-                  <BeverageCard
-                    beverage={beer}
-                    category="beer"
-                    onPress={() => router.push(`/beverage/beer/${beer.id}`)}
-                  />
+                  <BeverageCard beverage={beer} category="beer" onPress={() => router.push(`/beverage/beer/${beer.id}`)} />
                 </View>
               ))}
               {featuredSpirits.slice(0, 2).map((spirit) => (
                 <View key={spirit.id} style={styles.featuredCard}>
-                  <BeverageCard
-                    beverage={spirit}
-                    category="spirit"
-                    onPress={() => router.push(`/beverage/spirit/${spirit.id}`)}
-                  />
+                  <BeverageCard beverage={spirit} category="spirit" onPress={() => router.push(`/beverage/spirit/${spirit.id}`)} />
                 </View>
               ))}
               {featuredCocktails.slice(0, 2).map((cocktail) => (
                 <View key={cocktail.id} style={styles.featuredCard}>
-                  <BeverageCard
-                    beverage={cocktail}
-                    category="cocktail"
-                    onPress={() => router.push(`/beverage/cocktail/${cocktail.id}`)}
-                  />
+                  <BeverageCard beverage={cocktail} category="cocktail" onPress={() => router.push(`/beverage/cocktail/${cocktail.id}`)} />
                 </View>
               ))}
             </ScrollView>
@@ -353,7 +345,7 @@ export default function HomeScreen() {
 
         {/* Tasting Journal Prompt */}
         <View style={styles.section}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.journalPromptCard}
             onPress={() => router.push('/(tabs)/journal')}
           >
@@ -374,8 +366,8 @@ export default function HomeScreen() {
 
         {restaurant?.coverImageUrl && (
           <View style={styles.restaurantBanner}>
-            <Image 
-              source={{ uri: restaurant.coverImageUrl }} 
+            <Image
+              source={{ uri: restaurant.coverImageUrl }}
               style={styles.bannerImage}
               contentFit="cover"
             />

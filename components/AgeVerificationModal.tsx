@@ -1,26 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
-  StyleSheet,
-  Text,
   View,
+  Text,
   TouchableOpacity,
+  StyleSheet,
   Platform,
+  Alert,
 } from 'react-native';
-import { Wine, ShieldCheck, XCircle } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Wine, ShieldCheck } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface AgeVerificationModalProps {
-  visible: boolean;
-  onConfirm: () => void;
-  onDeny: () => void;
-}
+const AGE_VERIFIED_KEY = 'unbottl_age_verified';
 
-export default function AgeVerificationModal({
-  visible,
-  onConfirm,
-  onDeny,
-}: AgeVerificationModalProps) {
+export default function AgeVerificationModal() {
+  const { isAuthenticated, isAgeVerified: authAgeVerified } = useAuth();
+  const [visible, setVisible] = useState(false);
+  const [localVerified, setLocalVerified] = useState(true); // default true to avoid flash
+
+  useEffect(() => {
+    checkAgeVerification();
+  }, [isAuthenticated, authAgeVerified]);
+
+  const checkAgeVerification = async () => {
+    // Authenticated users who are already verified don't need the modal
+    if (isAuthenticated && authAgeVerified) {
+      setLocalVerified(true);
+      setVisible(false);
+      return;
+    }
+
+    // Check local storage for guest users (or unverified authenticated users)
+    try {
+      const stored = await AsyncStorage.getItem(AGE_VERIFIED_KEY);
+      if (stored === 'true') {
+        setLocalVerified(true);
+        setVisible(false);
+      } else {
+        setLocalVerified(false);
+        setVisible(true);
+      }
+    } catch {
+      setLocalVerified(false);
+      setVisible(true);
+    }
+  };
+
+  const handleConfirm = async () => {
+    try {
+      await AsyncStorage.setItem(AGE_VERIFIED_KEY, 'true');
+    } catch {}
+    setLocalVerified(true);
+    setVisible(false);
+  };
+
+  const handleDeny = () => {
+    Alert.alert(
+      'Access Restricted',
+      'You must be 21 or older to use Unbottl. If you believe this is an error, please contact support@unbottl.com.',
+    );
+  };
+
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
@@ -30,31 +74,35 @@ export default function AgeVerificationModal({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          {/* Logo / Icon */}
           <View style={styles.iconContainer}>
-            <Wine size={48} color={Colors.primary} strokeWidth={1.5} />
+            <ShieldCheck size={48} color={Colors.primary} strokeWidth={1.5} />
           </View>
 
           <Text style={styles.title}>Age Verification</Text>
           <Text style={styles.subtitle}>
-            This app contains alcohol-related content. You must be at least 21 years old to continue.
+            This app contains alcohol-related content.
+          </Text>
+          <Text style={styles.body}>
+            You must be 21 years of age or older to use Unbottl. By continuing, you confirm that you meet the legal drinking age requirement.
           </Text>
 
-          <Text style={styles.question}>Are you 21 or older?</Text>
-
-          {/* Confirm button */}
-          <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-            <ShieldCheck size={20} color={Colors.white} />
-            <Text style={styles.confirmText}>Yes, I'm 21 or Older</Text>
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={handleConfirm}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.confirmText}>I am 21 or older</Text>
           </TouchableOpacity>
 
-          {/* Deny button */}
-          <TouchableOpacity style={styles.denyButton} onPress={onDeny}>
-            <Text style={styles.denyText}>No, I'm Under 21</Text>
+          <TouchableOpacity
+            style={styles.denyButton}
+            onPress={handleDeny}
+          >
+            <Text style={styles.denyText}>I am under 21</Text>
           </TouchableOpacity>
 
-          <Text style={styles.disclaimer}>
-            By confirming, you agree that you are of legal drinking age in your location. We do not sell or deliver alcohol.
+          <Text style={styles.legal}>
+            By using Unbottl you agree to our Terms of Service and Privacy Policy. Unbottl does not sell or facilitate the sale of alcohol.
           </Text>
         </View>
       </View>
@@ -71,21 +119,21 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   card: {
-    backgroundColor: Colors.background,
-    borderRadius: 28,
+    backgroundColor: Colors.surface,
+    borderRadius: 24,
     padding: 32,
+    alignItems: 'center',
     width: '100%',
     maxWidth: 380,
-    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 24,
-    elevation: 12,
+    elevation: 8,
   },
   iconContainer: {
-    width: 96,
-    height: 96,
+    width: 88,
+    height: 88,
     borderRadius: 28,
     backgroundColor: Colors.primary + '12',
     justifyContent: 'center',
@@ -93,68 +141,56 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700' as const,
+    fontSize: 24,
+    fontWeight: '700',
     color: Colors.text,
-    marginBottom: 12,
+    marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-    paddingHorizontal: 8,
+    marginBottom: 16,
   },
-  question: {
-    fontSize: 18,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 20,
+  body: {
+    fontSize: 15,
+    color: Colors.textMuted,
     textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 28,
   },
   confirmButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: Colors.primary,
     borderRadius: 14,
     paddingVertical: 16,
+    alignItems: 'center',
     width: '100%',
-    gap: 10,
     marginBottom: 12,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   confirmText: {
-    color: Colors.white,
+    color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   denyButton: {
-    backgroundColor: 'transparent',
     borderRadius: 14,
     paddingVertical: 14,
-    width: '100%',
     alignItems: 'center',
-    borderWidth: 2,
+    width: '100%',
+    borderWidth: 1.5,
     borderColor: Colors.border,
     marginBottom: 20,
   },
   denyText: {
-    color: Colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '500' as const,
+    color: Colors.textMuted,
+    fontSize: 15,
+    fontWeight: '500',
   },
-  disclaimer: {
+  legal: {
     fontSize: 11,
     color: Colors.textMuted,
     textAlign: 'center',
     lineHeight: 16,
-    paddingHorizontal: 8,
   },
 });
