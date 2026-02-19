@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Wine, ShieldCheck } from 'lucide-react-native';
+import { Shield } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -75,7 +75,7 @@ export default function AgeVerificationModal() {
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.iconContainer}>
-            <ShieldCheck size={48} color={Colors.primary} strokeWidth={1.5} />
+            <Shield size={48} color={Colors.primary} strokeWidth={1.5} />
           </View>
 
           <Text style={styles.title}>Age Verification</Text>
