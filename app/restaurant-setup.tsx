@@ -23,10 +23,11 @@ import AuthGuard from '@/components/AuthGuard';
 export default function RestaurantSetupScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { restaurant, locations, needsSetup, updateRestaurant, refetch } = useRestaurant();
+  const { restaurant, locations: contextLocations, needsSetup, updateRestaurant, refetch } = useRestaurant();
   const isEditing = !!restaurant && !needsSetup;
 
   const [loading, setLoading] = useState(false);
+  const [localLocations, setLocalLocations] = useState(contextLocations || []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,17 +46,26 @@ export default function RestaurantSetupScreen() {
     zip_code: '',
   });
 
-  // Pre-fill form when editing an existing restaurant
+  // Sync local locations when context updates (initial load only)
   useEffect(() => {
-    if (restaurant) {
+    if (contextLocations && contextLocations.length > 0) {
+      setLocalLocations(contextLocations);
+    }
+  }, [contextLocations]);
+
+  // Pre-fill form when editing an existing restaurant (only once on mount)
+  const [hasPreFilled, setHasPreFilled] = useState(false);
+  useEffect(() => {
+    if (restaurant && !hasPreFilled) {
       setFormData({
         name: restaurant.name || '',
         email: restaurant.email || '',
         phone: restaurant.phone || '',
-        address: '', // Keep empty — address field is used to add new locations
+        address: '',
       });
+      setHasPreFilled(true);
     }
-  }, [restaurant]);
+  }, [restaurant, hasPreFilled]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -93,13 +103,13 @@ export default function RestaurantSetupScreen() {
         const trimmedAddress = formData.address.trim();
         if (trimmedAddress && restaurant) {
           // Check if this address already exists as a location
-          const addressExists = locations?.some(
+          const addressExists = localLocations?.some(
             loc => loc.address?.toLowerCase() === trimmedAddress.toLowerCase()
           );
 
           if (!addressExists) {
             // Check location limit before adding
-            if ((locations?.length || 0) >= getLocationLimit()) {
+            if ((localLocations?.length || 0) >= getLocationLimit()) {
               await refetch();
               setFormData(prev => ({ ...prev, address: '' }));
               setShowLocations(true);
@@ -114,18 +124,35 @@ export default function RestaurantSetupScreen() {
               return;
             }
 
-            const { error: locError } = await supabase
+            const newLocObj = {
+              restaurant_id: restaurant.id,
+              name: trimmedAddress.split(',')[0] || 'New Location',
+              address: trimmedAddress,
+            };
+
+            const { data: newLocData, error: locError } = await supabase
               .from('locations')
-              .insert({
+              .insert(newLocObj)
+              .select()
+              .single();
+
+            if (locError) {
+              console.error('Location add error:', JSON.stringify(locError));
+              // Still add to local state with a temp ID so UI updates
+              setLocalLocations(prev => [...prev, {
+                id: 'temp-' + Date.now(),
                 restaurant_id: restaurant.id,
-                name: trimmedAddress.split(',')[0] || 'New Location',
-                address: trimmedAddress,
-              });
-            if (locError) console.error('Location add error:', locError);
+                name: newLocObj.name,
+                address: newLocObj.address,
+                is_active: true,
+              }]);
+            } else if (newLocData) {
+              setLocalLocations(prev => [...prev, newLocData]);
+            }
           }
         }
 
-        await refetch();
+        refetch(); // Background sync
 
         // Clear the address field after saving so it's ready for a new one
         setFormData(prev => ({ ...prev, address: '' }));
@@ -178,7 +205,7 @@ export default function RestaurantSetupScreen() {
     return 1;
   };
 
-  const canAddLocation = (locations?.length || 0) < getLocationLimit();
+  const canAddLocation = (localLocations?.length || 0) < getLocationLimit();
 
   const handleAddLocation = async () => {
     if (!canAddLocation) {
@@ -202,20 +229,34 @@ export default function RestaurantSetupScreen() {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const newLocObj = {
+        restaurant_id: restaurant.id,
+        name: newLocation.name.trim(),
+        address: newLocation.address.trim() || null,
+        city: newLocation.city.trim() || null,
+        state: newLocation.state.trim() || null,
+        zip_code: newLocation.zip_code.trim() || null,
+      };
+
+      const { data: newLocData, error } = await supabase
         .from('locations')
-        .insert({
-          restaurant_id: restaurant.id,
-          name: newLocation.name.trim(),
-          address: newLocation.address.trim() || null,
-          city: newLocation.city.trim() || null,
-          state: newLocation.state.trim() || null,
-          zip_code: newLocation.zip_code.trim() || null,
-        });
+        .insert(newLocObj)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Add location error:', JSON.stringify(error));
+        // Still add to local state with temp ID
+        setLocalLocations(prev => [...prev, {
+          id: 'temp-' + Date.now(),
+          ...newLocObj,
+          is_active: true,
+        }]);
+      } else if (newLocData) {
+        setLocalLocations(prev => [...prev, newLocData]);
+      }
 
-      await refetch();
+      refetch(); // Background sync
       setNewLocation({ name: '', address: '', city: '', state: '', zip_code: '' });
       setAddingLocation(false);
       Alert.alert('Success', 'New location added!');
@@ -245,7 +286,9 @@ export default function RestaurantSetupScreen() {
                 console.error('Delete location error:', JSON.stringify(error));
                 throw error;
               }
-              await refetch();
+              // Update local state immediately
+              setLocalLocations(prev => prev.filter(loc => loc.id !== locationId));
+              refetch(); // Background sync
             } catch (err: any) {
               console.error('Delete location failed:', err);
               Alert.alert('Error', err.message || 'Failed to delete location. You may not have permission.');
@@ -365,7 +408,7 @@ export default function RestaurantSetupScreen() {
                   <View>
                     <Text style={styles.locationsSectionTitle}>Locations</Text>
                     <Text style={styles.locationsSectionCount}>
-                      {locations?.length || 0} location{(locations?.length || 0) !== 1 ? 's' : ''}
+                      {localLocations?.length || 0} location{(localLocations?.length || 0) !== 1 ? 's' : ''}
                     </Text>
                   </View>
                   {showLocations
@@ -377,7 +420,7 @@ export default function RestaurantSetupScreen() {
                 {showLocations && (
                   <View style={styles.locationsContent}>
                     {/* Existing locations */}
-                    {locations?.map((loc) => (
+                    {localLocations?.map((loc) => (
                       <View key={loc.id} style={styles.locationCard}>
                         <View style={styles.locationInfo}>
                           <Text style={styles.locationName}>{loc.name}</Text>
@@ -493,7 +536,7 @@ export default function RestaurantSetupScreen() {
                           styles.addLocationText,
                           !canAddLocation && { color: Colors.textMuted },
                         ]}>
-                          {canAddLocation ? 'Add Location' : `Upgrade to Add More (${locations?.length}/${getLocationLimit()})`}
+                          {canAddLocation ? 'Add Location' : `Upgrade to Add More (${localLocations?.length}/${getLocationLimit()})`}
                         </Text>
                       </TouchableOpacity>
                     )}
