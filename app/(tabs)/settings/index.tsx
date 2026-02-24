@@ -201,8 +201,8 @@ export default function SettingsScreen() {
     { icon: QrCode, label: 'QR Menu', description: 'Generate customer QR codes', route: '/qr-menu', color: Colors.secondary },
     { icon: FileSpreadsheet, label: 'Import CSV', description: 'Bulk import from spreadsheet', route: '/csv-import', color: '#10B981' },
     { icon: ScanBarcode, label: 'Scan Labels', description: 'Scan wine/beer labels to add', route: '/wine-scanner', color: '#8B5CF6' },
-    { icon: BarChart3, label: 'Analytics', description: 'View menu performance', route: '/qr-menu', color: '#F59E0B' },
-    { icon: Building2, label: 'Restaurant Details', description: 'Update restaurant info', route: '/qr-menu', color: '#EC4899' },
+    { icon: BarChart3, label: 'Analytics', description: 'View menu performance', route: '/analytics', color: '#F59E0B' },
+    { icon: Building2, label: 'Restaurant Details', description: 'Update restaurant info', route: '/restaurant-setup', color: '#EC4899' },
     { icon: Zap, label: 'Subscription', description: 'Manage your plan', route: '/pricing', color: '#F59E0B' },
     { icon: Users, label: 'Team', description: 'Manage staff access', route: '/staff-management', color: '#06B6D4' },
   ];

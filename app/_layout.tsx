@@ -165,6 +165,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="analytics"
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="wishlist"
         options={{
           presentation: "modal",
