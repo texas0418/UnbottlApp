@@ -15,7 +15,6 @@ import { X, Plus, Check, Sparkles, Wine, Beer, GlassWater, Martini, Coffee, Uten
 import { generateText } from '@/services/ai-toolkit';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { BeverageCategory, WineType, BeerType, SpiritType, CocktailType, NonAlcoholicType } from '@/types';
 import Button from '@/components/Button';
@@ -80,8 +79,7 @@ const nonAlcTypes: { label: string; value: NonAlcoholicType }[] = [
 export default function AddBeverageScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string }>();
-  const { addWine, isAddingWine } = useWines();
-  const { addBeer, addSpirit, addCocktail, addNonAlcoholic, isAddingBeer, isAddingSpirit, isAddingCocktail, isAddingNonAlcoholic } = useBeverages();
+  const { addWine, isAddingWine, addBeer, addSpirit, addCocktail, addNonAlcoholic, isAddingBeer, isAddingSpirit, isAddingCocktail, isAddingNonAlcoholic } = useBeverages();
 
   const initialCategory = (params.category as BeverageCategory) || 'wine';
   const [selectedCategory, setSelectedCategory] = useState<BeverageCategory>(initialCategory);

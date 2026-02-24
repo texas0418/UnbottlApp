@@ -11,7 +11,6 @@ import {
 import { useRouter } from 'expo-router';
 import { Wine, Beer, Martini, Coffee, GlassWater, Package, Filter, Leaf, X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
 import WineCard from '@/components/WineCard';
@@ -98,8 +97,7 @@ type CatalogItem = {
 
 export default function CatalogScreen() {
   const router = useRouter();
-  const { wines, isLoading: winesLoading } = useWines();
-  const { beers, spirits, cocktails, nonAlcoholic, isLoading: beveragesLoading } = useBeverages();
+  const { wines, beers, spirits, cocktails, nonAlcoholic, isLoading: beveragesLoading } = useBeverages();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BeverageCategory | 'all'>('all');
@@ -108,7 +106,7 @@ export default function CatalogScreen() {
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<DietaryTag[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const isLoading = winesLoading || beveragesLoading;
+  const isLoading = beveragesLoading;
 
   const getTypeFilters = () => {
     switch (selectedCategory) {
