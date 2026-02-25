@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Wine, Beer, Martini, Coffee, GlassWater, Package, Filter, Leaf, X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
@@ -471,7 +472,7 @@ export default function CatalogScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
         data={filteredItems}
         keyExtractor={(item) => `${item.category}-${item.id}`}
@@ -498,7 +499,7 @@ export default function CatalogScreen() {
           />
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
