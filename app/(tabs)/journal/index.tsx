@@ -16,6 +16,7 @@ import { Star, Plus, Calendar, MapPin, Wine, Trash2, Edit3, X, ChevronDown } fro
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useJournal } from '@/contexts/JournalContext';
+import EmptyState from '@/components/EmptyState';
 import { JournalEntry, WineType, BeverageCategory } from '@/types';
 
 const WINE_TYPES: { value: WineType; label: string; color: string }[] = [
@@ -256,17 +257,13 @@ export default function JournalScreen() {
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Wine size={64} color={Colors.borderLight} />
-      <Text style={styles.emptyTitle}>Start Your Wine Journey</Text>
-      <Text style={styles.emptySubtitle}>
-        Track the wines you try with personal notes and ratings
-      </Text>
-      <TouchableOpacity style={styles.addFirstButton} onPress={openAddModal}>
-        <Plus size={20} color={Colors.white} />
-        <Text style={styles.addFirstButtonText}>Add Your First Wine</Text>
-      </TouchableOpacity>
-    </View>
+    <EmptyState
+      icon={Wine}
+      title="Start your tasting journal"
+      description="Track the drinks you try with personal notes and ratings — your own record of every great pour."
+      actionLabel="Add your first note"
+      onAction={openAddModal}
+    />
   );
 
   if (isLoading) {

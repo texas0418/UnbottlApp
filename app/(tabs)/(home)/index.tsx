@@ -39,6 +39,7 @@ import BeverageCard from '@/components/BeverageCard';
 import SearchBar from '@/components/SearchBar';
 import PreferencesSetup from '@/components/PreferencesSetup';
 import AgeVerificationModal from '@/components/AgeVerificationModal';
+import EmptyState from '@/components/EmptyState';
 import { categoryColors } from '@/mocks/beverages';
 
 const categoryTabs: { label: string; value: BeverageCategory | 'all'; icon: React.ReactNode }[] = [
@@ -483,16 +484,21 @@ export default function DiscoverScreen() {
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
-          <View style={styles.emptySearch}>
-            <Text style={styles.emptySearchTitle}>
-              {allItems.length === 0 ? 'No drinks yet' : 'No drinks found'}
-            </Text>
-            <Text style={styles.emptySearchText}>
-              {allItems.length === 0
-                ? 'Scan a menu to add drinks, or check back soon.'
-                : 'Try adjusting your search or filters'}
-            </Text>
-          </View>
+          allItems.length === 0 ? (
+            <EmptyState
+              icon={QrCode}
+              title="No drinks yet"
+              description="Scan a restaurant's Unbottl QR code to browse its menu, save drinks you love, and build your taste profile."
+              actionLabel="Scan a menu"
+              onAction={() => router.push('/scan-menu')}
+            />
+          ) : (
+            <EmptyState
+              icon={Filter}
+              title="No drinks found"
+              description="Try adjusting your search or filters to find what you're looking for."
+            />
+          )
         }
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
