@@ -386,11 +386,13 @@ export default function CustomerMenuScreen() {
           </View>
         </View>
 
-        <View style={styles.customerBanner}>
-          <Text style={styles.customerBannerText}>
-            This is how customers will see your menu
-          </Text>
-        </View>
+        {!scannedSlug && (
+          <View style={styles.customerBanner}>
+            <Text style={styles.customerBannerText}>
+              This is how customers will see your menu
+            </Text>
+          </View>
+        )}
 
         <ScrollView 
           horizontal 
