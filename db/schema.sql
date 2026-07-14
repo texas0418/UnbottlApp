@@ -20,7 +20,8 @@
 --   1. db/schema.sql                    (this file — tables + RLS)
 --   2. db/fix-user-profiles-trigger.sql (auto-create profiles on signup)
 --   3. db/fix-rls-recursion.sql         (breaks restaurants/staff RLS loop)
---   4. db/public-menu-access.sql        (public QR-menu views)
+--   4. db/rpc-functions.sql             (create_restaurant/delete_account/etc.)
+--   5. db/public-menu-access.sql        (public QR-menu views)
 -- Then point the app's EXPO_PUBLIC_SUPABASE_URL / _ANON_KEY (and EAS secrets)
 -- at the new project.
 -- ============================================================================
