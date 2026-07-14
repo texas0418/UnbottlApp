@@ -122,24 +122,13 @@ export default function LoginScreen() {
           .eq('id', user.id)
           .single();
 
-        if (profile?.user_type === 'restaurant_owner') {
-          // Check if they already have a restaurant set up
-          const { data: restaurants } = await supabase
-            .from('restaurants')
-            .select('id')
-            .eq('owner_id', user.id)
-            .limit(1);
-
-          if (restaurants && restaurants.length > 0) {
-            // Restaurant already set up — go to Profile/Settings tab
-            router.replace('/(tabs)/settings');
-          } else {
-            // No restaurant yet — go to setup
-            router.replace('/restaurant-setup');
-          }
+        if (profile?.user_type === 'restaurant_owner' || profile?.user_type === 'staff') {
+          // Restaurant accounts land on the business dashboard, which surfaces
+          // a setup banner if they haven't created their restaurant yet.
+          router.replace('/(business)/dashboard');
         } else {
-          // Consumer — go to Home tab
-          router.replace('/');
+          // Consumer — go to the discover experience.
+          router.replace('/(tabs)/(home)');
         }
       }
     } catch (error) {

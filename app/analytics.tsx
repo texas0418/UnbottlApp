@@ -27,7 +27,7 @@ const screenWidth = Dimensions.get('window').width;
 
 type TimeRange = '7d' | '30d';
 
-function AnalyticsContent() {
+export function AnalyticsContent({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const {
     analyticsData,
@@ -77,9 +77,13 @@ function AnalyticsContent() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
-          <X size={24} color={Colors.text} />
-        </TouchableOpacity>
+        {embedded ? (
+          <View style={{ width: 40 }} />
+        ) : (
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+            <X size={24} color={Colors.text} />
+          </TouchableOpacity>
+        )}
         <Text style={styles.headerTitle}>Analytics</Text>
         <View style={{ width: 40 }} />
       </View>

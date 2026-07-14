@@ -32,7 +32,10 @@ function RootLayoutNav() {
         contentStyle: { backgroundColor: Colors.background },
       }}
     >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(business)" options={{ headerShown: false }} />
       <Stack.Screen
         name="wine/[id]"
         options={{
@@ -86,7 +89,7 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
-        name="menu-scanner"
+        name="menu-import"
         options={{
           presentation: "modal",
           headerShown: false,
