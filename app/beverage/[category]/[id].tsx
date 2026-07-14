@@ -12,12 +12,13 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import { 
   ArrowLeft, Edit2, Trash2, Star, MapPin, Droplets,
-  Wine, Beer, GlassWater, Martini, Coffee, Percent, Clock, Package, Bookmark
+  Wine, Beer, GlassWater, Martini, Coffee, Percent, Clock, Package, Bookmark, Heart
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import { BeverageCategory } from '@/types';
 import { 
@@ -48,6 +49,7 @@ export default function BeverageDetailScreen() {
     updateBeer, updateSpirit, updateCocktail, updateNonAlcoholic,
   } = useBeverages();
   const { isInWishlist, addToWishlist, removeByBeverageId, isAdding } = useWishlist();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { restaurant } = useRestaurant();
 
   const beverageCategory = category as BeverageCategory;
@@ -64,6 +66,13 @@ export default function BeverageDetailScreen() {
 
   const beverage = getBeverage();
   const isWishlisted = beverage ? isInWishlist(beverage.id) : false;
+  const isFav = beverage ? isFavorite(beverage.id) : false;
+
+  const handleToggleFavorite = () => {
+    if (!beverage) return;
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleFavorite(beverage.id);
+  };
 
   if (!beverage) {
     return (
@@ -416,14 +425,24 @@ export default function BeverageDetailScreen() {
           ),
           headerRight: () => (
             <View style={styles.headerActions}>
-              <TouchableOpacity 
-                onPress={handleToggleWishlist} 
+              <TouchableOpacity
+                onPress={handleToggleFavorite}
+                style={styles.headerButton}
+              >
+                <Heart
+                  size={22}
+                  color={Colors.white}
+                  fill={isFav ? Colors.white : 'none'}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleToggleWishlist}
                 style={styles.headerButton}
                 disabled={isAdding}
               >
-                <Bookmark 
-                  size={22} 
-                  color={Colors.white} 
+                <Bookmark
+                  size={22}
+                  color={Colors.white}
                   fill={isWishlisted ? Colors.white : 'none'}
                 />
               </TouchableOpacity>

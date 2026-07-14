@@ -18,10 +18,12 @@ import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useJournal } from '@/contexts/JournalContext';
 import { useWines } from '@/contexts/WineContext';
+import { useBeverages } from '@/contexts/BeverageContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import EmptyState from '@/components/EmptyState';
 import WineCard from '@/components/WineCard';
+import BeverageCard from '@/components/BeverageCard';
 import { JournalEntry, WineType, BeverageCategory } from '@/types';
 
 type SavedTab = 'favorites' | 'wishlist' | 'notes';
@@ -50,14 +52,24 @@ export default function JournalScreen() {
   const router = useRouter();
   const { entries, isLoading, addEntry, updateEntry, deleteEntry, totalEntries, getAverageRating, isAdding } = useJournal();
   const { wines } = useWines();
+  const { beers, spirits, cocktails, nonAlcoholic } = useBeverages();
   const { favoriteIds } = useFavorites();
   const { wishlistItems, removeFromWishlist } = useWishlist();
 
   const [activeTab, setActiveTab] = useState<SavedTab>('favorites');
-  const favoriteWines = React.useMemo(
-    () => wines.filter((w) => favoriteIds.includes(w.id)),
-    [wines, favoriteIds]
-  );
+
+  // Favorites can be any drink category, keyed by beverage id.
+  const favoriteDrinks = React.useMemo(() => {
+    const tagged: { id: string; category: BeverageCategory; data: any }[] = [
+      ...wines.map((w) => ({ id: w.id, category: 'wine' as BeverageCategory, data: w })),
+      ...beers.map((b) => ({ id: b.id, category: 'beer' as BeverageCategory, data: b })),
+      ...spirits.map((s) => ({ id: s.id, category: 'spirit' as BeverageCategory, data: s })),
+      ...cocktails.map((c) => ({ id: c.id, category: 'cocktail' as BeverageCategory, data: c })),
+      ...nonAlcoholic.map((n) => ({ id: n.id, category: 'non-alcoholic' as BeverageCategory, data: n })),
+    ];
+    const favSet = new Set(favoriteIds);
+    return tagged.filter((t) => favSet.has(t.id));
+  }, [wines, beers, spirits, cocktails, nonAlcoholic, favoriteIds]);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
@@ -285,7 +297,7 @@ export default function JournalScreen() {
   );
 
   const segments: { key: SavedTab; label: string; icon: typeof Heart; count: number }[] = [
-    { key: 'favorites', label: 'Favorites', icon: Heart, count: favoriteWines.length },
+    { key: 'favorites', label: 'Favorites', icon: Heart, count: favoriteDrinks.length },
     { key: 'wishlist', label: 'Wishlist', icon: Bookmark, count: wishlistItems.length },
     { key: 'notes', label: 'Notes', icon: BookOpen, count: entries.length },
   ];
@@ -317,19 +329,28 @@ export default function JournalScreen() {
 
   const renderFavorites = () => (
     <FlatList
-      data={favoriteWines}
-      keyExtractor={(item) => item.id}
+      data={favoriteDrinks}
+      keyExtractor={(item) => `${item.category}-${item.id}`}
       renderItem={({ item }) => (
         <View style={styles.favoriteRow}>
-          <WineCard wine={item} compact onPress={() => router.push(`/wine/${item.id}`)} />
+          {item.category === 'wine' ? (
+            <WineCard wine={item.data} compact onPress={() => router.push(`/wine/${item.id}`)} />
+          ) : (
+            <BeverageCard
+              beverage={item.data}
+              category={item.category}
+              compact
+              onPress={() => router.push(`/beverage/${item.category}/${item.id}`)}
+            />
+          )}
         </View>
       )}
-      contentContainerStyle={favoriteWines.length === 0 ? styles.emptyList : styles.listContent}
+      contentContainerStyle={favoriteDrinks.length === 0 ? styles.emptyList : styles.listContent}
       ListEmptyComponent={
         <EmptyState
           icon={Heart}
           title="No favorites yet"
-          description="Tap the heart on any wine to save it here for quick access."
+          description="Tap the heart on any drink to save it here for quick access."
           actionLabel="Discover drinks"
           onAction={() => router.replace('/(tabs)/(home)')}
         />

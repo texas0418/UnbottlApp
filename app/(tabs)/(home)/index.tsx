@@ -470,7 +470,7 @@ export default function DiscoverScreen() {
       {item.category === 'wine' ? (
         <WineCard wine={item.data as WineType} onPress={() => handleItemPress(item)} quickSave />
       ) : (
-        <BeverageCard beverage={item.data} category={item.category} onPress={() => handleItemPress(item)} />
+        <BeverageCard beverage={item.data} category={item.category} onPress={() => handleItemPress(item)} quickSave />
       )}
     </View>
   );
