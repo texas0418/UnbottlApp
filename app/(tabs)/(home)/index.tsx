@@ -26,9 +26,12 @@ import {
   Sparkles,
   Settings2,
   Zap,
+  Clock,
+  QrCode,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
+import { useRecentMenus } from '@/contexts/RecentMenusContext';
 import { useRecommendations } from '@/contexts/RecommendationsContext';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
 import WineCard from '@/components/WineCard';
@@ -114,6 +117,7 @@ export default function DiscoverScreen() {
   const router = useRouter();
   const { wines, beers, spirits, cocktails, nonAlcoholic, isLoading } = useBeverages();
   const { topPicks, learnedPreferences } = useRecommendations();
+  const { recentMenus } = useRecentMenus();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BeverageCategory | 'all'>('all');
@@ -309,6 +313,46 @@ export default function DiscoverScreen() {
           </View>
           <ArrowRight size={18} color={Colors.primary} />
         </TouchableOpacity>
+      )}
+
+      {/* Recently viewed menus */}
+      {recentMenus.length > 0 && (
+        <>
+          <View style={styles.recentHeader}>
+            <View style={styles.recentTitleRow}>
+              <Clock size={16} color={Colors.primary} />
+              <Text style={styles.recentTitle}>Recently viewed menus</Text>
+            </View>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recentList}
+          >
+            {recentMenus.map((menu) => (
+              <TouchableOpacity
+                key={menu.restaurantId}
+                style={styles.recentCard}
+                onPress={() =>
+                  router.push({ pathname: '/customer-menu', params: { r: menu.restaurantId } })
+                }
+                activeOpacity={0.75}
+              >
+                <View style={styles.recentThumb}>
+                  {menu.imageUrl ? (
+                    <Image source={{ uri: menu.imageUrl }} style={styles.recentThumbImg} contentFit="cover" />
+                  ) : (
+                    <QrCode size={22} color={Colors.primary} />
+                  )}
+                </View>
+                <Text style={styles.recentName} numberOfLines={1}>{menu.name}</Text>
+                <Text style={styles.recentMeta} numberOfLines={1}>
+                  {menu.cuisineType ? `${menu.cuisineType} · ` : ''}{menu.itemCount} drinks
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </>
       )}
 
       {/* Browse */}
@@ -590,6 +634,31 @@ const styles = StyleSheet.create({
   setupTextWrap: { flex: 1 },
   setupTitle: { fontSize: 15, fontWeight: '600' as const, color: Colors.text, marginBottom: 2 },
   setupSubtitle: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
+  recentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 28,
+    marginBottom: 12,
+  },
+  recentTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  recentTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.text },
+  recentList: { paddingHorizontal: 20, gap: 12, paddingRight: 20 },
+  recentCard: { width: 130 },
+  recentThumb: {
+    width: 130,
+    height: 90,
+    borderRadius: 14,
+    backgroundColor: Colors.primary + '12',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  recentThumbImg: { width: '100%', height: '100%' },
+  recentName: { fontSize: 14, fontWeight: '600' as const, color: Colors.text },
+  recentMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 1 },
   browseTitle: {
     fontSize: 18,
     fontWeight: '700' as const,

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,8 +7,10 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import {
@@ -30,6 +32,8 @@ import Colors from '@/constants/colors';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
+import { useRecentMenus } from '@/contexts/RecentMenusContext';
+import { fetchPublicMenu } from '@/services/publicMenu';
 import { wineTypeColors, wineTypeLabels } from '@/mocks/wines';
 import { BeverageCategory } from '@/types';
 
@@ -48,10 +52,52 @@ const categoryConfig: Record<CategoryTab, { label: string; icon: React.ElementTy
 
 export default function CustomerMenuScreen() {
   const router = useRouter();
-  const { restaurant } = useRestaurant();
-  const { wines } = useWines();
-  const { beers, spirits, cocktails, nonAlcoholic } = useBeverages();
-  
+  const params = useLocalSearchParams<{ r?: string }>();
+  const scannedSlug = typeof params.r === 'string' && params.r.length > 0 ? params.r : undefined;
+
+  const { restaurant: ctxRestaurant } = useRestaurant();
+  const { wines: ctxWines } = useWines();
+  const {
+    beers: ctxBeers,
+    spirits: ctxSpirits,
+    cocktails: ctxCocktails,
+    nonAlcoholic: ctxNonAlcoholic,
+  } = useBeverages();
+  const { recordView } = useRecentMenus();
+
+  // When arriving from a scanned QR code (`?r=<slug>`), load that restaurant's
+  // public menu. Otherwise fall back to the current restaurant in context
+  // (owner preview from the QR generator).
+  const publicMenuQuery = useQuery({
+    queryKey: ['publicMenu', scannedSlug],
+    queryFn: () => fetchPublicMenu(scannedSlug as string),
+    enabled: !!scannedSlug,
+  });
+  const publicMenu = publicMenuQuery.data ?? null;
+
+  useEffect(() => {
+    if (publicMenu?.restaurant) {
+      recordView({
+        restaurantId: publicMenu.restaurant.id,
+        name: publicMenu.restaurant.name,
+        cuisineType: publicMenu.restaurant.cuisineType,
+        imageUrl: publicMenu.restaurant.coverImageUrl ?? publicMenu.restaurant.logoUrl,
+        itemCount: publicMenu.itemCount,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publicMenu?.restaurant?.id]);
+
+  const restaurant = scannedSlug ? publicMenu?.restaurant : ctxRestaurant;
+  const wines = scannedSlug ? publicMenu?.wines ?? [] : ctxWines;
+  const beers = scannedSlug ? publicMenu?.beers ?? [] : ctxBeers;
+  const spirits = scannedSlug ? publicMenu?.spirits ?? [] : ctxSpirits;
+  const cocktails = scannedSlug ? publicMenu?.cocktails ?? [] : ctxCocktails;
+  const nonAlcoholic = scannedSlug ? publicMenu?.nonAlcoholic ?? [] : ctxNonAlcoholic;
+
+  const isLoadingMenu = !!scannedSlug && publicMenuQuery.isLoading;
+  const menuNotFound = !!scannedSlug && !publicMenuQuery.isLoading && !publicMenu;
+
   const [activeCategory, setActiveCategory] = useState<CategoryTab>('all');
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     wine: true,
@@ -271,13 +317,55 @@ export default function CustomerMenuScreen() {
     );
   };
 
+  if (isLoadingMenu) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <X size={24} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Loading Menu</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.stateText}>Loading menu…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (menuNotFound) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <X size={24} color={Colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Menu</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.stateContainer}>
+          <Text style={styles.stateEmoji}>🍷</Text>
+          <Text style={styles.stateTitle}>Menu unavailable</Text>
+          <Text style={styles.stateText}>
+            We couldn&apos;t load this menu. It may be private or the code may be out of date.
+          </Text>
+          <TouchableOpacity style={styles.stateButton} onPress={() => router.back()}>
+            <Text style={styles.stateButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
           <X size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Menu Preview</Text>
+        <Text style={styles.headerTitle}>{scannedSlug ? 'Menu' : 'Menu Preview'}</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -368,6 +456,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    gap: 12,
+  },
+  stateEmoji: { fontSize: 44, marginBottom: 4 },
+  stateTitle: { fontSize: 20, fontWeight: '700' as const, color: Colors.text },
+  stateText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  stateButton: {
+    marginTop: 12,
+    backgroundColor: Colors.primary,
+    paddingVertical: 13,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+  },
+  stateButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' as const },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

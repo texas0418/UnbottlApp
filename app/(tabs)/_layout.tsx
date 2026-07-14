@@ -23,9 +23,9 @@ function ScanButton() {
           if (Platform.OS !== "web") {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           }
-          router.push("/menu-import");
+          router.push("/scan-menu");
         }}
-        accessibilityLabel="Scan a menu"
+        accessibilityLabel="Scan a restaurant menu QR code"
       >
         <ScanLine size={26} color={Colors.white} />
       </TouchableOpacity>

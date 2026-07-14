@@ -16,6 +16,7 @@ import { RecommendationsProvider } from "@/contexts/RecommendationsContext";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { RecentMenusProvider } from "@/contexts/RecentMenusContext";
 import Colors from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
@@ -140,6 +141,13 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
+        name="scan-menu"
+        options={{
+          presentation: "fullScreenModal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
         name="sommelier-chat"
         options={{
           presentation: "modal",
@@ -217,12 +225,14 @@ export default function RootLayout() {
                       <RecommendationsProvider>
                         <OfflineProvider>
                           <WishlistProvider>
+                            <RecentMenusProvider>
                             <NotificationsProvider>
                               <GestureHandlerRootView style={{ flex: 1 }}>
                                 <StatusBar style="dark" />
                                 <RootLayoutNav />
                               </GestureHandlerRootView>
                             </NotificationsProvider>
+                            </RecentMenusProvider>
                           </WishlistProvider>
                         </OfflineProvider>
                       </RecommendationsProvider>

@@ -11,7 +11,7 @@ import { useRestaurant } from '@/contexts/RestaurantContext';
 
 // ─── Supabase row → App type mappers ──────────────────────────────────
 
-interface SupabaseBeverage {
+export interface SupabaseBeverage {
   id: string;
   restaurant_id: string;
   category: string;
@@ -39,7 +39,7 @@ interface SupabaseBeverage {
   updated_at: string;
 }
 
-function toWine(row: SupabaseBeverage): Wine {
+export function toWine(row: SupabaseBeverage): Wine {
   const meta = row.metadata || {};
   return {
     id: row.id,
@@ -66,7 +66,7 @@ function toWine(row: SupabaseBeverage): Wine {
   };
 }
 
-function toBeer(row: SupabaseBeverage): Beer {
+export function toBeer(row: SupabaseBeverage): Beer {
   const meta = row.metadata || {};
   return {
     id: row.id,
@@ -92,7 +92,7 @@ function toBeer(row: SupabaseBeverage): Beer {
   };
 }
 
-function toSpirit(row: SupabaseBeverage): Spirit {
+export function toSpirit(row: SupabaseBeverage): Spirit {
   const meta = row.metadata || {};
   return {
     id: row.id,
@@ -117,7 +117,7 @@ function toSpirit(row: SupabaseBeverage): Spirit {
   };
 }
 
-function toCocktail(row: SupabaseBeverage): Cocktail {
+export function toCocktail(row: SupabaseBeverage): Cocktail {
   const meta = row.metadata || {};
   return {
     id: row.id,
@@ -139,7 +139,7 @@ function toCocktail(row: SupabaseBeverage): Cocktail {
   };
 }
 
-function toNonAlcoholic(row: SupabaseBeverage): NonAlcoholicBeverage {
+export function toNonAlcoholic(row: SupabaseBeverage): NonAlcoholicBeverage {
   const meta = row.metadata || {};
   return {
     id: row.id,
