@@ -10,13 +10,18 @@ if (__DEV__) {
   console.log('Supabase Key:', supabaseAnonKey ? '✅ Loaded' : '❌ Missing');
 }
 
+// Fail loudly rather than silently connecting to a placeholder project.
+// The only sources of truth are .env (local dev) and EAS secrets (builds).
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Supabase credentials not found!');
+  throw new Error(
+    'Missing Supabase credentials. Set EXPO_PUBLIC_SUPABASE_URL and ' +
+      'EXPO_PUBLIC_SUPABASE_ANON_KEY in .env for local dev and as EAS secrets for builds.'
+  );
 }
 
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co',
-  supabaseAnonKey || 'placeholder-key',
+  supabaseUrl,
+  supabaseAnonKey,
   {
     auth: {
       storage: AsyncStorage,
