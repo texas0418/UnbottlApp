@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from "expo-router";
-import { Compass, BookOpen, User, ScanLine } from "lucide-react-native";
+import { Compass, Bookmark, User, ScanLine } from "lucide-react-native";
 import React from "react";
 import { Platform, TouchableOpacity, View, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
@@ -82,8 +82,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="journal"
           options={{
-            title: "Journal",
-            tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
+            title: "Saved",
+            tabBarIcon: ({ color, size }) => <Bookmark size={size} color={color} />,
           }}
         />
         <Tabs.Screen

@@ -177,18 +177,11 @@ export default function SettingsScreen() {
   const accountItems = [
     { icon: User, label: 'Profile', description: 'Edit your profile', chevron: true, route: '/login' },
     {
-      icon: Heart,
-      label: 'Favorites',
-      description: 'Your saved drinks',
+      icon: Bookmark,
+      label: 'Saved',
+      description: 'Favorites, wishlist & tasting notes',
       chevron: true,
       route: '/(tabs)/journal',
-    },
-    {
-      icon: Bookmark,
-      label: 'Wishlist',
-      description: `${wishlistCount} items to try`,
-      chevron: true,
-      route: '/wishlist',
       badge: wishlistCount > 0 ? wishlistCount : undefined,
     },
   ];

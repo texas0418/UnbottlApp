@@ -12,12 +12,19 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { Star, Plus, Calendar, MapPin, Wine, Trash2, Edit3, X, ChevronDown } from 'lucide-react-native';
+import { Star, Plus, Calendar, MapPin, Wine, Trash2, Edit3, X, ChevronDown, Heart, Bookmark, BookOpen } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useJournal } from '@/contexts/JournalContext';
+import { useWines } from '@/contexts/WineContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 import EmptyState from '@/components/EmptyState';
+import WineCard from '@/components/WineCard';
 import { JournalEntry, WineType, BeverageCategory } from '@/types';
+
+type SavedTab = 'favorites' | 'wishlist' | 'notes';
 
 const WINE_TYPES: { value: WineType; label: string; color: string }[] = [
   { value: 'red', label: 'Red', color: Colors.wineRed },
@@ -40,7 +47,18 @@ const OCCASIONS = [
 ];
 
 export default function JournalScreen() {
+  const router = useRouter();
   const { entries, isLoading, addEntry, updateEntry, deleteEntry, totalEntries, getAverageRating, isAdding } = useJournal();
+  const { wines } = useWines();
+  const { favoriteIds } = useFavorites();
+  const { wishlistItems, removeFromWishlist } = useWishlist();
+
+  const [activeTab, setActiveTab] = useState<SavedTab>('favorites');
+  const favoriteWines = React.useMemo(
+    () => wines.filter((w) => favoriteIds.includes(w.id)),
+    [wines, favoriteIds]
+  );
+
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEntry, setEditingEntry] = useState<JournalEntry | null>(null);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
@@ -266,6 +284,104 @@ export default function JournalScreen() {
     />
   );
 
+  const segments: { key: SavedTab; label: string; icon: typeof Heart; count: number }[] = [
+    { key: 'favorites', label: 'Favorites', icon: Heart, count: favoriteWines.length },
+    { key: 'wishlist', label: 'Wishlist', icon: Bookmark, count: wishlistItems.length },
+    { key: 'notes', label: 'Notes', icon: BookOpen, count: entries.length },
+  ];
+
+  const renderSegments = () => (
+    <View style={styles.segments}>
+      {segments.map((seg) => {
+        const isActive = activeTab === seg.key;
+        return (
+          <TouchableOpacity
+            key={seg.key}
+            style={[styles.segment, isActive && styles.segmentActive]}
+            onPress={() => {
+              if (Platform.OS !== 'web') Haptics.selectionAsync();
+              setActiveTab(seg.key);
+            }}
+            activeOpacity={0.7}
+          >
+            <seg.icon size={16} color={isActive ? Colors.white : Colors.textSecondary} />
+            <Text style={[styles.segmentText, isActive && styles.segmentTextActive]}>
+              {seg.label}
+              {seg.count > 0 ? ` ${seg.count}` : ''}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+
+  const renderFavorites = () => (
+    <FlatList
+      data={favoriteWines}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => (
+        <View style={styles.favoriteRow}>
+          <WineCard wine={item} compact onPress={() => router.push(`/wine/${item.id}`)} />
+        </View>
+      )}
+      contentContainerStyle={favoriteWines.length === 0 ? styles.emptyList : styles.listContent}
+      ListEmptyComponent={
+        <EmptyState
+          icon={Heart}
+          title="No favorites yet"
+          description="Tap the heart on any wine to save it here for quick access."
+          actionLabel="Discover drinks"
+          onAction={() => router.replace('/(tabs)/(home)')}
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    />
+  );
+
+  const renderWishlistRow = ({ item }: { item: typeof wishlistItems[0] }) => (
+    <View style={styles.wishlistRow}>
+      <View style={styles.wishlistInfo}>
+        <Text style={styles.wishlistName} numberOfLines={1}>{item.beverageName}</Text>
+        {!!item.producer && (
+          <Text style={styles.wishlistProducer} numberOfLines={1}>{item.producer}</Text>
+        )}
+        <View style={styles.wishlistMetaRow}>
+          <Text style={styles.wishlistCategory}>{item.beverageCategory}</Text>
+          {item.price > 0 && <Text style={styles.wishlistPrice}>${item.price}</Text>}
+          {!!item.restaurantName && (
+            <Text style={styles.wishlistVenue} numberOfLines={1}>· {item.restaurantName}</Text>
+          )}
+        </View>
+      </View>
+      <TouchableOpacity
+        style={styles.wishlistRemove}
+        onPress={() => removeFromWishlist(item.id)}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <X size={18} color={Colors.textMuted} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderWishlist = () => (
+    <FlatList
+      data={wishlistItems}
+      keyExtractor={(item) => item.id}
+      renderItem={renderWishlistRow}
+      contentContainerStyle={wishlistItems.length === 0 ? styles.emptyList : styles.listContent}
+      ListEmptyComponent={
+        <EmptyState
+          icon={Bookmark}
+          title="Your wishlist is empty"
+          description="Save drinks you want to try. Scan a menu and tap the bookmark to add them here."
+          actionLabel="Scan a menu"
+          onAction={() => router.push('/scan-menu')}
+        />
+      }
+      showsVerticalScrollIndicator={false}
+    />
+  );
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -276,21 +392,27 @@ export default function JournalScreen() {
 
   return (
     <View style={styles.container}>
-      {entries.length > 0 && renderStats()}
-      
-      <FlatList
-        data={entries}
-        keyExtractor={(item) => item.id}
-        renderItem={renderEntry}
-        contentContainerStyle={entries.length === 0 ? styles.emptyList : styles.listContent}
-        ListEmptyComponent={renderEmptyState}
-        showsVerticalScrollIndicator={false}
-      />
+      {renderSegments()}
 
-      {entries.length > 0 && (
-        <TouchableOpacity style={styles.fab} onPress={openAddModal}>
-          <Plus size={28} color={Colors.white} />
-        </TouchableOpacity>
+      {activeTab === 'favorites' && renderFavorites()}
+      {activeTab === 'wishlist' && renderWishlist()}
+      {activeTab === 'notes' && (
+        <>
+          {entries.length > 0 && renderStats()}
+          <FlatList
+            data={entries}
+            keyExtractor={(item) => item.id}
+            renderItem={renderEntry}
+            contentContainerStyle={entries.length === 0 ? styles.emptyList : styles.listContent}
+            ListEmptyComponent={renderEmptyState}
+            showsVerticalScrollIndicator={false}
+          />
+          {entries.length > 0 && (
+            <TouchableOpacity style={styles.fab} onPress={openAddModal}>
+              <Plus size={28} color={Colors.white} />
+            </TouchableOpacity>
+          )}
+        </>
       )}
 
       <Modal
@@ -512,8 +634,85 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   emptyList: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
+  },
+  segments: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  segment: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+  },
+  segmentActive: {
+    backgroundColor: Colors.primary,
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  segmentTextActive: {
+    color: Colors.white,
+  },
+  favoriteRow: {
+    marginBottom: 12,
+  },
+  wishlistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+  },
+  wishlistInfo: {
+    flex: 1,
+  },
+  wishlistName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  wishlistProducer: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 1,
+  },
+  wishlistMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+  },
+  wishlistCategory: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+    textTransform: 'capitalize',
+  },
+  wishlistPrice: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  wishlistVenue: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    flexShrink: 1,
+  },
+  wishlistRemove: {
+    padding: 6,
+    marginLeft: 8,
   },
   entryCard: {
     backgroundColor: Colors.surface,
