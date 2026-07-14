@@ -23,12 +23,14 @@ import {
   Package,
   Utensils,
   Bookmark,
+  Heart,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
 import { useWines } from '@/contexts/WineContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import { wineTypeColors, wineTypeLabels } from '@/mocks/wines';
 import Button from '@/components/Button';
@@ -38,10 +40,18 @@ export default function WineDetailScreen() {
   const router = useRouter();
   const { getWineById, deleteWine, toggleStock } = useWines();
   const { isInWishlist, addToWishlist, removeByBeverageId, isAdding } = useWishlist();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { restaurant } = useRestaurant();
 
   const wine = getWineById(id || '');
   const isWishlisted = wine ? isInWishlist(wine.id) : false;
+  const isFav = wine ? isFavorite(wine.id) : false;
+
+  const handleToggleFavorite = async () => {
+    if (!wine) return;
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await toggleFavorite(wine.id);
+  };
 
   if (!wine) {
     return (
@@ -120,8 +130,18 @@ export default function WineDetailScreen() {
           headerTitle: '',
           headerRight: () => (
             <View style={styles.headerActions}>
-              <TouchableOpacity 
-                onPress={handleToggleWishlist} 
+              <TouchableOpacity
+                onPress={handleToggleFavorite}
+                style={styles.headerButton}
+              >
+                <Heart
+                  size={20}
+                  color={isFav ? Colors.error : Colors.textMuted}
+                  fill={isFav ? Colors.error : 'none'}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleToggleWishlist}
                 style={styles.headerButton}
                 disabled={isAdding}
               >

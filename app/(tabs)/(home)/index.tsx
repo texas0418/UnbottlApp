@@ -468,7 +468,7 @@ export default function DiscoverScreen() {
   const renderItem = ({ item }: { item: CatalogItem }) => (
     <View style={styles.cardContainer}>
       {item.category === 'wine' ? (
-        <WineCard wine={item.data as WineType} onPress={() => handleItemPress(item)} />
+        <WineCard wine={item.data as WineType} onPress={() => handleItemPress(item)} quickSave />
       ) : (
         <BeverageCard beverage={item.data} category={item.category} onPress={() => handleItemPress(item)} />
       )}

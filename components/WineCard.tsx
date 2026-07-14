@@ -1,19 +1,29 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, Platform } from 'react-native';
 import { Image } from 'expo-image';
-import { Wine, Droplets, Star } from 'lucide-react-native';
+import { Wine, Droplets, Star, Heart } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { Wine as WineType } from '@/types';
 import { wineTypeColors, wineTypeLabels } from '@/mocks/wines';
+import { useFavorites } from '@/contexts/FavoritesContext';
 
 interface WineCardProps {
   wine: WineType;
   onPress: () => void;
   compact?: boolean;
+  quickSave?: boolean;
 }
 
-export default function WineCard({ wine, onPress, compact = false }: WineCardProps) {
+export default function WineCard({ wine, onPress, compact = false, quickSave = false }: WineCardProps) {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isFav = isFavorite(wine.id);
+
+  const handleToggleFavorite = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleFavorite(wine.id);
+  };
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -84,6 +94,19 @@ export default function WineCard({ wine, onPress, compact = false }: WineCardPro
             <View style={styles.featuredBadge}>
               <Star size={12} color={Colors.secondary} fill={Colors.secondary} />
             </View>
+          )}
+          {quickSave && (
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleToggleFavorite}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Heart
+                size={16}
+                color={isFav ? Colors.error : Colors.textSecondary}
+                fill={isFav ? Colors.error : 'none'}
+              />
+            </TouchableOpacity>
           )}
           {!wine.inStock && (
             <View style={styles.outOfStockOverlay}>
@@ -161,6 +184,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 6,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  saveButton: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
