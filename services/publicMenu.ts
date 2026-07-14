@@ -46,48 +46,32 @@ export function parseMenuSlug(scanned: string): string | null {
 }
 
 /**
- * Fetch a restaurant's public menu by slug or id.
+ * Fetch a restaurant's public menu by id (QR codes encode `.../m/<restaurant.id>`).
  *
- * NOTE: This requires row-level-security policies that permit anonymous SELECT
- * on `restaurants` and `beverages` (scoped to active menus). Until those
- * policies exist the queries return empty/permission errors, which surface to
- * the caller as `null` — the UI then shows an appropriate empty state.
+ * Reads from two curated, read-only views — `public_menu_restaurants` and
+ * `public_menu_beverages` — that expose only menu-appropriate columns of ACTIVE
+ * items to anonymous guests, without leaking private fields (owner contact,
+ * cost/margins). See db/public-menu-access.sql for the migration that creates
+ * them. Until that migration is applied the queries error and this returns
+ * `null`, so the UI shows a graceful "menu unavailable" state.
  */
 export async function fetchPublicMenu(slugOrId: string): Promise<PublicMenu | null> {
-  const slug = parseMenuSlug(slugOrId) ?? slugOrId;
-  if (!slug) return null;
+  const id = parseMenuSlug(slugOrId) ?? slugOrId;
+  if (!id) return null;
 
-  // Resolve the restaurant. Try menu_slug first, then fall back to id so both
-  // slug- and id-based QR codes work.
-  let restaurantRow: any = null;
-
-  const bySlug = await supabase
-    .from('restaurants')
-    .select('id, name, description, cuisine_type, logo_url, cover_image_url, city, menu_slug')
-    .eq('menu_slug', slug)
+  const { data: restaurantRow } = await supabase
+    .from('public_menu_restaurants')
+    .select('id, name')
+    .eq('id', id)
     .limit(1)
     .maybeSingle();
-
-  if (bySlug.data) {
-    restaurantRow = bySlug.data;
-  } else {
-    // menu_slug may not exist as a column, or no match — try by id.
-    const byId = await supabase
-      .from('restaurants')
-      .select('id, name, description, cuisine_type, logo_url, cover_image_url, city')
-      .eq('id', slug)
-      .limit(1)
-      .maybeSingle();
-    restaurantRow = byId.data;
-  }
 
   if (!restaurantRow) return null;
 
   const { data: bevRows } = await supabase
-    .from('beverages')
+    .from('public_menu_beverages')
     .select('*')
-    .eq('restaurant_id', restaurantRow.id)
-    .eq('is_active', true);
+    .eq('restaurant_id', restaurantRow.id);
 
   const rows: SupabaseBeverage[] = (bevRows as SupabaseBeverage[]) || [];
   const rowsIn = (category: string) => rows.filter((r) => r.category === category);
@@ -102,11 +86,14 @@ export async function fetchPublicMenu(slugOrId: string): Promise<PublicMenu | nu
     restaurant: {
       id: restaurantRow.id,
       name: restaurantRow.name,
-      description: restaurantRow.description ?? null,
-      cuisineType: restaurantRow.cuisine_type ?? null,
-      logoUrl: restaurantRow.logo_url ?? null,
-      coverImageUrl: restaurantRow.cover_image_url ?? null,
-      city: restaurantRow.city ?? null,
+      // The public restaurants view intentionally exposes only id + name.
+      // Richer fields can be added to the view + this mapping later if the
+      // restaurants table gains cuisine/logo/cover columns.
+      description: null,
+      cuisineType: null,
+      logoUrl: null,
+      coverImageUrl: null,
+      city: null,
     },
     wines,
     beers,
