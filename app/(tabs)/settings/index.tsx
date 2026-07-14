@@ -55,11 +55,10 @@ export default function SettingsScreen() {
   const { user, isAuthenticated, logout, userType, deleteAccount } = useAuth();
   const { wishlistCount } = useWishlist();
   const { unreadCount } = useNotifications();
-  const { setMode, isModeLocked } = useAppMode();
+  const { setMode } = useAppMode();
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handleSwitchToRestaurant = () => {
-    if (isModeLocked) return;
     Alert.alert(
       'Switch to Restaurant Mode',
       'Manage a beverage program? Switch to the restaurant dashboard to manage inventory, QR menus, and analytics.',
@@ -256,6 +255,21 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
+          <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
+            <View style={styles.switchModeIcon}>
+              <Building2 size={22} color={Colors.primary} />
+            </View>
+            <View style={styles.switchModeContent}>
+              <Text style={styles.switchModeTitle}>Switch to Restaurant</Text>
+              <Text style={styles.switchModeDesc}>
+                Manage inventory, QR menus & analytics
+              </Text>
+            </View>
+            <ChevronRight size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.menuCard}>
             {supportItems.map((item, index) => (
@@ -376,22 +390,20 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {!isModeLocked && (
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
-            <View style={styles.switchModeIcon}>
-              <Building2 size={22} color={Colors.primary} />
-            </View>
-            <View style={styles.switchModeContent}>
-              <Text style={styles.switchModeTitle}>Manage a restaurant?</Text>
-              <Text style={styles.switchModeDesc}>
-                Switch to the restaurant dashboard for inventory, QR menus & analytics
-              </Text>
-            </View>
-            <ChevronRight size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
-      )}
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
+          <View style={styles.switchModeIcon}>
+            <Building2 size={22} color={Colors.primary} />
+          </View>
+          <View style={styles.switchModeContent}>
+            <Text style={styles.switchModeTitle}>Switch to Restaurant</Text>
+            <Text style={styles.switchModeDesc}>
+              Manage inventory, QR menus & analytics
+            </Text>
+          </View>
+          <ChevronRight size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Support</Text>

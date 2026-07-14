@@ -42,7 +42,7 @@ export default function BusinessMoreScreen() {
   const router = useRouter();
   const { isAuthenticated, user, userType, logout, deleteAccount } = useAuth();
   const { restaurant } = useRestaurant();
-  const { setMode, isModeLocked } = useAppMode();
+  const { setMode } = useAppMode();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const go = (route: string) => {
@@ -60,13 +60,6 @@ export default function BusinessMoreScreen() {
   };
 
   const handleSwitchToGuest = () => {
-    if (isModeLocked) {
-      Alert.alert(
-        'Restaurant account',
-        'This account is registered as a restaurant. To browse as a guest, sign out and use a personal account.'
-      );
-      return;
-    }
     Alert.alert('Switch to guest mode', 'Browse Unbottl as a drink lover instead of managing a restaurant?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -185,18 +178,16 @@ export default function BusinessMoreScreen() {
         </View>
 
         {/* Switch mode */}
-        {!isModeLocked && (
-          <TouchableOpacity style={styles.switchCard} onPress={handleSwitchToGuest}>
-            <View style={[styles.itemIcon, { backgroundColor: Colors.secondary + '20' }]}>
-              <Compass size={18} color={Colors.secondary} />
-            </View>
-            <View style={styles.itemContent}>
-              <Text style={styles.itemLabel}>Switch to Guest Mode</Text>
-              <Text style={styles.itemDesc}>Browse and save drinks as a guest</Text>
-            </View>
-            <ChevronRight size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.switchCard} onPress={handleSwitchToGuest}>
+          <View style={[styles.itemIcon, { backgroundColor: Colors.secondary + '20' }]}>
+            <Compass size={18} color={Colors.secondary} />
+          </View>
+          <View style={styles.itemContent}>
+            <Text style={styles.itemLabel}>Switch to Guest Mode</Text>
+            <Text style={styles.itemDesc}>Browse and save drinks as a guest</Text>
+          </View>
+          <ChevronRight size={18} color={Colors.textMuted} />
+        </TouchableOpacity>
 
         {/* Support */}
         <Text style={styles.sectionTitle}>Support</Text>

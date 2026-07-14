@@ -43,22 +43,23 @@ export function useAppMode() {
     };
   }, []);
 
-  // A restaurant account always resolves to business mode.
-  const accountForcesBusiness =
+  const isRestaurantAccount =
     isAuthenticated && (userType === 'restaurant_owner' || userType === 'staff');
 
-  // Resolution order:
-  //  1. Restaurant account → business (their account type wins).
-  //  2. An explicit local choice (Welcome pick or "switch mode") → that choice.
-  //  3. Any other signed-in user → consumer (never show them the role picker).
-  //  4. Guest with no choice yet → null → send to Welcome.
-  const mode: AppMode | null = accountForcesBusiness
+  // The account's natural home when the user hasn't made an explicit choice.
+  const accountDefault: AppMode | null = isRestaurantAccount
     ? 'business'
-    : storedMode
-    ? storedMode
     : isAuthenticated
     ? 'consumer'
     : null;
+
+  // Resolution order:
+  //  1. An explicit local choice (Welcome pick or a manual "switch") ALWAYS
+  //     wins — this is what lets anyone move between the two experiences,
+  //     including a restaurant owner who wants to browse as a guest.
+  //  2. Otherwise fall back to the account's natural home.
+  //  3. Guest with no choice yet → null → send to Welcome.
+  const mode: AppMode | null = storedMode ?? accountDefault;
 
   const setMode = useCallback(async (next: AppMode) => {
     try {
@@ -82,8 +83,9 @@ export function useAppMode() {
     mode,
     setMode,
     clearMode,
-    // Consumers can freely switch modes; a restaurant account is locked to business.
-    isModeLocked: accountForcesBusiness,
+    // True when the signed-in account is a restaurant/staff account. Anyone can
+    // switch experiences freely; this is exposed only for copy/context.
+    isRestaurantAccount,
     isLoading: isLoading || authLoading,
   };
 }
