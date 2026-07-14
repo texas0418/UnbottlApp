@@ -46,20 +46,19 @@ export function useAppMode() {
   const isRestaurantAccount =
     isAuthenticated && (userType === 'restaurant_owner' || userType === 'staff');
 
-  // The account's natural home when the user hasn't made an explicit choice.
-  const accountDefault: AppMode | null = isRestaurantAccount
+  // Resolution order (this drives the launch entry gate):
+  //  1. A restaurant account ALWAYS starts on the business side on a fresh
+  //     launch, regardless of any stored choice. In-session they can still
+  //     switch to guest mode (that navigates directly and doesn't re-run the
+  //     gate); the next cold start simply resets them to business.
+  //  2. Otherwise an explicit local choice (Welcome pick or a manual "switch")
+  //     wins, so guests and consumer accounts can move between experiences and
+  //     have it persist.
+  //  3. A signed-in consumer with no explicit choice → consumer.
+  //  4. Guest with no choice yet → null → send to Welcome.
+  const mode: AppMode | null = isRestaurantAccount
     ? 'business'
-    : isAuthenticated
-    ? 'consumer'
-    : null;
-
-  // Resolution order:
-  //  1. An explicit local choice (Welcome pick or a manual "switch") ALWAYS
-  //     wins — this is what lets anyone move between the two experiences,
-  //     including a restaurant owner who wants to browse as a guest.
-  //  2. Otherwise fall back to the account's natural home.
-  //  3. Guest with no choice yet → null → send to Welcome.
-  const mode: AppMode | null = storedMode ?? accountDefault;
+    : storedMode ?? (isAuthenticated ? 'consumer' : null);
 
   const setMode = useCallback(async (next: AppMode) => {
     try {
