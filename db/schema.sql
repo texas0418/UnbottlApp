@@ -16,8 +16,13 @@
 -- best-effort — marked TODO; adjust once the app exercises them. Test each flow
 -- (sign-up, owner CRUD, guest scan) after import.
 --
--- After this: run db/public-menu-access.sql, then point the app's
--- EXPO_PUBLIC_SUPABASE_URL / _ANON_KEY (and EAS secrets) at the new project.
+-- REQUIRED run order for a fresh project (run each in the SQL editor):
+--   1. db/schema.sql                    (this file — tables + RLS)
+--   2. db/fix-user-profiles-trigger.sql (auto-create profiles on signup)
+--   3. db/fix-rls-recursion.sql         (breaks restaurants/staff RLS loop)
+--   4. db/public-menu-access.sql        (public QR-menu views)
+-- Then point the app's EXPO_PUBLIC_SUPABASE_URL / _ANON_KEY (and EAS secrets)
+-- at the new project.
 -- ============================================================================
 
 -- gen_random_uuid() ships with Supabase (pgcrypto). No extension step needed.
