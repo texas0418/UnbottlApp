@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,18 +22,29 @@ export default function ScanMenuScreen() {
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [error, setError] = useState<string | null>(null);
+  const [manualMode, setManualMode] = useState(false);
+  const [manualValue, setManualValue] = useState('');
   const handledRef = useRef(false);
 
-  const handleBarcodeScanned = (result: BarcodeScanningResult) => {
-    if (handledRef.current) return;
-    const slug = parseMenuSlug(result?.data ?? '');
+  const openMenu = (raw: string, invalidMsg: string) => {
+    const slug = parseMenuSlug(raw);
     if (!slug) {
-      setError("That doesn't look like an Unbottl menu code. Try again.");
-      return;
+      setError(invalidMsg);
+      return false;
     }
     handledRef.current = true;
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace({ pathname: '/customer-menu', params: { r: slug } });
+    return true;
+  };
+
+  const handleBarcodeScanned = (result: BarcodeScanningResult) => {
+    if (handledRef.current) return;
+    openMenu(result?.data ?? '', "That doesn't look like an Unbottl menu code. Try again.");
+  };
+
+  const submitManual = () => {
+    openMenu(manualValue.trim(), "That doesn't look like a valid menu link or code.");
   };
 
   const close = () => router.back();
@@ -116,6 +129,35 @@ export default function ScanMenuScreen() {
             {error ?? "Point at a restaurant's Unbottl QR code"}
           </Text>
         </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={[styles.manualBar, { paddingBottom: insets.bottom + 16 }]}
+        >
+          {manualMode ? (
+            <View style={styles.manualPanel}>
+              <TextInput
+                style={styles.manualInput}
+                placeholder="Paste menu link or code"
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={manualValue}
+                onChangeText={setManualValue}
+                onSubmitEditing={submitManual}
+                returnKeyType="go"
+                autoFocus
+              />
+              <TouchableOpacity style={styles.manualSubmit} onPress={submitManual}>
+                <Text style={styles.manualSubmitText}>View menu</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.manualToggle} onPress={() => setManualMode(true)}>
+              <Text style={styles.manualToggleText}>Enter code manually</Text>
+            </TouchableOpacity>
+          )}
+        </KeyboardAvoidingView>
       </View>
     </View>
   );
@@ -168,6 +210,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     fontWeight: '500' as const,
   },
+  manualBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  manualToggle: { paddingVertical: 12, paddingHorizontal: 20 },
+  manualToggleText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600' as const,
+    textDecorationLine: 'underline',
+  },
+  manualPanel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    width: '100%',
+  },
+  manualInput: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: Colors.text,
+  },
+  manualSubmit: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  manualSubmitText: { color: '#fff', fontSize: 15, fontWeight: '600' as const },
   permissionIcon: {
     width: 88,
     height: 88,
