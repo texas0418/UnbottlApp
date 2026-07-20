@@ -356,7 +356,11 @@ export default function DiscoverScreen() {
         </>
       )}
 
-      {/* Browse */}
+      {/* Browse — hidden when the catalog is empty so the first-run
+          "Scan a menu" empty state sits up front instead of below a wall
+          of filters that have nothing to filter. */}
+      {allItems.length > 0 && (
+        <>
       <Text style={styles.browseTitle}>Browse all drinks</Text>
       <View style={styles.searchContainer}>
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search drinks..." />
@@ -462,6 +466,8 @@ export default function DiscoverScreen() {
           </View>
         )}
       </View>
+        </>
+      )}
     </View>
   );
 
