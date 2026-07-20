@@ -286,7 +286,9 @@ export default function WishlistScreen() {
           <EmptyState
             icon={Heart}
             title="Your Wishlist is Empty"
-            description="Save beverages you want to try later. Browse menus and tap the bookmark icon to add items here."
+            description="Save drinks you want to try later. Browse menus and tap the bookmark icon to add items here."
+            actionLabel="Discover drinks"
+            onAction={() => router.replace('/(tabs)/(home)')}
           />
         ) : filteredItems.length === 0 ? (
           <EmptyState

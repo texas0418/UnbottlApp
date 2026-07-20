@@ -16,6 +16,7 @@ import { RecommendationsProvider } from "@/contexts/RecommendationsContext";
 import { OfflineProvider } from "@/contexts/OfflineContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { NotificationsProvider } from "@/contexts/NotificationsContext";
+import { RecentMenusProvider } from "@/contexts/RecentMenusContext";
 import Colors from "@/constants/colors";
 
 SplashScreen.preventAutoHideAsync();
@@ -32,7 +33,10 @@ function RootLayoutNav() {
         contentStyle: { backgroundColor: Colors.background },
       }}
     >
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(business)" options={{ headerShown: false }} />
       <Stack.Screen
         name="wine/[id]"
         options={{
@@ -86,7 +90,7 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
-        name="menu-scanner"
+        name="menu-import"
         options={{
           presentation: "modal",
           headerShown: false,
@@ -131,6 +135,13 @@ function RootLayoutNav() {
       />
       <Stack.Screen
         name="customer-menu"
+        options={{
+          presentation: "fullScreenModal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="scan-menu"
         options={{
           presentation: "fullScreenModal",
           headerShown: false,
@@ -214,12 +225,14 @@ export default function RootLayout() {
                       <RecommendationsProvider>
                         <OfflineProvider>
                           <WishlistProvider>
+                            <RecentMenusProvider>
                             <NotificationsProvider>
                               <GestureHandlerRootView style={{ flex: 1 }}>
                                 <StatusBar style="dark" />
                                 <RootLayoutNav />
                               </GestureHandlerRootView>
                             </NotificationsProvider>
+                            </RecentMenusProvider>
                           </WishlistProvider>
                         </OfflineProvider>
                       </RecommendationsProvider>

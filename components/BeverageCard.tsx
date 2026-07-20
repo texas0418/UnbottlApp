@@ -1,9 +1,11 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated, Platform } from 'react-native';
 import { Image } from 'expo-image';
-import { Wine, Beer, Martini, Coffee, GlassWater, Star, Droplets } from 'lucide-react-native';
+import { Wine, Beer, Martini, Coffee, GlassWater, Star, Droplets, Heart } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { Beer as BeerType, Spirit, Cocktail, NonAlcoholicBeverage, BeverageCategory } from '@/types';
+import { useFavorites } from '@/contexts/FavoritesContext';
 import { 
   beerTypeColors, beerTypeLabels,
   spiritTypeColors, spiritTypeLabels,
@@ -19,6 +21,7 @@ interface BeverageCardProps {
   category: BeverageCategory;
   onPress: () => void;
   compact?: boolean;
+  quickSave?: boolean;
 }
 
 const getCategoryIcon = (category: BeverageCategory, size: number, color: string) => {
@@ -156,11 +159,18 @@ const getBeverageDetails = (beverage: BeverageItem, category: BeverageCategory) 
   }
 };
 
-export default function BeverageCard({ beverage, category, onPress, compact = false }: BeverageCardProps) {
+export default function BeverageCard({ beverage, category, onPress, compact = false, quickSave = false }: BeverageCardProps) {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const details = getBeverageDetails(beverage, category);
   const typeColor = getTypeColor(category, details.type);
   const isLightType = ['vodka', 'wheat', 'pilsner', 'water'].includes(details.type);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isFav = isFavorite(beverage.id);
+
+  const handleToggleFavorite = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleFavorite(beverage.id);
+  };
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
@@ -228,6 +238,19 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
             <View style={styles.featuredBadge}>
               <Star size={12} color={Colors.secondary} fill={Colors.secondary} />
             </View>
+          )}
+          {quickSave && (
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleToggleFavorite}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Heart
+                size={16}
+                color={isFav ? Colors.error : Colors.textSecondary}
+                fill={isFav ? Colors.error : 'none'}
+              />
+            </TouchableOpacity>
           )}
           {!details.inStock && (
             <View style={styles.outOfStockOverlay}>
@@ -314,6 +337,22 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: 6,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  saveButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

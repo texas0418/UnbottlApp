@@ -41,10 +41,10 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
-import { useRestaurant } from '@/contexts/RestaurantContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useNotifications } from '@/contexts/NotificationsContext';
+import { useAppMode } from '@/hooks/useAppMode';
 import { useRouter } from 'expo-router';
 
 const PRIVACY_POLICY_URL = 'https://unbottl.com/privacy-policy.html';
@@ -52,12 +52,28 @@ const TERMS_OF_SERVICE_URL = 'https://unbottl.com/terms-of-service.html';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { restaurant, needsSetup } = useRestaurant();
   const { user, isAuthenticated, logout, userType, deleteAccount } = useAuth();
   const { wishlistCount } = useWishlist();
-  const { preferences, unreadCount, updatePreferences } = useNotifications();
-  const [darkMode, setDarkMode] = useState(false);
+  const { unreadCount } = useNotifications();
+  const { setMode } = useAppMode();
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  const handleSwitchToRestaurant = () => {
+    Alert.alert(
+      'Switch to Restaurant Mode',
+      'Manage a beverage program? Switch to the restaurant dashboard to manage inventory, QR menus, and analytics.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Switch',
+          onPress: async () => {
+            await setMode('business');
+            router.replace('/(business)/dashboard');
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -134,13 +150,6 @@ export default function SettingsScreen() {
     );
   };
 
-  const handleManagementOption = (route: string) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    router.push(route as any);
-  };
-
   const handleOpenURL = async (url: string) => {
     try {
       const canOpen = await Linking.canOpenURL(url);
@@ -156,15 +165,6 @@ export default function SettingsScreen() {
 
   const preferencesItems = [
     {
-      icon: Moon,
-      label: 'Dark Mode',
-      description: 'Switch to dark theme',
-      toggle: true,
-      value: darkMode,
-      onPress: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
-      onToggle: () => Alert.alert('Dark Mode', 'Dark mode coming soon!'),
-    },
-    {
       icon: Bell,
       label: 'Notifications',
       description: unreadCount > 0 ? `${unreadCount} unread` : 'Push notifications',
@@ -172,39 +172,18 @@ export default function SettingsScreen() {
       route: '/notifications',
       badge: unreadCount > 0 ? unreadCount : undefined,
     },
-    {
-      icon: Globe,
-      label: 'Language',
-      description: 'English',
-      chevron: true,
-      onPress: () => Alert.alert('Language', 'More languages coming soon!'),
-    },
   ];
 
   const accountItems = [
     { icon: User, label: 'Profile', description: 'Edit your profile', chevron: true, route: '/login' },
-    { icon: Heart, label: 'Favorites', description: 'Your saved items', chevron: true },
     {
       icon: Bookmark,
-      label: 'Wishlist',
-      description: `${wishlistCount} items to try`,
+      label: 'Saved',
+      description: 'Favorites, wishlist & tasting notes',
       chevron: true,
-      route: '/wishlist',
+      route: '/(tabs)/journal',
       badge: wishlistCount > 0 ? wishlistCount : undefined,
     },
-    { icon: Star, label: 'Taste Preferences', description: 'Update your preferences', chevron: true },
-  ];
-
-  const managementItems = [
-    { icon: Plus, label: 'Add Beverage', description: 'Add wines, beers, cocktails', route: '/beverage/add', color: Colors.primary },
-    { icon: Package, label: 'Inventory', description: 'Manage stock & availability', route: '/(tabs)/catalog', color: '#3B82F6' },
-    { icon: QrCode, label: 'QR Menu', description: 'Generate customer QR codes', route: '/qr-menu', color: Colors.secondary },
-    { icon: FileSpreadsheet, label: 'Import CSV', description: 'Bulk import from spreadsheet', route: '/csv-import', color: '#10B981' },
-    { icon: ScanBarcode, label: 'Scan Labels', description: 'Scan wine/beer labels to add', route: '/wine-scanner', color: '#8B5CF6' },
-    { icon: BarChart3, label: 'Analytics', description: 'View menu performance', route: '/analytics', color: '#F59E0B' },
-    { icon: Building2, label: 'Restaurant Details', description: 'Update restaurant info', route: '/restaurant-setup', color: '#EC4899' },
-    { icon: Zap, label: 'Subscription', description: 'Manage your plan', route: '/pricing', color: '#F59E0B' },
-    { icon: Users, label: 'Team', description: 'Manage staff access', route: '/staff-management', color: '#06B6D4' },
   ];
 
   const supportItems = [
@@ -266,6 +245,21 @@ export default function SettingsScreen() {
               <Text style={styles.guestCreateText}>Create Account</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
+            <View style={styles.switchModeIcon}>
+              <Building2 size={22} color={Colors.primary} />
+            </View>
+            <View style={styles.switchModeContent}>
+              <Text style={styles.switchModeTitle}>Switch to Restaurant</Text>
+              <Text style={styles.switchModeDesc}>
+                Manage inventory, QR menus & analytics
+              </Text>
+            </View>
+            <ChevronRight size={20} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
@@ -389,69 +383,20 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {userType === 'restaurant_owner' && (
-        <View style={styles.section}>
-          {needsSetup && (
-            <TouchableOpacity
-              style={styles.setupBanner}
-              onPress={() => router.push('/restaurant-setup')}
-            >
-              <Building2 size={24} color={Colors.primary} />
-              <View style={styles.setupBannerContent}>
-                <Text style={styles.setupBannerTitle}>Set Up Your Restaurant</Text>
-                <Text style={styles.setupBannerDesc}>
-                  Create your restaurant to start managing inventory
-                </Text>
-              </View>
-              <ChevronRight size={20} color={Colors.primary} />
-            </TouchableOpacity>
-          )}
-
-          {restaurant?.is_founding_member && restaurant?.founding_member_expires_at && (
-            <View style={styles.founderBadge}>
-              <View style={styles.founderBadgeIcon}>
-                <Star size={20} color="#F59E0B" fill="#F59E0B" />
-              </View>
-              <View style={styles.founderBadgeContent}>
-                <Text style={styles.founderBadgeTitle}>
-                  Founding Member #{restaurant.founding_member_number}
-                </Text>
-                <Text style={styles.founderBadgeDesc}>
-                  Pro features free until{' '}
-                  {new Date(restaurant.founding_member_expires_at).toLocaleDateString()}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          <View style={styles.managementHeader}>
-            <View style={styles.managementTitleRow}>
-              <Settings size={16} color={Colors.textMuted} />
-              <Text style={styles.sectionTitle}>Restaurant Management</Text>
-            </View>
-            <Text style={styles.managementSubtitle}>For owners & managers only</Text>
+      <View style={styles.section}>
+        <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
+          <View style={styles.switchModeIcon}>
+            <Building2 size={22} color={Colors.primary} />
           </View>
-
-          <View style={styles.managementGrid}>
-            {managementItems.map((item) => (
-              <TouchableOpacity
-                key={item.label}
-                style={styles.managementCard}
-                onPress={() => handleManagementOption(item.route)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.managementIcon, { backgroundColor: item.color + '15' }]}>
-                  <item.icon size={22} color={item.color} />
-                </View>
-                <Text style={styles.managementLabel}>{item.label}</Text>
-                <Text style={styles.managementDesc} numberOfLines={1}>
-                  {item.description}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.switchModeContent}>
+            <Text style={styles.switchModeTitle}>Switch to Restaurant</Text>
+            <Text style={styles.switchModeDesc}>
+              Manage inventory, QR menus & analytics
+            </Text>
           </View>
-        </View>
-      )}
+          <ChevronRight size={20} color={Colors.primary} />
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Support</Text>
@@ -737,6 +682,27 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginBottom: 20,
   },
+  switchModeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primary + '10',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: Colors.primary + '20',
+  },
+  switchModeIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  switchModeContent: { flex: 1 },
+  switchModeTitle: { fontSize: 16, fontWeight: '600' as const, color: Colors.text },
+  switchModeDesc: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   setupBanner: {
     flexDirection: 'row',
     alignItems: 'center',

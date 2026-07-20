@@ -13,7 +13,12 @@ import { Shield } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 
-const AGE_VERIFIED_KEY = 'unbottl_age_verified';
+// Canonical key — kept in sync with hooks/useAgeVerification.ts so both the
+// modal and the hook read/write the same value.
+const AGE_VERIFIED_KEY = '@unbottl_age_verified';
+// Earlier builds stored verification under this un-prefixed key. We still read
+// it so previously-verified users are not re-prompted after this fix.
+const LEGACY_AGE_VERIFIED_KEY = 'unbottl_age_verified';
 
 export default function AgeVerificationModal() {
   const { isAuthenticated, isAgeVerified: authAgeVerified } = useAuth();
@@ -32,10 +37,12 @@ export default function AgeVerificationModal() {
       return;
     }
 
-    // Check local storage for guest users (or unverified authenticated users)
+    // Check local storage for guest users (or unverified authenticated users).
+    // Accept either the canonical key or the legacy one for backward compat.
     try {
       const stored = await AsyncStorage.getItem(AGE_VERIFIED_KEY);
-      if (stored === 'true') {
+      const legacy = stored === 'true' ? null : await AsyncStorage.getItem(LEGACY_AGE_VERIFIED_KEY);
+      if (stored === 'true' || legacy === 'true') {
         setLocalVerified(true);
         setVisible(false);
       } else {

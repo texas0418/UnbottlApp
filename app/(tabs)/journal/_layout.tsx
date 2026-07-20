@@ -13,7 +13,7 @@ export default function JournalLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "Wine Journal",
+          title: "Saved",
         }}
       />
     </Stack>

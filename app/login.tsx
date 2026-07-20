@@ -17,6 +17,7 @@ import { Wine, Mail, Lock, User, Eye, EyeOff, Building2, CheckCircle } from 'luc
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAppMode } from '@/hooks/useAppMode';
 import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { login, register, resetPassword, isLoginLoading, isRegisterLoading, loginError, registerError } = useAuth();
+  const { setMode } = useAppMode();
 
   const [isSignUp, setIsSignUp] = useState(mode === 'signup');
   const [showPassword, setShowPassword] = useState(false);
@@ -122,24 +124,15 @@ export default function LoginScreen() {
           .eq('id', user.id)
           .single();
 
-        if (profile?.user_type === 'restaurant_owner') {
-          // Check if they already have a restaurant set up
-          const { data: restaurants } = await supabase
-            .from('restaurants')
-            .select('id')
-            .eq('owner_id', user.id)
-            .limit(1);
-
-          if (restaurants && restaurants.length > 0) {
-            // Restaurant already set up — go to Profile/Settings tab
-            router.replace('/(tabs)/settings');
-          } else {
-            // No restaurant yet — go to setup
-            router.replace('/restaurant-setup');
-          }
+        if (profile?.user_type === 'restaurant_owner' || profile?.user_type === 'staff') {
+          // Restaurant accounts land on the business dashboard, which surfaces
+          // a setup banner if they haven't created their restaurant yet.
+          await setMode('business');
+          router.replace('/(business)/dashboard');
         } else {
-          // Consumer — go to Home tab
-          router.replace('/');
+          // Consumer — go to the discover experience.
+          await setMode('consumer');
+          router.replace('/(tabs)/(home)');
         }
       }
     } catch (error) {
