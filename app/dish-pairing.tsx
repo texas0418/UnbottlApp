@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- tracked in #2 */
 import React, { useState, useMemo, useRef } from 'react';
 import {
   StyleSheet,
@@ -178,6 +179,7 @@ const getSmartSuggestions = (profile: { body: number; sweetness: number; tannins
 const calculateFlavorMatch = (
   wineProfile: { body: number; sweetness: number; tannins: number; acidity: number },
   dishCategory: string
+// eslint-disable-next-line complexity -- tracked in #2
 ): { score: number; reasons: string[] } => {
   let score = 0;
   const reasons: string[] = [];
@@ -315,6 +317,7 @@ const dishCategories: DishCategory[] = [
   },
 ];
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function DishPairingScreen() {
   const router = useRouter();
   const { inStockWines } = useWines();

@@ -1,7 +1,7 @@
 // hooks/useAuth.ts
 // Authentication hook for Unbottl
 
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, createElement } from 'react';
 import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
@@ -277,11 +277,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshProfile,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  // JSX is not valid in a .ts file; use createElement so the file compiles
+  // without renaming it to .tsx.
+  return createElement(AuthContext.Provider, { value }, children);
 }
 
 export function useAuth() {

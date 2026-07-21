@@ -76,6 +76,7 @@ const nonAlcTypes: { label: string; value: NonAlcoholicType }[] = [
   { label: 'Other', value: 'other' },
 ];
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function AddBeverageScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string }>();
@@ -115,6 +116,7 @@ export default function AddBeverageScreen() {
 
   const isSubmitting = isAddingWine || isAddingBeer || isAddingSpirit || isAddingCocktail || isAddingNonAlcoholic;
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const handleGenerateDescription = async () => {
     let prompt = '';
     switch (selectedCategory) {
@@ -160,6 +162,7 @@ export default function AddBeverageScreen() {
   };
 
   // ── NEW: AI Food Pairing Generation ──────────────────────────────
+  // eslint-disable-next-line complexity -- tracked in #2
   const handleGeneratePairings = async () => {
     let prompt = '';
     switch (selectedCategory) {
@@ -253,6 +256,7 @@ export default function AddBeverageScreen() {
     }
   };
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const handleSubmit = async () => {
     try {
       switch (selectedCategory) {

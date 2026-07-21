@@ -40,6 +40,7 @@ const getCategoryIcon = (category: BeverageCategory, size: number, color: string
   }
 };
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function BeverageDetailScreen() {
   const router = useRouter();
   const { category, id } = useLocalSearchParams<{ category: string; id: string }>();

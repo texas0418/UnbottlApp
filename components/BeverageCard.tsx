@@ -159,6 +159,7 @@ const getBeverageDetails = (beverage: BeverageItem, category: BeverageCategory) 
   }
 };
 
+// eslint-disable-next-line complexity -- tracked in #2
 export default function BeverageCard({ beverage, category, onPress, compact = false, quickSave = false }: BeverageCardProps) {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const details = getBeverageDetails(beverage, category);
