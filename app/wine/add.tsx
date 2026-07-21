@@ -28,6 +28,7 @@ const wineTypes: { label: string; value: WineType }[] = [
   { label: 'Fortified', value: 'fortified' },
 ];
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function AddWineScreen() {
   const router = useRouter();
   const { addWine, isAddingWine } = useWines();

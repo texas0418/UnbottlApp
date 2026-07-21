@@ -56,6 +56,7 @@ type ExtractedWineData = z.infer<typeof WineLabelSchema>;
 
 type ScanMode = 'label' | 'barcode';
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function WineScannerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

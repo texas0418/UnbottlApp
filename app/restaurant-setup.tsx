@@ -20,6 +20,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import AuthGuard from '@/components/AuthGuard';
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function RestaurantSetupScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -479,7 +480,7 @@ export default function RestaurantSetupScreen() {
                 style={styles.backButton}
                 onPress={() => router.back()}
               >
-                <Text style={styles.backText}>I'll do this later</Text>
+                <Text style={styles.backText}>I&apos;ll do this later</Text>
               </TouchableOpacity>
             )}
           </ScrollView>

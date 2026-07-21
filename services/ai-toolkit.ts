@@ -107,6 +107,7 @@ async function generateTextWithOpenAI(prompt: string, apiKey: string): Promise<s
 /**
  * Mock text generation for development
  */
+// eslint-disable-next-line complexity -- tracked in #2
 async function generateTextMock(prompt: string): Promise<string> {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
@@ -459,6 +460,7 @@ export async function generateObject<T = any>(options: GenerateObjectOptions<T>)
 /**
  * Generate object using OpenAI
  */
+// eslint-disable-next-line complexity -- tracked in #2
 async function generateObjectWithOpenAI<T>(
   options: GenerateObjectOptions<T>,
   apiKey: string

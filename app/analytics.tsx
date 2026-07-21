@@ -27,6 +27,7 @@ const screenWidth = Dimensions.get('window').width;
 
 type TimeRange = '7d' | '30d';
 
+// eslint-disable-next-line complexity -- tracked in #2
 export function AnalyticsContent({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const {

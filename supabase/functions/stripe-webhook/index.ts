@@ -33,6 +33,7 @@ const PLAN_LIMITS: Record<string, number> = {
   business: 10,
 };
 
+// eslint-disable-next-line complexity -- tracked in #2
 serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   if (!signature) {

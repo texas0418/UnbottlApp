@@ -35,6 +35,7 @@ import { useRestaurant } from '@/contexts/RestaurantContext';
 import { wineTypeColors, wineTypeLabels } from '@/mocks/wines';
 import Button from '@/components/Button';
 
+// eslint-disable-next-line complexity -- tracked in #2
 export default function WineDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();

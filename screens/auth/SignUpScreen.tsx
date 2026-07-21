@@ -20,6 +20,7 @@ interface SignUpScreenProps {
   navigation: any;
 }
 
+// eslint-disable-next-line complexity -- tracked in #2
 export default function SignUpScreen({ navigation }: SignUpScreenProps) {
   const { signUp, signInWithOAuth, loading } = useAuth();
   const [displayName, setDisplayName] = useState('');

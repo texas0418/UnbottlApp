@@ -116,6 +116,7 @@ function FavoriteButton({ wineId, size = 20 }: FavoriteButtonProps) {
   );
 }
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function MenuPreviewScreen() {
   const router = useRouter();
   const { inStockWines, featuredWines } = useWines();

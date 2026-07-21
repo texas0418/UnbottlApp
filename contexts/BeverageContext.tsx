@@ -39,6 +39,7 @@ export interface SupabaseBeverage {
   updated_at: string;
 }
 
+// eslint-disable-next-line complexity -- tracked in #2
 export function toWine(row: SupabaseBeverage): Wine {
   const meta = row.metadata || {};
   return {
@@ -66,6 +67,7 @@ export function toWine(row: SupabaseBeverage): Wine {
   };
 }
 
+// eslint-disable-next-line complexity -- tracked in #2
 export function toBeer(row: SupabaseBeverage): Beer {
   const meta = row.metadata || {};
   return {
@@ -92,6 +94,7 @@ export function toBeer(row: SupabaseBeverage): Beer {
   };
 }
 
+// eslint-disable-next-line complexity -- tracked in #2
 export function toSpirit(row: SupabaseBeverage): Spirit {
   const meta = row.metadata || {};
   return {
@@ -293,6 +296,7 @@ function nonAlcoholicToRow(na: Omit<NonAlcoholicBeverage, 'id' | 'createdAt' | '
 
 // ─── Context ──────────────────────────────────────────────────────────
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export const [BeverageProvider, useBeverages] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { restaurant } = useRestaurant();
@@ -391,6 +395,7 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateWineMutation = useMutation({
+    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Wine> }) => {
       const row: Record<string, any> = {};
       if (updates.name !== undefined) row.name = updates.name;
@@ -444,6 +449,7 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateBeerMutation = useMutation({
+    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Beer> }) => {
       const row: Record<string, any> = {};
       if (updates.name !== undefined) row.name = updates.name;
@@ -495,6 +501,7 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateSpiritMutation = useMutation({
+    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Spirit> }) => {
       const row: Record<string, any> = {};
       if (updates.name !== undefined) row.name = updates.name;
@@ -545,6 +552,7 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateCocktailMutation = useMutation({
+    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Cocktail> }) => {
       const row: Record<string, any> = {};
       if (updates.name !== undefined) row.name = updates.name;
@@ -593,6 +601,7 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateNonAlcoholicMutation = useMutation({
+    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<NonAlcoholicBeverage> }) => {
       const row: Record<string, any> = {};
       if (updates.name !== undefined) row.name = updates.name;

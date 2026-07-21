@@ -96,6 +96,7 @@ type CatalogItem = {
   searchText: string;
 };
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function CatalogScreen() {
   const router = useRouter();
   const { wines, beers, spirits, cocktails, nonAlcoholic, isLoading: beveragesLoading } = useBeverages();

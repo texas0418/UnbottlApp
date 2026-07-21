@@ -48,6 +48,7 @@ const OCCASIONS = [
   'Other',
 ];
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function JournalScreen() {
   const router = useRouter();
   const { entries, isLoading, addEntry, updateEntry, deleteEntry, totalEntries, getAverageRating, isAdding } = useJournal();

@@ -37,6 +37,7 @@ import { analyzeMenuImage, ExtractedBeverage } from '@/services/menu-ai';
 
 type ImportStep = 'capture' | 'processing' | 'review' | 'importing' | 'complete';
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function MenuImportScreen() {
   const router = useRouter();
   const { addWine } = useWines();
@@ -125,6 +126,7 @@ export default function MenuImportScreen() {
     setSelectedItems(new Set(selectedItems));
   };
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const importItems = async () => {
     const itemsToImport = extractedItems.filter(item => selectedItems.has(item.id));
     if (itemsToImport.length === 0) {

@@ -377,6 +377,7 @@ async function mockAnalyzeMenu(imageUri: string): Promise<ExtractedBeverage[]> {
 /**
  * Validate and clean extracted beverage data
  */
+// eslint-disable-next-line complexity -- tracked in #2
 export function validateExtractedBeverage(item: Partial<ExtractedBeverage>): ExtractedBeverage | null {
   if (!item.name || !item.category) {
     return null;
