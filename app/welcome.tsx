@@ -63,7 +63,7 @@ export default function WelcomeScreen() {
               <Compass size={30} color={Colors.primary} />
             </View>
             <View style={styles.cardBody}>
-              <Text style={styles.cardTitle}>I'm here to discover drinks</Text>
+              <Text style={styles.cardTitle}>I&apos;m here to discover drinks</Text>
               <Text style={styles.cardDesc}>
                 Find and save wines, cocktails, beers and more. Scan menus at
                 restaurants and get AI recommendations.

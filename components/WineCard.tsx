@@ -15,6 +15,7 @@ interface WineCardProps {
   quickSave?: boolean;
 }
 
+// eslint-disable-next-line complexity -- tracked in #2
 export default function WineCard({ wine, onPress, compact = false, quickSave = false }: WineCardProps) {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const { isFavorite, toggleFavorite } = useFavorites();

@@ -15,6 +15,7 @@ interface ButtonProps {
   fullWidth?: boolean;
 }
 
+// eslint-disable-next-line complexity -- tracked in #2
 export default function Button({
   title,
   onPress,

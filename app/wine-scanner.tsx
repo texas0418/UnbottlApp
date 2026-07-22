@@ -56,6 +56,7 @@ type ExtractedWineData = z.infer<typeof WineLabelSchema>;
 
 type ScanMode = 'label' | 'barcode';
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function WineScannerScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -108,7 +109,7 @@ Be as accurate as possible. If information isn't clearly visible, make educated 
         ],
         schema: WineLabelSchema,
       });
-      return result;
+      return result.object;
     },
     onSuccess: (data) => {
       console.log('Extracted wine data:', data);
@@ -152,7 +153,7 @@ Provide:
         ],
         schema: WineLabelSchema,
       });
-      return result;
+      return result.object;
     },
     onSuccess: (data) => {
       console.log('Barcode lookup result:', data);

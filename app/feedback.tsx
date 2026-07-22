@@ -51,6 +51,7 @@ const FEEDBACK_TYPES: { key: FeedbackType; label: string; icon: any; color: stri
   },
 ];
 
+// eslint-disable-next-line complexity -- tracked in #2
 export default function FeedbackScreen() {
   const router = useRouter();
   const { user, isAuthenticated, userType } = useAuth();

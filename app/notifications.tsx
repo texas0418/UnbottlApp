@@ -35,6 +35,7 @@ import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { useNotifications, NotificationItem } from '@/contexts/NotificationsContext';
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function NotificationsScreen() {
   const router = useRouter();
   const {

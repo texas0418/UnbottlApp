@@ -21,6 +21,7 @@ import { useAppMode } from '@/hooks/useAppMode';
 import { supabase } from '@/lib/supabase';
 import Button from '@/components/Button';
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function LoginScreen() {
   const router = useRouter();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
@@ -53,7 +54,7 @@ export default function LoginScreen() {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Send',
-            onPress: async (inputEmail) => {
+            onPress: async (inputEmail?: string) => {
               if (inputEmail?.trim()) {
                 const { error } = await resetPassword(inputEmail.trim());
                 if (error) {
@@ -79,6 +80,7 @@ export default function LoginScreen() {
     }
   };
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const handleSubmit = async () => {
     if (!formData.email.trim() || !formData.password.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
@@ -196,7 +198,7 @@ export default function LoginScreen() {
                 }
               }}
             >
-              <Text style={styles.resendText}>Didn't receive it? Resend email</Text>
+              <Text style={styles.resendText}>Didn&apos;t receive it? Resend email</Text>
             </TouchableOpacity>
           </View>
         </View>

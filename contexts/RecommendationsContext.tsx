@@ -155,6 +155,7 @@ export const [RecommendationsProvider, useRecommendations] = createContextHook((
     return { preferredTypes, avgFlavor, avgPrice };
   }, [favoriteIds, entries, wines]);
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const calculateMatchScore = useCallback((wine: Wine): { score: number; reasons: string[] } => {
     let score = 0;
     const reasons: string[] = [];

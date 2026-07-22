@@ -39,6 +39,7 @@ export function useSubscription(restaurantId: string | null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const fetchSubscription = useCallback(async () => {
     if (!restaurantId) {
       setLoading(false);

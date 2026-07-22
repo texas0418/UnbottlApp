@@ -20,7 +20,16 @@ const AGE_VERIFIED_KEY = '@unbottl_age_verified';
 // it so previously-verified users are not re-prompted after this fix.
 const LEGACY_AGE_VERIFIED_KEY = 'unbottl_age_verified';
 
-export default function AgeVerificationModal() {
+interface AgeVerificationModalProps {
+  // The modal self-manages visibility via AsyncStorage; these are optional so a
+  // parent (e.g. the tabs layout) can also be notified to keep its own
+  // age-verification state in sync.
+  visible?: boolean;
+  onConfirm?: () => void | Promise<void>;
+  onDeny?: () => void;
+}
+
+export default function AgeVerificationModal({ onConfirm, onDeny }: AgeVerificationModalProps = {}) {
   const { isAuthenticated, isAgeVerified: authAgeVerified } = useAuth();
   const [visible, setVisible] = useState(false);
   const [localVerified, setLocalVerified] = useState(true); // default true to avoid flash
@@ -61,9 +70,11 @@ export default function AgeVerificationModal() {
     } catch {}
     setLocalVerified(true);
     setVisible(false);
+    await onConfirm?.();
   };
 
   const handleDeny = () => {
+    onDeny?.();
     Alert.alert(
       'Access Restricted',
       'You must be 21 or older to use Unbottl. If you believe this is an error, please contact support@unbottl.com.',

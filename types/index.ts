@@ -69,6 +69,11 @@ export interface Wine {
   dietaryTags: DietaryTag[];
   createdAt: string;
   updatedAt: string;
+  // Persisted by WineContext's row mapping; optional because not every
+  // caller/view supplies them.
+  description?: string;
+  pairings?: string[];
+  rating?: number | null;
 }
 
 export interface Beer {

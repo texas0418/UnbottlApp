@@ -50,6 +50,7 @@ import { useRouter } from 'expo-router';
 const PRIVACY_POLICY_URL = 'https://unbottl.com/privacy-policy.html';
 const TERMS_OF_SERVICE_URL = 'https://unbottl.com/terms-of-service.html';
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function SettingsScreen() {
   const router = useRouter();
   const { user, isAuthenticated, logout, userType, deleteAccount } = useAuth();

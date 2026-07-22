@@ -114,6 +114,7 @@ type CatalogItem = {
   searchText: string;
 };
 
+// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function DiscoverScreen() {
   const router = useRouter();
   const { wines, beers, spirits, cocktails, nonAlcoholic, isLoading } = useBeverages();
@@ -250,7 +251,7 @@ export default function DiscoverScreen() {
           </View>
           <View style={styles.sommelierText}>
             <Text style={styles.sommelierTitle}>Ask the AI Sommelier</Text>
-            <Text style={styles.sommelierSubtitle}>Tell me what you're in the mood for</Text>
+            <Text style={styles.sommelierSubtitle}>Tell me what you&apos;re in the mood for</Text>
           </View>
           <View style={styles.sommelierArrow}>
             <ArrowRight size={18} color={Colors.white} />
@@ -310,7 +311,7 @@ export default function DiscoverScreen() {
           </View>
           <View style={styles.setupTextWrap}>
             <Text style={styles.setupTitle}>Get personalized picks</Text>
-            <Text style={styles.setupSubtitle}>Tell us your taste and we'll suggest drinks you'll love</Text>
+            <Text style={styles.setupSubtitle}>Tell us your taste and we&apos;ll suggest drinks you&apos;ll love</Text>
           </View>
           <ArrowRight size={18} color={Colors.primary} />
         </TouchableOpacity>

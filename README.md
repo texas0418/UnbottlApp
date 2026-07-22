@@ -61,3 +61,10 @@ pod install --repo-update
 - 🤖 AI Sommelier Chat
 - 📋 Menu Management
 - 📊 Analytics Dashboard
+
+## To-dos and bugs
+
+Tracked in [GitHub Issues](https://github.com/texas0418/UnbottlApp/issues) — the
+`pre-ship` label is the App Store submission checklist, `tech-debt` items have
+inline eslint-disables pointing at them, and `handoff` issues carry
+session-to-session notes. See AGENTS.md for the PR/CI workflow.

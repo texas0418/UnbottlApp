@@ -109,6 +109,7 @@ Espresso,Lavazza,coffee,"Double shot Italian espresso",4,2oz,5,"Espresso Beans",
   },
 };
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function CSVImportScreen() {
   const router = useRouter();
   const { addWine } = useWines();
@@ -225,6 +226,7 @@ export default function CSVImportScreen() {
     }
   };
 
+  // eslint-disable-next-line complexity -- tracked in #2
   const importRow = async (data: Record<string, string>) => {
     const timestamp = new Date().toISOString();
 
@@ -415,7 +417,7 @@ export default function CSVImportScreen() {
                   </Text>
                   <Text style={[styles.templateLabel, { marginTop: 8 }]}>Note:</Text>
                   <Text style={styles.templateFields}>
-                    Use | to separate multiple values (e.g., "Beef|Lamb|Cheese")
+                    Use | to separate multiple values (e.g., &quot;Beef|Lamb|Cheese&quot;)
                   </Text>
                 </View>
                 <View style={styles.templateBox}>

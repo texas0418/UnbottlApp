@@ -50,6 +50,7 @@ const categoryConfig: Record<CategoryTab, { label: string; icon: React.ElementTy
   'non-alcoholic': { label: 'Non-Alc', icon: Coffee, color: Colors.success },
 };
 
+// eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function CustomerMenuScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ r?: string }>();
