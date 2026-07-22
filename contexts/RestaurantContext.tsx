@@ -7,13 +7,18 @@ export interface Restaurant {
   id: string;
   owner_id: string;
   name: string;
-  email?: string;
-  phone?: string;
+  email?: string | null;
+  phone?: string | null;
   created_at: string;
   updated_at: string;
   is_founding_member?: boolean;
   founding_member_number?: number;
   founding_member_expires_at?: string;
+  // Display fields surfaced on customer-facing menu screens. Optional because
+  // the owner may not have set them yet.
+  coverImageUrl?: string | null;
+  cuisineType?: string;
+  menuSlug?: string;
 }
 
 export interface Location {

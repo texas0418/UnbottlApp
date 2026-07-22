@@ -8,6 +8,16 @@ import { supabase, getDeviceId } from '@/services/supabase';
 
 const WINES_STORAGE_KEY = '@unbottl_wines';
 
+// Fuller Wine fields the DB row may not carry; defaulted so dbToWine always
+// returns a complete Wine. Split out to keep dbToWine under the complexity gate.
+const dbToWineExtras = (row: any): Pick<Wine, 'alcoholContent' | 'glassPrice' | 'foodPairings' | 'flavorProfile' | 'dietaryTags'> => ({
+  alcoholContent: row.alcohol_content ?? 0,
+  glassPrice: row.glass_price ?? null,
+  foodPairings: row.food_pairings || [],
+  flavorProfile: row.flavor_profile || { body: 0, sweetness: 0, tannins: 0, acidity: 0 },
+  dietaryTags: row.dietary_tags || [],
+});
+
 // Convert database row to Wine type
 const dbToWine = (row: any): Wine => ({
   id: row.id,
@@ -29,6 +39,7 @@ const dbToWine = (row: any): Wine => ({
   rating: row.rating,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+  ...dbToWineExtras(row),
 });
 
 // Convert Wine to database row
