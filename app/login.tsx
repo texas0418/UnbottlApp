@@ -54,7 +54,7 @@ export default function LoginScreen() {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Send',
-            onPress: async (inputEmail) => {
+            onPress: async (inputEmail?: string) => {
               if (inputEmail?.trim()) {
                 const { error } = await resetPassword(inputEmail.trim());
                 if (error) {

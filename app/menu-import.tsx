@@ -32,7 +32,6 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useWines } from '@/contexts/WineContext';
-import { useBeverages } from '@/contexts/BeverageContext';
 import { analyzeMenuImage, ExtractedBeverage } from '@/services/menu-ai';
 
 type ImportStep = 'capture' | 'processing' | 'review' | 'importing' | 'complete';
@@ -41,7 +40,6 @@ type ImportStep = 'capture' | 'processing' | 'review' | 'importing' | 'complete'
 export default function MenuImportScreen() {
   const router = useRouter();
   const { addWine } = useWines();
-  const { addBeverage } = useBeverages();
 
   const [step, setStep] = useState<ImportStep>('capture');
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -149,25 +147,27 @@ export default function MenuImportScreen() {
             grape: item.grape || '',
             region: item.region || '',
             country: item.country || '',
-            vintage: item.vintage,
-            price: item.price,
+            vintage: item.vintage ?? null,
+            price: item.price ?? 0,
+            alcoholContent: 0,
+            glassPrice: null,
             description: item.description || '',
             tastingNotes: item.tastingNotes || '',
             pairings: item.pairings || [],
+            foodPairings: item.pairings || [],
+            flavorProfile: { body: 0, sweetness: 0, tannins: 0, acidity: 0 },
+            dietaryTags: [],
+            imageUrl: null,
+            featured: false,
             inStock: true,
             quantity: item.quantity || 1,
           });
         } else {
-          await addBeverage({
-            name: item.name,
-            category: item.category,
-            type: item.beverageType || '',
-            producer: item.producer || '',
-            description: item.description || '',
-            price: item.price,
-            inStock: true,
-            quantity: item.quantity || 1,
-          });
+          // Non-wine beverage import is not yet wired to BeverageContext's
+          // per-category adders (addBeer/addSpirit/addCocktail/addNonAlcoholic),
+          // each of which needs a fully-typed payload. Skip these items rather
+          // than import them with fabricated defaults. Tracked as a follow-up.
+          console.warn('Skipping non-wine menu import (not yet supported):', item.name);
         }
       } catch (error) {
         console.error('Error importing item:', item.name, error);

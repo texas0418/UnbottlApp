@@ -16,8 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Typecheck
-        # Pre-existing type errors; gate softened during CI bootstrap.
-        run: npx tsc --noEmit || true  # TODO(#3)
+        run: npx tsc --noEmit
       - name: Lint (incl. complexity limits)
         run: npx eslint .
       - name: LLM slop check
