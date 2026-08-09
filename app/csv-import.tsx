@@ -32,6 +32,13 @@ import * as Clipboard from 'expo-clipboard';
 import Colors from '@/constants/colors';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
+import {
+  csvRowToWine,
+  csvRowToBeer,
+  csvRowToSpirit,
+  csvRowToCocktail,
+  csvRowToNonAlcoholic,
+} from '@/utils/csvRowPayloads';
 import { BeverageCategory } from '@/types';
 import AuthGuard from '@/components/AuthGuard';
 
@@ -226,107 +233,22 @@ export default function CSVImportScreen() {
     }
   };
 
-  // eslint-disable-next-line complexity -- tracked in #2
   const importRow = async (data: Record<string, string>) => {
-    const timestamp = new Date().toISOString();
-
     switch (selectedCategory) {
       case 'wine':
-        await addWine({
-          name: data.name,
-          producer: data.producer,
-          type: data.type as any,
-          vintage: data.vintage ? parseInt(data.vintage) : null,
-          region: data.region || '',
-          country: data.country || '',
-          grape: data.grape || '',
-          alcoholContent: parseFloat(data.alcoholcontent) || 13,
-          price: parseFloat(data.price) || 0,
-          glassPrice: data.glassprice ? parseFloat(data.glassprice) : null,
-          tastingNotes: data.tastingnotes || '',
-          foodPairings: data.foodpairings ? data.foodpairings.split('|') : [],
-          quantity: parseInt(data.quantity) || 0,
-          inStock: data.instock?.toLowerCase() === 'true',
-          featured: data.featured?.toLowerCase() === 'true',
-          imageUrl: null,
-          flavorProfile: { body: 3, sweetness: 2, tannins: 3, acidity: 3 },
-          dietaryTags: [],
-        });
+        await addWine(csvRowToWine(data));
         break;
       case 'beer':
-        await addBeer({
-          name: data.name,
-          brewery: data.brewery,
-          type: data.type as any,
-          style: data.style || '',
-          abv: parseFloat(data.abv) || 5,
-          ibu: data.ibu ? parseInt(data.ibu) : null,
-          origin: data.origin || '',
-          price: parseFloat(data.price) || 0,
-          servingSize: data.servingsize || '12oz',
-          description: data.description || '',
-          foodPairings: data.foodpairings ? data.foodpairings.split('|') : [],
-          quantity: parseInt(data.quantity) || 0,
-          inStock: data.instock?.toLowerCase() === 'true',
-          featured: data.featured?.toLowerCase() === 'true',
-          imageUrl: null,
-          beerProfile: { bitterness: 3, maltiness: 3, hoppy: 3, body: 3 },
-          dietaryTags: [],
-        });
+        await addBeer(csvRowToBeer(data));
         break;
       case 'spirit':
-        await addSpirit({
-          name: data.name,
-          brand: data.brand,
-          type: data.type as any,
-          origin: data.origin || '',
-          age: data.age || null,
-          abv: parseFloat(data.abv) || 40,
-          price: parseFloat(data.price) || 0,
-          shotPrice: data.shotprice ? parseFloat(data.shotprice) : null,
-          description: data.description || '',
-          mixers: data.mixers ? data.mixers.split('|') : [],
-          quantity: parseInt(data.quantity) || 0,
-          inStock: data.instock?.toLowerCase() === 'true',
-          featured: data.featured?.toLowerCase() === 'true',
-          imageUrl: null,
-          spiritProfile: { smoothness: 3, complexity: 3, sweetness: 2, intensity: 3 },
-          dietaryTags: [],
-        });
+        await addSpirit(csvRowToSpirit(data));
         break;
       case 'cocktail':
-        await addCocktail({
-          name: data.name,
-          type: data.type as any,
-          baseSpirit: data.basespirit,
-          ingredients: data.ingredients ? data.ingredients.split('|') : [],
-          garnish: data.garnish || '',
-          glassType: data.glasstype || 'Rocks',
-          price: parseFloat(data.price) || 0,
-          description: data.description || '',
-          isSignature: data.issignature?.toLowerCase() === 'true',
-          isAvailable: data.isavailable?.toLowerCase() !== 'false',
-          featured: data.featured?.toLowerCase() === 'true',
-          imageUrl: null,
-          dietaryTags: [],
-        });
+        await addCocktail(csvRowToCocktail(data));
         break;
       case 'non-alcoholic':
-        await addNonAlcoholic({
-          name: data.name,
-          brand: data.brand || null,
-          type: data.type as any,
-          description: data.description || '',
-          price: parseFloat(data.price) || 0,
-          servingSize: data.servingsize || '12oz',
-          calories: data.calories ? parseInt(data.calories) : null,
-          ingredients: data.ingredients ? data.ingredients.split('|') : [],
-          quantity: parseInt(data.quantity) || 0,
-          inStock: data.instock?.toLowerCase() !== 'false',
-          featured: data.featured?.toLowerCase() === 'true',
-          imageUrl: null,
-          dietaryTags: [],
-        });
+        await addNonAlcoholic(csvRowToNonAlcoholic(data));
         break;
     }
   };
