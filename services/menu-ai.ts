@@ -377,7 +377,13 @@ async function mockAnalyzeMenu(imageUri: string): Promise<ExtractedBeverage[]> {
 /**
  * Validate and clean extracted beverage data
  */
-// eslint-disable-next-line complexity -- tracked in #2
+const trimmed = (value: string | undefined) => value?.trim();
+const positive = (value: number | undefined) => (value && value > 0 ? value : undefined);
+
+/** Vintages outside a plausible range are treated as extraction noise. */
+const plausibleVintage = (value: number | undefined) =>
+  value && value > 1900 && value <= new Date().getFullYear() + 1 ? value : undefined;
+
 export function validateExtractedBeverage(item: Partial<ExtractedBeverage>): ExtractedBeverage | null {
   if (!item.name || !item.category) {
     return null;
@@ -387,18 +393,16 @@ export function validateExtractedBeverage(item: Partial<ExtractedBeverage>): Ext
     id: item.id || generateId(),
     name: item.name.trim(),
     category: item.category,
-    price: item.price && item.price > 0 ? item.price : undefined,
-    description: item.description?.trim(),
-    producer: item.producer?.trim(),
-    region: item.region?.trim(),
-    country: item.country?.trim(),
-    vintage: item.vintage && item.vintage > 1900 && item.vintage <= new Date().getFullYear() + 1 
-      ? item.vintage 
-      : undefined,
-    grape: item.grape?.trim(),
+    price: positive(item.price),
+    description: trimmed(item.description),
+    producer: trimmed(item.producer),
+    region: trimmed(item.region),
+    country: trimmed(item.country),
+    vintage: plausibleVintage(item.vintage),
+    grape: trimmed(item.grape),
     wineType: item.wineType,
-    beverageType: item.beverageType?.trim(),
-    tastingNotes: item.tastingNotes?.trim(),
+    beverageType: trimmed(item.beverageType),
+    tastingNotes: trimmed(item.tastingNotes),
     pairings: item.pairings,
     quantity: item.quantity || 1,
     confidence: item.confidence,
