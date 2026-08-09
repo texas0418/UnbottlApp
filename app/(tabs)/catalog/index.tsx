@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Wine, Beer, Martini, Coffee, GlassWater, Package, Filter, Leaf, X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
+import { useResponsive } from '@/hooks/useResponsive';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
 import WineCard from '@/components/WineCard';
 import BeverageCard from '@/components/BeverageCard';
@@ -99,6 +100,7 @@ type CatalogItem = {
 // eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function CatalogScreen() {
   const router = useRouter();
+  const { gridColumns } = useResponsive();
   const { wines, beers, spirits, cocktails, nonAlcoholic, isLoading: beveragesLoading } = useBeverages();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -490,7 +492,8 @@ export default function CatalogScreen() {
         contentContainerStyle={styles.list}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        numColumns={2}
+        key={`cols-${gridColumns}`}
+        numColumns={gridColumns}
         columnWrapperStyle={styles.row}
         refreshControl={
           <RefreshControl

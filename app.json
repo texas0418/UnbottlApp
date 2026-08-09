@@ -21,7 +21,13 @@
         "NSCameraUsageDescription": "Unbottl needs camera access to scan wine labels and menus",
         "NSPhotoLibraryUsageDescription": "Unbottl needs photo library access to select wine images",
         "NSLocationWhenInUseUsageDescription": "Unbottl uses your location to find nearby wine shops",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "android": {
