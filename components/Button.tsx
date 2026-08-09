@@ -3,11 +3,14 @@ import { StyleSheet, Text, TouchableOpacity, ActivityIndicator, View } from 'rea
 import { LucideIcon } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonSize = 'small' | 'medium' | 'large';
+
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   icon?: LucideIcon;
   iconPosition?: 'left' | 'right';
   loading?: boolean;
@@ -15,7 +18,21 @@ interface ButtonProps {
   fullWidth?: boolean;
 }
 
-// eslint-disable-next-line complexity -- tracked in #2
+// Icon treatment per variant/size, as lookups rather than nested ternaries so
+// adding a variant is a one-line change the compiler checks for exhaustiveness.
+const ICON_COLORS: Record<ButtonVariant, string> = {
+  primary: Colors.white,
+  secondary: Colors.primary,
+  outline: Colors.primary,
+  ghost: Colors.primary,
+};
+
+const ICON_SIZES: Record<ButtonSize, number> = {
+  small: 16,
+  medium: 18,
+  large: 22,
+};
+
 export default function Button({
   title,
   onPress,
@@ -43,13 +60,8 @@ export default function Button({
     styles[`${size}Text`],
   ];
 
-  const iconColor = variant === 'primary' 
-    ? Colors.white 
-    : variant === 'secondary' 
-    ? Colors.primary 
-    : Colors.primary;
-
-  const iconSize = size === 'small' ? 16 : size === 'large' ? 22 : 18;
+  const iconColor = ICON_COLORS[variant];
+  const iconSize = ICON_SIZES[size];
 
   return (
     <TouchableOpacity

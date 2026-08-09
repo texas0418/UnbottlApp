@@ -39,12 +39,32 @@ export interface SupabaseBeverage {
   updated_at: string;
 }
 
-// eslint-disable-next-line complexity -- tracked in #2
+// Every beverage row maps these the same way, so they're shared rather than
+// repeated in each of the five mappers below.
+const metaOf = (row: SupabaseBeverage) => row.metadata || {};
+const commonFields = (row: SupabaseBeverage) => ({
+  id: row.id,
+  name: row.name,
+  price: Number(row.price) || 0,
+  imageUrl: row.image_url,
+  featured: row.featured,
+  dietaryTags: (row.dietary_tags || []) as any[],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+// Cocktails track availability instead, so they don't use these.
+const stockFields = (row: SupabaseBeverage) => ({
+  inStock: row.in_stock,
+  quantity: row.quantity || 0,
+});
+const descriptionOf = (row: SupabaseBeverage) => row.description || row.tasting_notes || '';
+const originOf = (row: SupabaseBeverage) => row.region || row.country || '';
+
 export function toWine(row: SupabaseBeverage): Wine {
-  const meta = row.metadata || {};
+  const meta = metaOf(row);
   return {
-    id: row.id,
-    name: row.name,
+    ...commonFields(row),
+    ...stockFields(row),
     producer: row.brand || '',
     type: (meta.wineType || row.type || 'red') as WineType,
     vintage: row.vintage || null,
@@ -52,115 +72,74 @@ export function toWine(row: SupabaseBeverage): Wine {
     country: row.country || '',
     grape: meta.grape || '',
     alcoholContent: row.abv || 0,
-    price: Number(row.price) || 0,
     glassPrice: row.glass_price ? Number(row.glass_price) : null,
     tastingNotes: row.tasting_notes || row.description || '',
     foodPairings: row.food_pairings || [],
-    inStock: row.in_stock,
-    quantity: row.quantity || 0,
-    imageUrl: row.image_url,
-    featured: row.featured,
     flavorProfile: meta.flavorProfile || { body: 3, sweetness: 2, tannins: 3, acidity: 3 },
-    dietaryTags: (row.dietary_tags || []) as any[],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 
-// eslint-disable-next-line complexity -- tracked in #2
 export function toBeer(row: SupabaseBeverage): Beer {
-  const meta = row.metadata || {};
+  const meta = metaOf(row);
   return {
-    id: row.id,
-    name: row.name,
+    ...commonFields(row),
+    ...stockFields(row),
     brewery: row.brand || '',
     type: (meta.beerType || row.type || 'ale') as BeerType,
     style: meta.style || '',
     abv: row.abv || 0,
     ibu: meta.ibu || null,
-    origin: row.region || row.country || '',
-    price: Number(row.price) || 0,
+    origin: originOf(row),
     servingSize: meta.servingSize || '12oz',
-    description: row.description || row.tasting_notes || '',
+    description: descriptionOf(row),
     foodPairings: row.food_pairings || [],
-    inStock: row.in_stock,
-    quantity: row.quantity || 0,
-    imageUrl: row.image_url,
-    featured: row.featured,
     beerProfile: meta.beerProfile || { bitterness: 3, maltiness: 3, hoppy: 3, body: 3 },
-    dietaryTags: (row.dietary_tags || []) as any[],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 
-// eslint-disable-next-line complexity -- tracked in #2
 export function toSpirit(row: SupabaseBeverage): Spirit {
-  const meta = row.metadata || {};
+  const meta = metaOf(row);
   return {
-    id: row.id,
-    name: row.name,
+    ...commonFields(row),
+    ...stockFields(row),
     brand: row.brand || '',
     type: (meta.spiritType || row.type || 'whiskey') as SpiritType,
-    origin: row.region || row.country || '',
+    origin: originOf(row),
     age: meta.age || null,
     abv: row.abv || 0,
-    price: Number(row.price) || 0,
     shotPrice: row.glass_price ? Number(row.glass_price) : null,
-    description: row.description || row.tasting_notes || '',
+    description: descriptionOf(row),
     mixers: meta.mixers || [],
-    inStock: row.in_stock,
-    quantity: row.quantity || 0,
-    imageUrl: row.image_url,
-    featured: row.featured,
     spiritProfile: meta.spiritProfile || { smoothness: 3, complexity: 3, sweetness: 3, intensity: 3 },
-    dietaryTags: (row.dietary_tags || []) as any[],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 
 export function toCocktail(row: SupabaseBeverage): Cocktail {
-  const meta = row.metadata || {};
+  const meta = metaOf(row);
   return {
-    id: row.id,
-    name: row.name,
+    ...commonFields(row),
     type: (meta.cocktailType || row.type || 'classic') as CocktailType,
     baseSpirit: meta.baseSpirit || '',
     ingredients: meta.ingredients || [],
     garnish: meta.garnish || '',
     glassType: meta.glassType || '',
-    price: Number(row.price) || 0,
-    description: row.description || row.tasting_notes || '',
+    description: descriptionOf(row),
     isSignature: meta.isSignature || false,
     isAvailable: row.in_stock,
-    imageUrl: row.image_url,
-    featured: row.featured,
-    dietaryTags: (row.dietary_tags || []) as any[],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 
 export function toNonAlcoholic(row: SupabaseBeverage): NonAlcoholicBeverage {
-  const meta = row.metadata || {};
+  const meta = metaOf(row);
   return {
-    id: row.id,
-    name: row.name,
+    ...commonFields(row),
+    ...stockFields(row),
     brand: row.brand || null,
     type: (meta.naType || row.type || 'other') as NonAlcoholicType,
-    description: row.description || row.tasting_notes || '',
-    price: Number(row.price) || 0,
+    description: descriptionOf(row),
     servingSize: meta.servingSize || '',
     calories: meta.calories || null,
     ingredients: meta.ingredients || [],
-    inStock: row.in_stock,
-    quantity: row.quantity || 0,
-    imageUrl: row.image_url,
-    featured: row.featured,
-    dietaryTags: (row.dietary_tags || []) as any[],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 
