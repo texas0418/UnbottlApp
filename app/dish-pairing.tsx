@@ -176,53 +176,79 @@ const getSmartSuggestions = (profile: { body: number; sweetness: number; tannins
   return suggestions;
 };
 
+type FlavorRanges = {
+  idealBody: [number, number];
+  idealAcidity: [number, number];
+  idealTannins: [number, number];
+  idealSweetness: [number, number];
+};
+
+type WineFlavorProfile = { body: number; sweetness: number; tannins: number; acidity: number };
+
+const CATEGORY_PROFILES: Record<string, FlavorRanges> = {
+  'red-meat': { idealBody: [4, 5], idealAcidity: [2, 4], idealTannins: [3, 5], idealSweetness: [1, 2] },
+  'seafood': { idealBody: [1, 3], idealAcidity: [3, 5], idealTannins: [1, 2], idealSweetness: [1, 3] },
+  'vegetarian': { idealBody: [2, 4], idealAcidity: [3, 4], idealTannins: [1, 3], idealSweetness: [1, 3] },
+  'pasta-rice': { idealBody: [2, 4], idealAcidity: [3, 5], idealTannins: [1, 4], idealSweetness: [1, 2] },
+  'cheese': { idealBody: [3, 5], idealAcidity: [2, 4], idealTannins: [2, 5], idealSweetness: [1, 4] },
+  'dessert': { idealBody: [2, 4], idealAcidity: [2, 4], idealTannins: [1, 2], idealSweetness: [3, 5] },
+};
+
+// Every dimension scores the same 25 points when the wine falls inside the
+// dish's ideal range, and may contribute one human-readable reason. Written as
+// a table so the pairing rules read as data rather than as a wall of branches.
+const FLAVOR_DIMENSIONS: {
+  key: keyof WineFlavorProfile;
+  range: keyof FlavorRanges;
+  reason: (value: number) => string | null;
+}[] = [
+  {
+    key: 'body',
+    range: 'idealBody',
+    reason: (v) =>
+      v >= 4 ? 'Full body matches dish intensity'
+        : v <= 2 ? 'Light body complements delicate flavors'
+        : 'Balanced body works well',
+  },
+  {
+    key: 'acidity',
+    range: 'idealAcidity',
+    reason: (v) => (v >= 4 ? 'High acidity cuts through richness' : null),
+  },
+  {
+    key: 'tannins',
+    range: 'idealTannins',
+    reason: (v) =>
+      v >= 4 ? 'Bold tannins complement proteins'
+        : v <= 2 ? 'Soft tannins won\'t overpower'
+        : null,
+  },
+  {
+    key: 'sweetness',
+    range: 'idealSweetness',
+    reason: (v) => (v >= 3 ? 'Sweetness balances the dish' : null),
+  },
+];
+
 const calculateFlavorMatch = (
-  wineProfile: { body: number; sweetness: number; tannins: number; acidity: number },
+  wineProfile: WineFlavorProfile,
   dishCategory: string
-// eslint-disable-next-line complexity -- tracked in #2
 ): { score: number; reasons: string[] } => {
+  const profile = CATEGORY_PROFILES[dishCategory];
+  if (!profile) return { score: 50, reasons: [] };
+
   let score = 0;
   const reasons: string[] = [];
-  
-  const categoryProfiles: Record<string, { idealBody: [number, number]; idealAcidity: [number, number]; idealTannins: [number, number]; idealSweetness: [number, number] }> = {
-    'red-meat': { idealBody: [4, 5], idealAcidity: [2, 4], idealTannins: [3, 5], idealSweetness: [1, 2] },
-    'seafood': { idealBody: [1, 3], idealAcidity: [3, 5], idealTannins: [1, 2], idealSweetness: [1, 3] },
-    'vegetarian': { idealBody: [2, 4], idealAcidity: [3, 4], idealTannins: [1, 3], idealSweetness: [1, 3] },
-    'pasta-rice': { idealBody: [2, 4], idealAcidity: [3, 5], idealTannins: [1, 4], idealSweetness: [1, 2] },
-    'cheese': { idealBody: [3, 5], idealAcidity: [2, 4], idealTannins: [2, 5], idealSweetness: [1, 4] },
-    'dessert': { idealBody: [2, 4], idealAcidity: [2, 4], idealTannins: [1, 2], idealSweetness: [3, 5] },
-  };
-  
-  const profile = categoryProfiles[dishCategory];
-  if (!profile) return { score: 50, reasons: [] };
-  
-  // Check body match
-  if (wineProfile.body >= profile.idealBody[0] && wineProfile.body <= profile.idealBody[1]) {
+
+  for (const dimension of FLAVOR_DIMENSIONS) {
+    const value = wineProfile[dimension.key];
+    const [min, max] = profile[dimension.range];
+    if (value < min || value > max) continue;
     score += 25;
-    if (wineProfile.body >= 4) reasons.push('Full body matches dish intensity');
-    else if (wineProfile.body <= 2) reasons.push('Light body complements delicate flavors');
-    else reasons.push('Balanced body works well');
+    const reason = dimension.reason(value);
+    if (reason) reasons.push(reason);
   }
-  
-  // Check acidity match
-  if (wineProfile.acidity >= profile.idealAcidity[0] && wineProfile.acidity <= profile.idealAcidity[1]) {
-    score += 25;
-    if (wineProfile.acidity >= 4) reasons.push('High acidity cuts through richness');
-  }
-  
-  // Check tannins match
-  if (wineProfile.tannins >= profile.idealTannins[0] && wineProfile.tannins <= profile.idealTannins[1]) {
-    score += 25;
-    if (wineProfile.tannins >= 4) reasons.push('Bold tannins complement proteins');
-    else if (wineProfile.tannins <= 2) reasons.push('Soft tannins won\'t overpower');
-  }
-  
-  // Check sweetness match
-  if (wineProfile.sweetness >= profile.idealSweetness[0] && wineProfile.sweetness <= profile.idealSweetness[1]) {
-    score += 25;
-    if (wineProfile.sweetness >= 3) reasons.push('Sweetness balances the dish');
-  }
-  
+
   return { score, reasons };
 };
 
