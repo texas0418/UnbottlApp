@@ -32,7 +32,15 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useWines } from '@/contexts/WineContext';
+import { useBeverages } from '@/contexts/BeverageContext';
 import { analyzeMenuImage, ExtractedBeverage } from '@/services/menu-ai';
+import {
+  extractedToWine,
+  extractedToBeer,
+  extractedToSpirit,
+  extractedToCocktail,
+  extractedToNonAlcoholic,
+} from '@/utils/extractedBeverageMappers';
 
 type ImportStep = 'capture' | 'processing' | 'review' | 'importing' | 'complete';
 
@@ -40,6 +48,7 @@ type ImportStep = 'capture' | 'processing' | 'review' | 'importing' | 'complete'
 export default function MenuImportScreen() {
   const router = useRouter();
   const { addWine } = useWines();
+  const { addBeer, addSpirit, addCocktail, addNonAlcoholic } = useBeverages();
 
   const [step, setStep] = useState<ImportStep>('capture');
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -124,7 +133,6 @@ export default function MenuImportScreen() {
     setSelectedItems(new Set(selectedItems));
   };
 
-  // eslint-disable-next-line complexity -- tracked in #2
   const importItems = async () => {
     const itemsToImport = extractedItems.filter(item => selectedItems.has(item.id));
     if (itemsToImport.length === 0) {
@@ -139,35 +147,22 @@ export default function MenuImportScreen() {
       setImportProgress(((i + 1) / itemsToImport.length) * 100);
 
       try {
-        if (item.category === 'wine') {
-          await addWine({
-            name: item.name,
-            producer: item.producer || 'Unknown',
-            type: item.wineType || 'red',
-            grape: item.grape || '',
-            region: item.region || '',
-            country: item.country || '',
-            vintage: item.vintage ?? null,
-            price: item.price ?? 0,
-            alcoholContent: 0,
-            glassPrice: null,
-            description: item.description || '',
-            tastingNotes: item.tastingNotes || '',
-            pairings: item.pairings || [],
-            foodPairings: item.pairings || [],
-            flavorProfile: { body: 0, sweetness: 0, tannins: 0, acidity: 0 },
-            dietaryTags: [],
-            imageUrl: null,
-            featured: false,
-            inStock: true,
-            quantity: item.quantity || 1,
-          });
-        } else {
-          // Non-wine beverage import is not yet wired to BeverageContext's
-          // per-category adders (addBeer/addSpirit/addCocktail/addNonAlcoholic),
-          // each of which needs a fully-typed payload. Skip these items rather
-          // than import them with fabricated defaults. Tracked as a follow-up.
-          console.warn('Skipping non-wine menu import (not yet supported):', item.name);
+        switch (item.category) {
+          case 'wine':
+            await addWine(extractedToWine(item));
+            break;
+          case 'beer':
+            await addBeer(extractedToBeer(item));
+            break;
+          case 'spirit':
+            await addSpirit(extractedToSpirit(item));
+            break;
+          case 'cocktail':
+            await addCocktail(extractedToCocktail(item));
+            break;
+          case 'non-alcoholic':
+            await addNonAlcoholic(extractedToNonAlcoholic(item));
+            break;
         }
       } catch (error) {
         console.error('Error importing item:', item.name, error);
