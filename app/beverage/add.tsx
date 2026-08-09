@@ -18,6 +18,15 @@ import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { BeverageCategory, WineType, BeerType, SpiritType, CocktailType, NonAlcoholicType } from '@/types';
 import Button from '@/components/Button';
+import {
+  missingFieldsMessage,
+  buildWinePayload,
+  buildBeerPayload,
+  buildSpiritPayload,
+  buildCocktailPayload,
+  buildNonAlcoholicPayload,
+} from '@/utils/beverageFormPayloads';
+import { buildDescriptionPrompt, buildPairingsPrompt } from '@/utils/beverageAiPrompts';
 import { categoryColors } from '@/mocks/beverages';
 
 const categories: { label: string; value: BeverageCategory; icon: React.ReactNode }[] = [
@@ -116,31 +125,23 @@ export default function AddBeverageScreen() {
 
   const isSubmitting = isAddingWine || isAddingBeer || isAddingSpirit || isAddingCocktail || isAddingNonAlcoholic;
 
-  // eslint-disable-next-line complexity -- tracked in #2
+  // Bundle passed to the AI prompt builders.
+  const promptForms = {
+    wine: wineForm,
+    beer: beerForm,
+    spirit: spiritForm,
+    cocktail: cocktailForm,
+    nonAlcoholic: nonAlcForm,
+    ingredients,
+  };
+
   const handleGenerateDescription = async () => {
-    let prompt = '';
-    switch (selectedCategory) {
-      case 'wine':
-        if (!wineForm.name && !wineForm.grape && !wineForm.type) { Alert.alert('Missing Info', 'Please add wine details first.'); return; }
-        prompt = `Write a brief tasting note (2-3 sentences) for: ${wineForm.name || 'Unknown'} ${wineForm.type} wine from ${wineForm.region || 'Unknown'}, ${wineForm.country || 'Unknown'}. Grape: ${wineForm.grape || 'Unknown'}. Describe aromas and flavors.`;
-        break;
-      case 'beer':
-        if (!beerForm.name && !beerForm.type) { Alert.alert('Missing Info', 'Please add beer details first.'); return; }
-        prompt = `Write a brief description (2-3 sentences) for: ${beerForm.name || 'Unknown'} ${beerForm.type} ${beerForm.style || ''} from ${beerForm.brewery || 'Unknown'}. ABV: ${beerForm.abv || 'Unknown'}%. Describe taste and character.`;
-        break;
-      case 'spirit':
-        if (!spiritForm.name && !spiritForm.type) { Alert.alert('Missing Info', 'Please add spirit details first.'); return; }
-        prompt = `Write a brief tasting note (2-3 sentences) for: ${spiritForm.name || 'Unknown'} ${spiritForm.type} from ${spiritForm.origin || 'Unknown'}. Age: ${spiritForm.age || 'Unaged'}. Describe nose, palate, and finish.`;
-        break;
-      case 'cocktail':
-        if (!cocktailForm.name) { Alert.alert('Missing Info', 'Please add cocktail name first.'); return; }
-        prompt = `Write a brief enticing description (2-3 sentences) for a cocktail called "${cocktailForm.name}" made with ${cocktailForm.baseSpirit || 'spirits'}. Ingredients: ${ingredients.join(', ') || 'various'}. Make it sound appealing.`;
-        break;
-      case 'non-alcoholic':
-        if (!nonAlcForm.name) { Alert.alert('Missing Info', 'Please add beverage name first.'); return; }
-        prompt = `Write a brief description (2-3 sentences) for: ${nonAlcForm.name || 'Unknown'} (${nonAlcForm.type}). Make it sound refreshing and appealing.`;
-        break;
+    const built = buildDescriptionPrompt(selectedCategory, promptForms);
+    if (built.error !== undefined) {
+      Alert.alert('Missing Info', built.error);
+      return;
     }
+    const prompt = built.prompt;
 
     setIsGenerating(true);
     try {
@@ -162,46 +163,13 @@ export default function AddBeverageScreen() {
   };
 
   // ── NEW: AI Food Pairing Generation ──────────────────────────────
-  // eslint-disable-next-line complexity -- tracked in #2
   const handleGeneratePairings = async () => {
-    let prompt = '';
-    switch (selectedCategory) {
-      case 'wine':
-        if (!wineForm.name && !wineForm.grape && !wineForm.type) {
-          Alert.alert('Missing Info', 'Please add wine details first so we can suggest pairings.');
-          return;
-        }
-        prompt = `Suggest exactly 5 specific food pairings for: ${wineForm.name || 'a'} ${wineForm.type} wine${wineForm.grape ? ` made from ${wineForm.grape}` : ''}${wineForm.region ? ` from ${wineForm.region}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Grilled Ribeye, Aged Gouda, Mushroom Risotto, Dark Chocolate, Lamb Chops`;
-        break;
-      case 'beer':
-        if (!beerForm.name && !beerForm.type) {
-          Alert.alert('Missing Info', 'Please add beer details first so we can suggest pairings.');
-          return;
-        }
-        prompt = `Suggest exactly 5 specific food pairings for: ${beerForm.name || 'a'} ${beerForm.type} ${beerForm.style || 'beer'}${beerForm.brewery ? ` from ${beerForm.brewery}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: BBQ Ribs, Fish Tacos, Pretzels, Spicy Wings, Cheddar Cheese`;
-        break;
-      case 'spirit':
-        if (!spiritForm.name && !spiritForm.type) {
-          Alert.alert('Missing Info', 'Please add spirit details first so we can suggest pairings.');
-          return;
-        }
-        prompt = `Suggest exactly 5 specific food pairings for: ${spiritForm.name || 'a'} ${spiritForm.type}${spiritForm.origin ? ` from ${spiritForm.origin}` : ''}${spiritForm.age ? `, aged ${spiritForm.age}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Dark Chocolate, Smoked Salmon, Blue Cheese, Grilled Peaches, Charcuterie`;
-        break;
-      case 'cocktail':
-        if (!cocktailForm.name) {
-          Alert.alert('Missing Info', 'Please add cocktail name first so we can suggest pairings.');
-          return;
-        }
-        prompt = `Suggest exactly 5 specific food pairings for a cocktail called "${cocktailForm.name}"${cocktailForm.baseSpirit ? ` made with ${cocktailForm.baseSpirit}` : ''}${ingredients.length > 0 ? `, ingredients: ${ingredients.join(', ')}` : ''}. Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Shrimp Ceviche, Bruschetta, Oysters, Spicy Tuna Roll, Caprese Salad`;
-        break;
-      case 'non-alcoholic':
-        if (!nonAlcForm.name) {
-          Alert.alert('Missing Info', 'Please add beverage name first so we can suggest pairings.');
-          return;
-        }
-        prompt = `Suggest exactly 5 specific food pairings for: ${nonAlcForm.name || 'a'} (${nonAlcForm.type} beverage). Return ONLY a comma-separated list of short food names (2-4 words each), no numbering, no explanations. Example format: Croissant, Fruit Tart, Granola Bowl, Scones, Avocado Toast`;
-        break;
+    const built = buildPairingsPrompt(selectedCategory, promptForms);
+    if (built.error !== undefined) {
+      Alert.alert('Missing Info', built.error);
+      return;
     }
+    const prompt = built.prompt;
 
     setIsGeneratingPairings(true);
     try {
@@ -256,83 +224,66 @@ export default function AddBeverageScreen() {
     }
   };
 
-  // eslint-disable-next-line complexity -- tracked in #2
+  // Validate and save the form for the active category. Returns an error
+  // message when required fields are blank, or null once the item is saved.
+  const saveCurrentCategory = async (): Promise<string | null> => {
+    switch (selectedCategory) {
+      case 'wine': {
+        const error = missingFieldsMessage(
+          [wineForm.name, wineForm.producer, wineForm.price],
+          'Name, producer, and price are required',
+        );
+        if (error) return error;
+        await addWine(buildWinePayload(wineForm, foodPairings, featured));
+        return null;
+      }
+      case 'beer': {
+        const error = missingFieldsMessage(
+          [beerForm.name, beerForm.brewery, beerForm.price],
+          'Name, brewery, and price are required',
+        );
+        if (error) return error;
+        await addBeer(buildBeerPayload(beerForm, foodPairings, featured));
+        return null;
+      }
+      case 'spirit': {
+        const error = missingFieldsMessage(
+          [spiritForm.name, spiritForm.brand, spiritForm.price],
+          'Name, brand, and price are required',
+        );
+        if (error) return error;
+        await addSpirit(buildSpiritPayload(spiritForm, mixers, featured));
+        return null;
+      }
+      case 'cocktail': {
+        const error = missingFieldsMessage(
+          [cocktailForm.name, cocktailForm.price],
+          'Name and price are required',
+        );
+        if (error) return error;
+        await addCocktail(buildCocktailPayload(cocktailForm, ingredients, featured));
+        return null;
+      }
+      case 'non-alcoholic': {
+        const error = missingFieldsMessage(
+          [nonAlcForm.name, nonAlcForm.price],
+          'Name and price are required',
+        );
+        if (error) return error;
+        await addNonAlcoholic(buildNonAlcoholicPayload(nonAlcForm, ingredients, featured));
+        return null;
+      }
+      default:
+        return null;
+    }
+  };
+
   const handleSubmit = async () => {
     try {
-      switch (selectedCategory) {
-        case 'wine':
-          if (!wineForm.name.trim() || !wineForm.producer.trim() || !wineForm.price.trim()) {
-            Alert.alert('Error', 'Name, producer, and price are required'); return;
-          }
-          await addWine({
-            name: wineForm.name.trim(), producer: wineForm.producer.trim(), type: wineForm.type,
-            vintage: wineForm.vintage ? parseInt(wineForm.vintage, 10) : null,
-            region: wineForm.region.trim(), country: wineForm.country.trim(), grape: wineForm.grape.trim(),
-            alcoholContent: parseFloat(wineForm.alcoholContent) || 0,
-            price: parseFloat(wineForm.price) || 0,
-            glassPrice: wineForm.glassPrice ? parseFloat(wineForm.glassPrice) : null,
-            tastingNotes: wineForm.tastingNotes.trim(), foodPairings, inStock: true,
-            quantity: parseInt(wineForm.quantity, 10) || 0,
-            imageUrl: wineForm.imageUrl.trim() || null, featured,
-            flavorProfile: { body: 3, sweetness: 2, tannins: 3, acidity: 3 }, dietaryTags: [],
-          });
-          break;
-        case 'beer':
-          if (!beerForm.name.trim() || !beerForm.brewery.trim() || !beerForm.price.trim()) {
-            Alert.alert('Error', 'Name, brewery, and price are required'); return;
-          }
-          await addBeer({
-            name: beerForm.name.trim(), brewery: beerForm.brewery.trim(), type: beerForm.type,
-            style: beerForm.style.trim(), abv: parseFloat(beerForm.abv) || 0,
-            ibu: beerForm.ibu ? parseInt(beerForm.ibu, 10) : null, origin: beerForm.origin.trim(),
-            price: parseFloat(beerForm.price) || 0, servingSize: beerForm.servingSize.trim(),
-            description: beerForm.description.trim(), foodPairings, inStock: true,
-            quantity: parseInt(beerForm.quantity, 10) || 0,
-            imageUrl: beerForm.imageUrl.trim() || null, featured,
-            beerProfile: { bitterness: 3, maltiness: 3, hoppy: 3, body: 3 }, dietaryTags: [],
-          });
-          break;
-        case 'spirit':
-          if (!spiritForm.name.trim() || !spiritForm.brand.trim() || !spiritForm.price.trim()) {
-            Alert.alert('Error', 'Name, brand, and price are required'); return;
-          }
-          await addSpirit({
-            name: spiritForm.name.trim(), brand: spiritForm.brand.trim(), type: spiritForm.type,
-            origin: spiritForm.origin.trim(), age: spiritForm.age.trim() || null,
-            abv: parseFloat(spiritForm.abv) || 0, price: parseFloat(spiritForm.price) || 0,
-            shotPrice: spiritForm.shotPrice ? parseFloat(spiritForm.shotPrice) : null,
-            description: spiritForm.description.trim(), mixers, inStock: true,
-            quantity: parseInt(spiritForm.quantity, 10) || 0,
-            imageUrl: spiritForm.imageUrl.trim() || null, featured,
-            spiritProfile: { smoothness: 3, complexity: 3, sweetness: 2, intensity: 3 }, dietaryTags: [],
-          });
-          break;
-        case 'cocktail':
-          if (!cocktailForm.name.trim() || !cocktailForm.price.trim()) {
-            Alert.alert('Error', 'Name and price are required'); return;
-          }
-          await addCocktail({
-            name: cocktailForm.name.trim(), type: cocktailForm.type,
-            baseSpirit: cocktailForm.baseSpirit.trim(), ingredients,
-            garnish: cocktailForm.garnish.trim(), glassType: cocktailForm.glassType.trim(),
-            price: parseFloat(cocktailForm.price) || 0, description: cocktailForm.description.trim(),
-            isSignature: cocktailForm.isSignature, isAvailable: true,
-            imageUrl: cocktailForm.imageUrl.trim() || null, featured, dietaryTags: [],
-          });
-          break;
-        case 'non-alcoholic':
-          if (!nonAlcForm.name.trim() || !nonAlcForm.price.trim()) {
-            Alert.alert('Error', 'Name and price are required'); return;
-          }
-          await addNonAlcoholic({
-            name: nonAlcForm.name.trim(), brand: nonAlcForm.brand.trim() || null,
-            type: nonAlcForm.type, description: nonAlcForm.description.trim(),
-            price: parseFloat(nonAlcForm.price) || 0, servingSize: nonAlcForm.servingSize.trim(),
-            calories: nonAlcForm.calories ? parseInt(nonAlcForm.calories, 10) : null,
-            ingredients, inStock: true, quantity: parseInt(nonAlcForm.quantity, 10) || 0,
-            imageUrl: nonAlcForm.imageUrl.trim() || null, featured, dietaryTags: [],
-          });
-          break;
+      const error = await saveCurrentCategory();
+      if (error) {
+        Alert.alert('Error', error);
+        return;
       }
       if (Platform.OS !== 'web') { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); }
       router.back();

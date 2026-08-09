@@ -41,6 +41,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { askForReviewNow } from '@/utils/appReview';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useNotifications } from '@/contexts/NotificationsContext';
@@ -188,6 +189,13 @@ export default function SettingsScreen() {
   ];
 
   const supportItems = [
+    {
+      icon: Star,
+      label: 'Rate Unbottl',
+      description: 'Leave a review on the App Store',
+      chevron: true,
+      onPress: () => { askForReviewNow(); },
+    },
     {
       icon: MessageSquarePlus,
       label: 'Send Feedback',

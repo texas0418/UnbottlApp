@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
-  Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -35,9 +34,8 @@ import { useBeverages } from '@/contexts/BeverageContext';
 import { useRecentMenus } from '@/contexts/RecentMenusContext';
 import { fetchPublicMenu } from '@/services/publicMenu';
 import { wineTypeColors, wineTypeLabels } from '@/mocks/wines';
+import { useResponsive } from '@/hooks/useResponsive';
 import { BeverageCategory } from '@/types';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type CategoryTab = 'all' | BeverageCategory;
 
@@ -53,6 +51,7 @@ const categoryConfig: Record<CategoryTab, { label: string; icon: React.ElementTy
 // eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function CustomerMenuScreen() {
   const router = useRouter();
+  const { isTablet } = useResponsive();
   const params = useLocalSearchParams<{ r?: string }>();
   const scannedSlug = typeof params.r === 'string' && params.r.length > 0 ? params.r : undefined;
 
@@ -370,7 +369,10 @@ export default function CustomerMenuScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={isTablet ? styles.tabletContent : undefined}
+      >
         <View style={styles.hero}>
           {restaurant?.coverImageUrl && (
             <Image 
@@ -458,6 +460,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  // On tablets, keep the menu a centered, readable column instead of stretching
+  // edge-to-edge across the wide screen.
+  tabletContent: {
+    width: '100%',
+    maxWidth: 760,
+    alignSelf: 'center',
   },
   stateContainer: {
     flex: 1,

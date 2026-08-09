@@ -31,6 +31,7 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useRecentMenus } from '@/contexts/RecentMenusContext';
 import { useRecommendations } from '@/contexts/RecommendationsContext';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
@@ -117,6 +118,7 @@ type CatalogItem = {
 // eslint-disable-next-line max-lines-per-function -- tracked in #2
 export default function DiscoverScreen() {
   const router = useRouter();
+  const { gridColumns } = useResponsive();
   const { wines, beers, spirits, cocktails, nonAlcoholic, isLoading } = useBeverages();
   const { topPicks, learnedPreferences } = useRecommendations();
   const { recentMenus } = useRecentMenus();
@@ -509,7 +511,8 @@ export default function DiscoverScreen() {
         }
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        numColumns={2}
+        key={`cols-${gridColumns}`}
+        numColumns={gridColumns}
         columnWrapperStyle={styles.row}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
