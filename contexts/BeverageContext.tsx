@@ -294,9 +294,146 @@ function nonAlcoholicToRow(na: Omit<NonAlcoholicBeverage, 'id' | 'createdAt' | '
   };
 }
 
+// ─── Update helpers ───────────────────────────────────────────────────
+
+// The five update mutations all translate a Partial<T> of camelCase app fields
+// into snake_case columns (plus a metadata blob for type-specific fields). Each
+// used a long `if (updates.x !== undefined)` chain, which is what tripped the
+// complexity gate. These declarative maps express the same thing as data:
+// appField -> column (or metadata key). A field may map to several columns.
+type FieldMap<T> = Partial<Record<keyof T, string | string[]>>;
+
+// Copy every defined field from `updates` onto `target`, following `map`.
+function applyFieldMap<T extends object>(
+  target: Record<string, any>,
+  updates: T,
+  map: FieldMap<T>,
+): void {
+  for (const key of Object.keys(map) as (keyof T)[]) {
+    const value = updates[key];
+    if (value === undefined) continue;
+    const dest = map[key]!;
+    for (const name of Array.isArray(dest) ? dest : [dest]) target[name] = value;
+  }
+}
+
+// Build the full row payload for an update: shared columns + metadata merged
+// onto whatever metadata the existing row already carries.
+function buildUpdateRow<T extends object>(
+  updates: T,
+  existingMetadata: Record<string, any> | null | undefined,
+  columns: FieldMap<T>,
+  metadataFields: FieldMap<T>,
+): Record<string, any> {
+  const row: Record<string, any> = {};
+  applyFieldMap(row, updates, columns);
+  const meta = { ...(existingMetadata || {}) };
+  applyFieldMap(meta, updates, metadataFields);
+  row.metadata = meta;
+  return row;
+}
+
+const WINE_COLUMNS: FieldMap<Wine> = {
+  name: 'name',
+  producer: 'brand',
+  price: 'price',
+  glassPrice: 'glass_price',
+  alcoholContent: 'abv',
+  tastingNotes: ['tasting_notes', 'description'],
+  inStock: 'in_stock',
+  quantity: 'quantity',
+  featured: 'featured',
+  imageUrl: 'image_url',
+  foodPairings: 'food_pairings',
+  dietaryTags: 'dietary_tags',
+  vintage: 'vintage',
+  region: 'region',
+  country: 'country',
+};
+const WINE_METADATA: FieldMap<Wine> = {
+  type: 'wineType',
+  grape: 'grape',
+  flavorProfile: 'flavorProfile',
+};
+
+const BEER_COLUMNS: FieldMap<Beer> = {
+  name: 'name',
+  brewery: 'brand',
+  price: 'price',
+  abv: 'abv',
+  description: 'description',
+  inStock: 'in_stock',
+  quantity: 'quantity',
+  featured: 'featured',
+  imageUrl: 'image_url',
+  foodPairings: 'food_pairings',
+  dietaryTags: 'dietary_tags',
+};
+const BEER_METADATA: FieldMap<Beer> = {
+  type: 'beerType',
+  style: 'style',
+  ibu: 'ibu',
+  beerProfile: 'beerProfile',
+};
+
+const SPIRIT_COLUMNS: FieldMap<Spirit> = {
+  name: 'name',
+  brand: 'brand',
+  price: 'price',
+  shotPrice: 'glass_price',
+  abv: 'abv',
+  description: 'description',
+  inStock: 'in_stock',
+  quantity: 'quantity',
+  featured: 'featured',
+  imageUrl: 'image_url',
+  dietaryTags: 'dietary_tags',
+};
+const SPIRIT_METADATA: FieldMap<Spirit> = {
+  type: 'spiritType',
+  age: 'age',
+  mixers: 'mixers',
+  spiritProfile: 'spiritProfile',
+};
+
+const COCKTAIL_COLUMNS: FieldMap<Cocktail> = {
+  name: 'name',
+  price: 'price',
+  description: 'description',
+  isAvailable: 'in_stock',
+  featured: 'featured',
+  imageUrl: 'image_url',
+  dietaryTags: 'dietary_tags',
+};
+const COCKTAIL_METADATA: FieldMap<Cocktail> = {
+  type: 'cocktailType',
+  baseSpirit: 'baseSpirit',
+  ingredients: 'ingredients',
+  garnish: 'garnish',
+  glassType: 'glassType',
+  isSignature: 'isSignature',
+};
+
+const NON_ALCOHOLIC_COLUMNS: FieldMap<NonAlcoholicBeverage> = {
+  name: 'name',
+  brand: 'brand',
+  price: 'price',
+  description: 'description',
+  inStock: 'in_stock',
+  quantity: 'quantity',
+  featured: 'featured',
+  imageUrl: 'image_url',
+  dietaryTags: 'dietary_tags',
+};
+const NON_ALCOHOLIC_METADATA: FieldMap<NonAlcoholicBeverage> = {
+  type: 'naType',
+  servingSize: 'servingSize',
+  calories: 'calories',
+  ingredients: 'ingredients',
+};
+
 // ─── Context ──────────────────────────────────────────────────────────
 
-// eslint-disable-next-line max-lines-per-function -- tracked in #2
 export const [BeverageProvider, useBeverages] = createContextHook(() => {
   const queryClient = useQueryClient();
   const { restaurant } = useRestaurant();
@@ -395,30 +532,9 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateWineMutation = useMutation({
-    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Wine> }) => {
-      const row: Record<string, any> = {};
-      if (updates.name !== undefined) row.name = updates.name;
-      if (updates.producer !== undefined) row.brand = updates.producer;
-      if (updates.price !== undefined) row.price = updates.price;
-      if (updates.glassPrice !== undefined) row.glass_price = updates.glassPrice;
-      if (updates.alcoholContent !== undefined) row.abv = updates.alcoholContent;
-      if (updates.tastingNotes !== undefined) { row.tasting_notes = updates.tastingNotes; row.description = updates.tastingNotes; }
-      if (updates.inStock !== undefined) row.in_stock = updates.inStock;
-      if (updates.quantity !== undefined) row.quantity = updates.quantity;
-      if (updates.featured !== undefined) row.featured = updates.featured;
-      if (updates.imageUrl !== undefined) row.image_url = updates.imageUrl;
-      if (updates.foodPairings !== undefined) row.food_pairings = updates.foodPairings;
-      if (updates.dietaryTags !== undefined) row.dietary_tags = updates.dietaryTags;
-      if (updates.vintage !== undefined) row.vintage = updates.vintage;
-      if (updates.region !== undefined) row.region = updates.region;
-      if (updates.country !== undefined) row.country = updates.country;
       const existing = allRows.find(r => r.id === id);
-      const meta = { ...(existing?.metadata || {}) };
-      if (updates.type !== undefined) meta.wineType = updates.type;
-      if (updates.grape !== undefined) meta.grape = updates.grape;
-      if (updates.flavorProfile !== undefined) meta.flavorProfile = updates.flavorProfile;
-      row.metadata = meta;
+      const row = buildUpdateRow(updates, existing?.metadata, WINE_COLUMNS, WINE_METADATA);
 
       const { data, error } = await supabase.from('beverages').update(row).eq('id', id).select().single();
       if (error) throw error;
@@ -449,28 +565,9 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateBeerMutation = useMutation({
-    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Beer> }) => {
-      const row: Record<string, any> = {};
-      if (updates.name !== undefined) row.name = updates.name;
-      if (updates.brewery !== undefined) row.brand = updates.brewery;
-      if (updates.price !== undefined) row.price = updates.price;
-      if (updates.abv !== undefined) row.abv = updates.abv;
-      if (updates.description !== undefined) row.description = updates.description;
-      if (updates.inStock !== undefined) row.in_stock = updates.inStock;
-      if (updates.quantity !== undefined) row.quantity = updates.quantity;
-      if (updates.featured !== undefined) row.featured = updates.featured;
-      if (updates.imageUrl !== undefined) row.image_url = updates.imageUrl;
-      if (updates.foodPairings !== undefined) row.food_pairings = updates.foodPairings;
-      if (updates.dietaryTags !== undefined) row.dietary_tags = updates.dietaryTags;
-      // Store type-specific fields in metadata
       const existing = allRows.find(r => r.id === id);
-      const meta = { ...(existing?.metadata || {}) };
-      if (updates.type !== undefined) meta.beerType = updates.type;
-      if (updates.style !== undefined) meta.style = updates.style;
-      if (updates.ibu !== undefined) meta.ibu = updates.ibu;
-      if (updates.beerProfile !== undefined) meta.beerProfile = updates.beerProfile;
-      row.metadata = meta;
+      const row = buildUpdateRow(updates, existing?.metadata, BEER_COLUMNS, BEER_METADATA);
 
       const { data, error } = await supabase.from('beverages').update(row).eq('id', id).select().single();
       if (error) throw error;
@@ -501,27 +598,9 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateSpiritMutation = useMutation({
-    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Spirit> }) => {
-      const row: Record<string, any> = {};
-      if (updates.name !== undefined) row.name = updates.name;
-      if (updates.brand !== undefined) row.brand = updates.brand;
-      if (updates.price !== undefined) row.price = updates.price;
-      if (updates.shotPrice !== undefined) row.glass_price = updates.shotPrice;
-      if (updates.abv !== undefined) row.abv = updates.abv;
-      if (updates.description !== undefined) row.description = updates.description;
-      if (updates.inStock !== undefined) row.in_stock = updates.inStock;
-      if (updates.quantity !== undefined) row.quantity = updates.quantity;
-      if (updates.featured !== undefined) row.featured = updates.featured;
-      if (updates.imageUrl !== undefined) row.image_url = updates.imageUrl;
-      if (updates.dietaryTags !== undefined) row.dietary_tags = updates.dietaryTags;
       const existing = allRows.find(r => r.id === id);
-      const meta = { ...(existing?.metadata || {}) };
-      if (updates.type !== undefined) meta.spiritType = updates.type;
-      if (updates.age !== undefined) meta.age = updates.age;
-      if (updates.mixers !== undefined) meta.mixers = updates.mixers;
-      if (updates.spiritProfile !== undefined) meta.spiritProfile = updates.spiritProfile;
-      row.metadata = meta;
+      const row = buildUpdateRow(updates, existing?.metadata, SPIRIT_COLUMNS, SPIRIT_METADATA);
 
       const { data, error } = await supabase.from('beverages').update(row).eq('id', id).select().single();
       if (error) throw error;
@@ -552,25 +631,9 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateCocktailMutation = useMutation({
-    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Cocktail> }) => {
-      const row: Record<string, any> = {};
-      if (updates.name !== undefined) row.name = updates.name;
-      if (updates.price !== undefined) row.price = updates.price;
-      if (updates.description !== undefined) row.description = updates.description;
-      if (updates.isAvailable !== undefined) row.in_stock = updates.isAvailable;
-      if (updates.featured !== undefined) row.featured = updates.featured;
-      if (updates.imageUrl !== undefined) row.image_url = updates.imageUrl;
-      if (updates.dietaryTags !== undefined) row.dietary_tags = updates.dietaryTags;
       const existing = allRows.find(r => r.id === id);
-      const meta = { ...(existing?.metadata || {}) };
-      if (updates.type !== undefined) meta.cocktailType = updates.type;
-      if (updates.baseSpirit !== undefined) meta.baseSpirit = updates.baseSpirit;
-      if (updates.ingredients !== undefined) meta.ingredients = updates.ingredients;
-      if (updates.garnish !== undefined) meta.garnish = updates.garnish;
-      if (updates.glassType !== undefined) meta.glassType = updates.glassType;
-      if (updates.isSignature !== undefined) meta.isSignature = updates.isSignature;
-      row.metadata = meta;
+      const row = buildUpdateRow(updates, existing?.metadata, COCKTAIL_COLUMNS, COCKTAIL_METADATA);
 
       const { data, error } = await supabase.from('beverages').update(row).eq('id', id).select().single();
       if (error) throw error;
@@ -601,25 +664,9 @@ export const [BeverageProvider, useBeverages] = createContextHook(() => {
   });
 
   const updateNonAlcoholicMutation = useMutation({
-    // eslint-disable-next-line complexity -- tracked in #2
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<NonAlcoholicBeverage> }) => {
-      const row: Record<string, any> = {};
-      if (updates.name !== undefined) row.name = updates.name;
-      if (updates.brand !== undefined) row.brand = updates.brand;
-      if (updates.price !== undefined) row.price = updates.price;
-      if (updates.description !== undefined) row.description = updates.description;
-      if (updates.inStock !== undefined) row.in_stock = updates.inStock;
-      if (updates.quantity !== undefined) row.quantity = updates.quantity;
-      if (updates.featured !== undefined) row.featured = updates.featured;
-      if (updates.imageUrl !== undefined) row.image_url = updates.imageUrl;
-      if (updates.dietaryTags !== undefined) row.dietary_tags = updates.dietaryTags;
       const existing = allRows.find(r => r.id === id);
-      const meta = { ...(existing?.metadata || {}) };
-      if (updates.type !== undefined) meta.naType = updates.type;
-      if (updates.servingSize !== undefined) meta.servingSize = updates.servingSize;
-      if (updates.calories !== undefined) meta.calories = updates.calories;
-      if (updates.ingredients !== undefined) meta.ingredients = updates.ingredients;
-      row.metadata = meta;
+      const row = buildUpdateRow(updates, existing?.metadata, NON_ALCOHOLIC_COLUMNS, NON_ALCOHOLIC_METADATA);
 
       const { data, error } = await supabase.from('beverages').update(row).eq('id', id).select().single();
       if (error) throw error;
