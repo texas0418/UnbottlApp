@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { maybeAskForReview } from '@/utils/appReview';
 
 const FAVORITES_STORAGE_KEY = '@unbottl_favorites';
 
@@ -49,6 +50,11 @@ export const [FavoritesProvider, useFavorites] = createContextHook(() => {
       }
       
       return { wineId, isFavorite: !isFavorite };
+    },
+    onSuccess: ({ isFavorite }) => {
+      // Saving a drink is a positive moment — a good time to let iOS decide
+      // whether to show its rating prompt. Never on un-favoriting.
+      if (isFavorite) maybeAskForReview();
     },
   });
 
