@@ -14,9 +14,20 @@ export interface Restaurant {
   is_founding_member?: boolean;
   founding_member_number?: number;
   founding_member_expires_at?: string;
-  // Display fields surfaced on customer-facing menu screens. Optional because
-  // the owner may not have set them yet.
+  // Branding columns as they exist on the table (see db/venue-branding.sql).
+  // Writes go through updateRestaurant() and must use these snake_case names.
+  logo_url?: string | null;
+  cover_image_url?: string | null;
+  /** Venue's own accent colour as #RRGGBB; null falls back to Unbottl's. */
+  brand_color?: string | null;
+  cuisine_type?: string | null;
+  menu_slug?: string | null;
+
+  // camelCase aliases added by withDisplayFields() on read, so screens can use
+  // the same property names for a context restaurant and a PublicRestaurant.
+  logoUrl?: string | null;
   coverImageUrl?: string | null;
+  brandColor?: string | null;
   cuisineType?: string;
   menuSlug?: string;
 }
@@ -30,6 +41,26 @@ export interface Location {
   state?: string;
   zip_code?: string;
   is_active: boolean;
+}
+
+const DISPLAY_ALIASES = [
+  'logoUrl', 'coverImageUrl', 'brandColor', 'cuisineType', 'menuSlug',
+] as const satisfies readonly (keyof Restaurant)[];
+
+/**
+ * Add camelCase aliases for the branding columns so a context restaurant and a
+ * PublicRestaurant can be read with the same property names. The snake_case
+ * originals are kept — updateRestaurant() writes them straight to Postgres.
+ */
+function withDisplayFields(row: Restaurant): Restaurant {
+  return {
+    ...row,
+    logoUrl: row.logo_url ?? null,
+    coverImageUrl: row.cover_image_url ?? null,
+    brandColor: row.brand_color ?? null,
+    cuisineType: row.cuisine_type ?? undefined,
+    menuSlug: row.menu_slug ?? undefined,
+  };
 }
 
 export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
@@ -89,10 +120,10 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
         }
       }
 
-      setRestaurants(allRestaurants);
+      setRestaurants(allRestaurants.map(withDisplayFields));
 
       if (allRestaurants.length > 0) {
-        setRestaurant(allRestaurants[0]);
+        setRestaurant(withDisplayFields(allRestaurants[0]));
         setNeedsSetup(false);
 
         // Fetch locations for the restaurant
@@ -121,7 +152,7 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   const switchRestaurant = useCallback(async (restaurantId: string) => {
     const found = restaurants.find(r => r.id === restaurantId);
     if (found) {
-      setRestaurant(found);
+      setRestaurant(withDisplayFields(found));
 
       // Fetch locations for this restaurant
       const { data: locationData } = await supabase
@@ -137,15 +168,20 @@ export const [RestaurantProvider, useRestaurant] = createContextHook(() => {
   const updateRestaurant = useCallback(async (updates: Partial<Restaurant>) => {
     if (!restaurant) return { error: new Error('No restaurant selected') };
 
+    // The camelCase aliases are read-side conveniences and aren't real columns;
+    // sending them would make Postgres reject the whole update.
+    const columns = { ...updates };
+    for (const alias of DISPLAY_ALIASES) delete columns[alias];
+
     const { error } = await supabase
       .from('restaurants')
-      .update(updates)
+      .update(columns)
       .eq('id', restaurant.id);
 
     if (!error) {
-      setRestaurant({ ...restaurant, ...updates });
+      setRestaurant(withDisplayFields({ ...restaurant, ...updates }));
       setRestaurants(prev => prev.map(r => 
-        r.id === restaurant.id ? { ...r, ...updates } : r
+        r.id === restaurant.id ? withDisplayFields({ ...r, ...updates }) : r
       ));
     }
 
