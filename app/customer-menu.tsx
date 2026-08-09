@@ -48,6 +48,11 @@ const categoryConfig: Record<CategoryTab, { label: string; icon: React.ElementTy
   'non-alcoholic': { label: 'Non-Alc', icon: Coffee, color: Colors.success },
 };
 
+/** Accept only #RRGGBB so a bad stored value can't break the menu's styling. */
+function safeBrandColor(value: string | null | undefined): string {
+  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : Colors.primary;
+}
+
 // eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function CustomerMenuScreen() {
   const router = useRouter();
@@ -89,6 +94,8 @@ export default function CustomerMenuScreen() {
   }, [publicMenu?.restaurant?.id]);
 
   const restaurant = scannedSlug ? publicMenu?.restaurant : ctxRestaurant;
+  // The venue's accent drives the menu's styling; Unbottl's red is the fallback.
+  const brandColor = safeBrandColor(restaurant?.brandColor);
   const wines = scannedSlug ? publicMenu?.wines ?? [] : ctxWines;
   const beers = scannedSlug ? publicMenu?.beers ?? [] : ctxBeers;
   const spirits = scannedSlug ? publicMenu?.spirits ?? [] : ctxSpirits;
@@ -135,7 +142,11 @@ export default function CustomerMenuScreen() {
     return (
       <TouchableOpacity
         key={category}
-        style={[styles.categoryTab, isActive && styles.categoryTabActive]}
+        style={[
+          styles.categoryTab,
+          isActive && styles.categoryTabActive,
+          isActive && { backgroundColor: brandColor, borderColor: brandColor },
+        ]}
         onPress={() => setActiveCategory(category)}
       >
         <config.icon size={16} color={isActive ? Colors.white : config.color} />
@@ -373,15 +384,25 @@ export default function CustomerMenuScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={isTablet ? styles.tabletContent : undefined}
       >
-        <View style={styles.hero}>
+        <View style={[styles.hero, { backgroundColor: brandColor }]}>
           {restaurant?.coverImageUrl && (
-            <Image 
-              source={{ uri: restaurant.coverImageUrl }} 
+            <Image
+              source={{ uri: restaurant.coverImageUrl }}
               style={styles.heroImage}
               contentFit="cover"
             />
           )}
-          <View style={styles.heroOverlay}>
+          {/* Scrim only over photography — over a flat brand colour it would
+              just muddy the venue's own hue. */}
+          <View style={[styles.heroOverlay, restaurant?.coverImageUrl && styles.heroScrim]}>
+            {restaurant?.logoUrl && (
+              <Image
+                source={{ uri: restaurant.logoUrl }}
+                style={styles.heroLogo}
+                contentFit="contain"
+                accessibilityLabel={`${restaurant.name} logo`}
+              />
+            )}
             <Text style={styles.restaurantName}>{restaurant?.name || 'Restaurant'}</Text>
             {restaurant?.cuisineType && (
               <Text style={styles.cuisineType}>{restaurant.cuisineType}</Text>
@@ -448,6 +469,8 @@ export default function CustomerMenuScreen() {
         <View style={styles.footer}>
           <Text style={styles.footerText}>Prices subject to change</Text>
           <Text style={styles.footerText}>Please inform your server of any allergies</Text>
+          {/* Unbottl signs the menu quietly — the page belongs to the venue. */}
+          <Text style={styles.poweredBy}>Menu by Unbottl</Text>
         </View>
 
         <View style={styles.bottomPadding} />
@@ -520,9 +543,17 @@ const styles = StyleSheet.create({
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'flex-end',
     padding: 20,
+  },
+  heroScrim: {
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  heroLogo: {
+    width: 92,
+    height: 44,
+    marginBottom: 10,
+    alignSelf: 'flex-start',
   },
   restaurantName: {
     fontSize: 28,
@@ -807,6 +838,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textMuted,
     fontStyle: 'italic',
+  },
+  poweredBy: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    letterSpacing: 0.6,
+    marginTop: 10,
   },
   bottomPadding: {
     height: 40,

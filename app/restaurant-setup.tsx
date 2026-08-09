@@ -20,6 +20,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import AuthGuard from '@/components/AuthGuard';
 
+// A short, opinionated set rather than a colour wheel — venues want to pick
+// something close to their brand in two taps, not tune a hex value. Empty
+// string means "use Unbottl's default".
+const BRAND_PRESETS: { label: string; value: string }[] = [
+  { label: 'Default', value: '' },
+  { label: 'Claret', value: '#722F37' },
+  { label: 'Ink', value: '#1F2933' },
+  { label: 'Forest', value: '#2F4739' },
+  { label: 'Navy', value: '#1E3A5F' },
+  { label: 'Bronze', value: '#8A6A3B' },
+  { label: 'Plum', value: '#4A2C4D' },
+  { label: 'Rust', value: '#8C4A2F' },
+];
+
 // eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function RestaurantSetupScreen() {
   const router = useRouter();
@@ -34,6 +48,7 @@ export default function RestaurantSetupScreen() {
     email: '',
     phone: '',
     address: '',
+    brandColor: '' as string,
   });
 
   // New restaurant form (separate from edit form)
@@ -61,6 +76,7 @@ export default function RestaurantSetupScreen() {
         email: restaurant.email || '',
         phone: restaurant.phone || '',
         address: '',
+        brandColor: restaurant.brand_color || '',
       });
       setHasPreFilled(true);
     }
@@ -76,6 +92,7 @@ export default function RestaurantSetupScreen() {
         email: found.email || '',
         phone: found.phone || '',
         address: '',
+        brandColor: found.brand_color || '',
       });
     }
   };
@@ -107,6 +124,7 @@ export default function RestaurantSetupScreen() {
           name: formData.name.trim(),
           email: formData.email.trim() || null,
           phone: formData.phone.trim() || null,
+          brand_color: formData.brandColor || null,
         });
 
         if (error) throw error;
@@ -197,6 +215,7 @@ export default function RestaurantSetupScreen() {
         email: newRestaurantData.email.trim(),
         phone: newRestaurantData.phone.trim(),
         address: '',
+        brandColor: '',
       });
 
       setNewRestaurantData({ name: '', email: '', phone: '', address: '' });
@@ -336,6 +355,40 @@ export default function RestaurantSetupScreen() {
                     placeholderTextColor={Colors.textMuted}
                     autoCapitalize="words"
                   />
+                </View>
+              )}
+
+              {isEditing && (
+                <View style={styles.brandSection}>
+                  <Text style={styles.brandLabel}>Menu colour</Text>
+                  <Text style={styles.brandHint}>
+                    Used on your guest menu when someone scans your QR code.
+                  </Text>
+                  <View style={styles.swatchRow}>
+                    {BRAND_PRESETS.map((preset) => {
+                      const selected = (formData.brandColor || '') === preset.value;
+                      return (
+                        <TouchableOpacity
+                          key={preset.label}
+                          onPress={() => handleChange('brandColor', preset.value)}
+                          style={[styles.swatch, selected && styles.swatchSelected]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Menu colour: ${preset.label}`}
+                          accessibilityState={{ selected }}
+                        >
+                          <View
+                            style={[
+                              styles.swatchFill,
+                              { backgroundColor: preset.value || Colors.primary },
+                            ]}
+                          />
+                          <Text style={styles.swatchLabel} numberOfLines={1}>
+                            {preset.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                 </View>
               )}
 
@@ -590,6 +643,50 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     marginRight: 12,
+  },
+  brandSection: {
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  brandLabel: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  brandHint: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 14,
+  },
+  swatchRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  swatch: {
+    width: 68,
+    alignItems: 'center',
+    padding: 6,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  swatchSelected: {
+    borderColor: Colors.text,
+    backgroundColor: Colors.borderLight,
+  },
+  swatchFill: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  swatchLabel: {
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 6,
   },
   input: {
     flex: 1,
