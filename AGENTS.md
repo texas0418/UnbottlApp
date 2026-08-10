@@ -1,11 +1,15 @@
 # Repo layout note
 
 This repository's root IS the Expo app (package.json, eslint.config.js, and
-.github/ all live at the repo root). Heads up for sessions on Simon's Mac: the
-local clone lives at `~/Documents/GitHub/UnbottlApp/UnbottlApp` — the OUTER
-`~/Documents/GitHub/UnbottlApp` folder is a stale, unrelated-history git wrapper
-holding marketing assets and screenshots. Always work in the inner clone; never
-commit or push from the outer folder.
+.github/ all live at the repo root). On Simon's Mac the clone is
+`~/Documents/GitHub/UnbottlApp`, and its `origin` is
+`https://github.com/texas0418/UnbottlApp.git`.
+
+There used to be a nested `~/Documents/GitHub/UnbottlApp/UnbottlApp` — a stale,
+unrelated-history git wrapper holding marketing assets — and earlier revisions
+of this file warned you to work in the inner clone. That directory is gone; the
+outer folder is now the real clone. If a handoff or an old comment tells you to
+`cd` into an inner `UnbottlApp/`, it is out of date.
 
 # Git workflow (PR-based CI)
 
