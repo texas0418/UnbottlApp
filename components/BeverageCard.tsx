@@ -4,6 +4,8 @@ import { Image } from 'expo-image';
 import { Wine, Beer, Martini, Coffee, GlassWater, Star, Droplets, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { card as cardTokens } from '@/constants/theme';
+import { cardSwatch } from '@/utils/cardSwatch';
 import { Beer as BeerType, Spirit, Cocktail, NonAlcoholicBeverage, BeverageCategory } from '@/types';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { 
@@ -15,6 +17,8 @@ import {
 } from '@/mocks/beverages';
 
 type BeverageItem = BeerType | Spirit | Cocktail | NonAlcoholicBeverage;
+
+const NAME_LINE_HEIGHT = 22;
 
 interface BeverageCardProps {
   beverage: BeverageItem;
@@ -170,6 +174,10 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
   const details = getBeverageDetails(beverage, category);
   const typeColor = getTypeColor(category, details.type);
   const isLightType = ['vodka', 'wheat', 'pilsner', 'water'].includes(details.type);
+  const swatch = cardSwatch(typeColor, Colors.surface);
+  // See WineCard: a URL that 404s falls back to the same designed plate.
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const imageUri = imageFailed ? null : details.imageUrl || null;
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFav = isFavorite(beverage.id);
 
@@ -202,11 +210,11 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
         activeOpacity={0.9}
       >
         <Animated.View style={[styles.compactCard, { transform: [{ scale: scaleAnim }] }]}>
-          <View style={[styles.compactImageContainer, { backgroundColor: typeColor + '20' }]}>
+          <View style={[styles.compactImageContainer, { backgroundColor: swatch.ground }]}>
             {details.imageUrl ? (
               <Image source={{ uri: details.imageUrl }} style={styles.compactImage} contentFit="cover" />
             ) : (
-              getCategoryIcon(category, 24, typeColor)
+              getCategoryIcon(category, 24, swatch.ink)
             )}
           </View>
           <View style={styles.compactContent}>
@@ -232,13 +240,19 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       activeOpacity={0.9}
+      style={styles.pressable}
     >
       <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
-        <View style={[styles.imageContainer, { backgroundColor: typeColor + '15' }]}>
-          {details.imageUrl ? (
-            <Image source={{ uri: details.imageUrl }} style={styles.image} contentFit="cover" />
+        <View style={[styles.imageContainer, { backgroundColor: swatch.ground }]}>
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.image}
+              contentFit="cover"
+              onError={() => setImageFailed(true)}
+            />
           ) : (
-            getCategoryIcon(category, 48, typeColor)
+            getCategoryIcon(category, 44, swatch.ink)
           )}
           {details.featured && (
             <View style={styles.featuredBadge}>
@@ -279,8 +293,8 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
             )}
           </View>
           
-          <Text style={styles.name} numberOfLines={2}>{details.name}</Text>
-          <Text style={styles.producer}>{details.subtitle}</Text>
+          <Text style={styles.name} numberOfLines={cardTokens.titleLines}>{details.name}</Text>
+          <Text style={styles.producer} numberOfLines={1}>{details.subtitle}</Text>
           
           {details.region && (
             <View style={styles.details}>
@@ -316,7 +330,12 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
 }
 
 const styles = StyleSheet.create({
+  // See WineCard for why flexGrow and not flex.
+  pressable: {
+    flexGrow: 1,
+  },
   card: {
+    flexGrow: 1,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
@@ -327,7 +346,11 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   imageContainer: {
-    height: 140,
+    width: '100%',
+    // Was 140 against WineCard's 160, which put a 20pt step in every row that
+    // mixed a wine with anything else.
+    aspectRatio: cardTokens.mediaAspectRatio,
+    maxHeight: cardTokens.mediaMaxHeight,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -379,6 +402,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   content: {
+    flexGrow: 1,
     padding: 14,
   },
   header: {
@@ -412,7 +436,8 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.text,
     marginBottom: 2,
-    lineHeight: 22,
+    lineHeight: NAME_LINE_HEIGHT,
+    minHeight: NAME_LINE_HEIGHT * cardTokens.titleLines,
   },
   producer: {
     fontSize: 13,
@@ -427,6 +452,9 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   footer: {
+    // Pinned low. A cocktail has no region line and a beer has no second price;
+    // without this the footer floated up and the row went ragged.
+    marginTop: 'auto',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',

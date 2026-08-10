@@ -4,9 +4,13 @@ import { Image } from 'expo-image';
 import { Wine, Droplets, Star, Heart } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { card as cardTokens } from '@/constants/theme';
+import { cardSwatch } from '@/utils/cardSwatch';
 import { Wine as WineType } from '@/types';
 import { wineTypeColors, wineTypeLabels } from '@/mocks/wines';
 import { useFavorites } from '@/contexts/FavoritesContext';
+
+const NAME_LINE_HEIGHT = 24;
 
 interface WineCardProps {
   wine: WineType;
@@ -49,6 +53,10 @@ export default function WineCard({ wine, onPress, compact = false, quickSave = f
 
   const typeColor = wineTypeColors[wine.type] || Colors.primary;
   const isLightType = wine.type === 'white' || wine.type === 'sparkling' || wine.type === 'rose';
+  const swatch = cardSwatch(typeColor, Colors.surface);
+  // A URL that 404s used to leave the same empty box as no URL at all.
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const imageUri = imageFailed ? null : wine.imageUrl || null;
 
   if (compact) {
     return (
@@ -59,11 +67,11 @@ export default function WineCard({ wine, onPress, compact = false, quickSave = f
         activeOpacity={0.9}
       >
         <Animated.View style={[styles.compactCard, { transform: [{ scale: scaleAnim }] }]}>
-          <View style={[styles.compactImageContainer, { backgroundColor: typeColor + '20' }]}>
+          <View style={[styles.compactImageContainer, { backgroundColor: swatch.ground }]}>
             {wine.imageUrl ? (
               <Image source={{ uri: wine.imageUrl }} style={styles.compactImage} contentFit="cover" />
             ) : (
-              <Wine size={24} color={typeColor} />
+              <Wine size={24} color={swatch.ink} />
             )}
           </View>
           <View style={styles.compactContent}>
@@ -89,13 +97,19 @@ export default function WineCard({ wine, onPress, compact = false, quickSave = f
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       activeOpacity={0.9}
+      style={styles.pressable}
     >
       <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
-        <View style={[styles.imageContainer, { backgroundColor: typeColor + '15' }]}>
-          {wine.imageUrl ? (
-            <Image source={{ uri: wine.imageUrl }} style={styles.image} contentFit="cover" />
+        <View style={[styles.imageContainer, { backgroundColor: swatch.ground }]}>
+          {imageUri ? (
+            <Image
+              source={{ uri: imageUri }}
+              style={styles.image}
+              contentFit="cover"
+              onError={() => setImageFailed(true)}
+            />
           ) : (
-            <Wine size={48} color={typeColor} />
+            <Wine size={44} color={swatch.ink} />
           )}
           {wine.featured && (
             <View style={styles.featuredBadge}>
@@ -134,9 +148,9 @@ export default function WineCard({ wine, onPress, compact = false, quickSave = f
             )}
           </View>
           
-          <Text style={styles.name} numberOfLines={2}>{wine.name}</Text>
-          <Text style={styles.producer}>{wine.producer}</Text>
-          
+          <Text style={styles.name} numberOfLines={cardTokens.titleLines}>{wine.name}</Text>
+          <Text style={styles.producer} numberOfLines={1}>{wine.producer}</Text>
+
           <View style={styles.details}>
             <Text style={styles.region} numberOfLines={1}>
               {wine.region}, {wine.country}
@@ -166,7 +180,15 @@ export default function WineCard({ wine, onPress, compact = false, quickSave = f
 }
 
 const styles = StyleSheet.create({
+  // A grid cell stretches to the height of the tallest card in its row (#6).
+  // flexGrow rather than flex so the card still sizes to its content in the
+  // scroll views and detail screens that render it outside a grid — `flex: 1`
+  // sets flexBasis to 0 and would collapse it there.
+  pressable: {
+    flexGrow: 1,
+  },
   card: {
+    flexGrow: 1,
     backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
@@ -177,7 +199,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   imageContainer: {
-    height: 160,
+    width: '100%',
+    aspectRatio: cardTokens.mediaAspectRatio,
+    maxHeight: cardTokens.mediaMaxHeight,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -229,6 +253,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   content: {
+    flexGrow: 1,
     padding: 16,
   },
   header: {
@@ -262,7 +287,10 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: Colors.text,
     marginBottom: 4,
-    lineHeight: 24,
+    lineHeight: NAME_LINE_HEIGHT,
+    // Reserved whether the title needs one line or two, so a short name and a
+    // long one leave the rest of the card at the same height.
+    minHeight: NAME_LINE_HEIGHT * cardTokens.titleLines,
   },
   producer: {
     fontSize: 14,
@@ -277,6 +305,10 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   footer: {
+    // Pinned to the bottom of the card. Any slack from a missing region line or
+    // a one-line title collects above the rule instead of shortening the card,
+    // so the price sits on the same baseline right across a row.
+    marginTop: 'auto',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',

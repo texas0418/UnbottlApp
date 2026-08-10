@@ -14,8 +14,11 @@ import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { BeverageCategory, Wine as WineType } from '@/types';
+import { padGridRow, isGridSpacer, GridSpacer } from '@/utils/gridRows';
 import WineCard from '@/components/WineCard';
 import BeverageCard from '@/components/BeverageCard';
+
+const GRID_COLUMNS = 2;
 import SearchBar from '@/components/SearchBar';
 import BusinessAuthPrompt from '@/components/BusinessAuthPrompt';
 import { categoryColors } from '@/mocks/beverages';
@@ -68,6 +71,10 @@ export default function InventoryScreen() {
       }),
     [allItems, searchQuery, selectedCategory]
   );
+
+  // Keeps the last row's cards the same width as every other row's (#6).
+  // Above the `isAuthenticated` early return so the hook order is stable.
+  const gridData = useMemo(() => padGridRow(filtered, GRID_COLUMNS), [filtered]);
 
   const counts: Record<string, number> = {
     all: allItems.length,
@@ -123,24 +130,29 @@ export default function InventoryScreen() {
     </View>
   );
 
-  const renderItem = ({ item }: { item: Item }) => (
-    <View style={styles.cardContainer}>
-      {item.category === 'wine' ? (
-        <WineCard wine={item.data as WineType} onPress={() => openItem(item)} showStock />
-      ) : (
-        <BeverageCard beverage={item.data} category={item.category} onPress={() => openItem(item)} showStock />
-      )}
-    </View>
-  );
+  const renderItem = ({ item }: { item: Item | GridSpacer }) => {
+    if (isGridSpacer(item)) return <View style={styles.cardContainer} />;
+    return (
+      <View style={styles.cardContainer}>
+        {item.category === 'wine' ? (
+          <WineCard wine={item.data as WineType} onPress={() => openItem(item)} showStock />
+        ) : (
+          <BeverageCard beverage={item.data} category={item.category} onPress={() => openItem(item)} showStock />
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
-        data={filtered}
-        keyExtractor={(item) => `${item.category}-${item.id}`}
+        data={gridData}
+        keyExtractor={(item) =>
+          isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
+        }
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
-        numColumns={2}
+        numColumns={GRID_COLUMNS}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}

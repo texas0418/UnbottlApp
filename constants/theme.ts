@@ -124,6 +124,30 @@ export const elevation = {
   },
 } as const;
 
+// ─── Cards ──────────────────────────────────────────────────────────────────
+// Grid cards have to line up across a row, and a row can mix a wine with a
+// beer. These are the two numbers that have to agree between WineCard and
+// BeverageCard for that to happen.
+export const card = {
+  /**
+   * Shape of the media area. Previously a fixed height — 160 on WineCard, 140
+   * on BeverageCard — which put a 20pt step in every mixed row, and letterboxed
+   * badly on iPad where a 4-column card is ~300pt wide. An aspect ratio scales
+   * with the column and is the same on both cards.
+   */
+  mediaAspectRatio: 4 / 3,
+  /**
+   * Ceiling on the media area. The ratio alone is right on a phone, where a
+   * 2-column card is ~170pt wide, but on a 3-column iPad the card is ~415pt and
+   * 4:3 gives a 310pt image — only two rows of drinks fit on screen. Every card
+   * in a row is the same width, so they all clamp to the same height and the
+   * row stays flush either way.
+   */
+  mediaMaxHeight: 200,
+  /** Lines of drink name reserved on every card, needed or not. */
+  titleLines: 2,
+} as const;
+
 // ─── Colour ─────────────────────────────────────────────────────────────────
 
 export const lightColors = {
@@ -206,4 +230,5 @@ export const theme = {
   fontWeight,
   lineHeight,
   elevation,
+  card,
 } as const;
