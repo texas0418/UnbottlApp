@@ -28,6 +28,7 @@ import {
   Search,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { fontFamily } from '@/constants/theme';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
@@ -556,9 +557,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   restaurantName: {
-    fontSize: 28,
-    fontWeight: '700' as const,
+    fontSize: 30,
+    fontFamily: fontFamily.displayBold,
     color: Colors.white,
+    letterSpacing: 0.2,
     marginBottom: 4,
   },
   cuisineType: {
@@ -621,8 +623,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   featuredTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
+    fontSize: 20,
+    fontFamily: fontFamily.displaySemibold,
     color: Colors.text,
   },
   featuredList: {
@@ -691,8 +693,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
+    fontSize: 20,
+    fontFamily: fontFamily.displaySemibold,
     color: Colors.text,
   },
   itemCount: {
@@ -729,8 +731,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   menuItemName: {
-    fontSize: 16,
-    fontWeight: '600' as const,
+    fontSize: 17,
+    fontFamily: fontFamily.displaySemibold,
     color: Colors.text,
   },
   menuItemVintage: {
@@ -756,8 +758,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   bottlePrice: {
-    fontSize: 16,
-    fontWeight: '700' as const,
+    fontSize: 17,
+    fontFamily: fontFamily.displaySemibold,
     color: Colors.primary,
   },
   menuItemProducer: {

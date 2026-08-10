@@ -52,6 +52,28 @@ export const fontSize = {
   xxl: 30,
 } as const;
 
+// ─── Families ───────────────────────────────────────────────────────────────
+// Two roles, one bundled family.
+//
+// `display` is EB Garamond — a wine list is a piece of fine printing, and the
+// archetypal book face reads that way where the system serif does not. Its
+// old-style figures suit menu prices. Used for venue names, section headings,
+// drink names and prices.
+//
+// `ui` stays the platform font deliberately. San Francisco and Roboto are built
+// for interface chrome at small sizes, and bundling a second family to replace
+// them would cost weight for no gain a guest would notice.
+//
+// Weights are separate faces here, not a numeric fontWeight — on Android a
+// fontWeight against a custom family silently falls back to the system font.
+export const fontFamily = {
+  display: 'EBGaramond_400Regular',
+  displayMedium: 'EBGaramond_500Medium',
+  displaySemibold: 'EBGaramond_600SemiBold',
+  displayBold: 'EBGaramond_700Bold',
+  ui: undefined as string | undefined,
+} as const;
+
 // Observed weights: 600 (221), 700 (85), 500 (78). '400' appears once.
 export const fontWeight = {
   regular: '400',
@@ -178,6 +200,7 @@ export const darkColors: ThemeColors = {
 
 export const theme = {
   spacing,
+  fontFamily,
   radius,
   fontSize,
   fontWeight,

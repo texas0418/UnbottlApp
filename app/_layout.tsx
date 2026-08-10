@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
+import { useFonts } from "expo-font";
+import {
+  EBGaramond_400Regular,
+  EBGaramond_500Medium,
+  EBGaramond_600SemiBold,
+  EBGaramond_700Bold,
+} from "@expo-google-fonts/eb-garamond";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
@@ -208,9 +215,26 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  // Hold the splash until the brand face is ready, so no screen paints in the
+  // system serif and then reflows once EB Garamond loads.
+  const [fontsLoaded, fontError] = useFonts({
+    EBGaramond_400Regular,
+    EBGaramond_500Medium,
+    EBGaramond_600SemiBold,
+    EBGaramond_700Bold,
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    // Fall through on error rather than trapping the user behind a splash
+    // screen — the system serif is a survivable fallback, a dead app isn't.
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
