@@ -11,6 +11,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Image } from 'expo-image';
 import {
   X,
@@ -27,8 +28,8 @@ import {
   ChevronUp,
   Search,
 } from 'lucide-react-native';
-import Colors from '@/constants/colors';
-import { fontFamily } from '@/constants/theme';
+import { fontFamily, type ThemeColors } from '@/constants/theme';
+import { useThemeColors, useIsDark } from '@/hooks/useTheme';
 import { useRestaurant } from '@/contexts/RestaurantContext';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
@@ -40,23 +41,27 @@ import { BeverageCategory } from '@/types';
 
 type CategoryTab = 'all' | BeverageCategory;
 
-const categoryConfig: Record<CategoryTab, { label: string; icon: React.ElementType; color: string }> = {
-  all: { label: 'All', icon: Star, color: Colors.secondary },
-  wine: { label: 'Wines', icon: Wine, color: Colors.wineRed },
-  beer: { label: 'Beers', icon: Beer, color: '#D4A84B' },
-  spirit: { label: 'Spirits', icon: GlassWater, color: Colors.accent },
-  cocktail: { label: 'Cocktails', icon: Martini, color: Colors.primary },
-  'non-alcoholic': { label: 'Non-Alc', icon: Coffee, color: Colors.success },
-};
+const categoryConfigFor = (c: ThemeColors): Record<CategoryTab, { label: string; icon: React.ElementType; color: string }> => ({
+  all: { label: 'All', icon: Star, color: c.secondary },
+  wine: { label: 'Wines', icon: Wine, color: c.wineRed },
+  beer: { label: 'Beers', icon: Beer, color: c.warning },
+  spirit: { label: 'Spirits', icon: GlassWater, color: c.accent },
+  cocktail: { label: 'Cocktails', icon: Martini, color: c.primary },
+  'non-alcoholic': { label: 'Non-Alc', icon: Coffee, color: c.success },
+});
 
 /** Accept only #RRGGBB so a bad stored value can't break the menu's styling. */
-function safeBrandColor(value: string | null | undefined): string {
-  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : Colors.primary;
+function safeBrandColor(value: string | null | undefined, fallback: string): string {
+  return value && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
 }
 
 // eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function CustomerMenuScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
+  const isDark = useIsDark();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const categoryConfig = useMemo(() => categoryConfigFor(colors), [colors]);
   const { isTablet } = useResponsive();
   const params = useLocalSearchParams<{ r?: string }>();
   const scannedSlug = typeof params.r === 'string' && params.r.length > 0 ? params.r : undefined;
@@ -96,7 +101,7 @@ export default function CustomerMenuScreen() {
 
   const restaurant = scannedSlug ? publicMenu?.restaurant : ctxRestaurant;
   // The venue's accent drives the menu's styling; Unbottl's red is the fallback.
-  const brandColor = safeBrandColor(restaurant?.brandColor);
+  const brandColor = safeBrandColor(restaurant?.brandColor, colors.primary);
   const wines = scannedSlug ? publicMenu?.wines ?? [] : ctxWines;
   const beers = scannedSlug ? publicMenu?.beers ?? [] : ctxBeers;
   const spirits = scannedSlug ? publicMenu?.spirits ?? [] : ctxSpirits;
@@ -150,7 +155,7 @@ export default function CustomerMenuScreen() {
         ]}
         onPress={() => setActiveCategory(category)}
       >
-        <config.icon size={16} color={isActive ? Colors.white : config.color} />
+        <config.icon size={16} color={isActive ? colors.white : config.color} />
         <Text style={[styles.categoryTabText, isActive && styles.categoryTabTextActive]}>
           {config.label}
         </Text>
@@ -174,7 +179,7 @@ export default function CustomerMenuScreen() {
       </View>
       <Text style={styles.menuItemProducer}>{wine.producer}</Text>
       <View style={styles.menuItemDetails}>
-        <MapPin size={12} color={Colors.textMuted} />
+        <MapPin size={12} color={colors.textMuted} />
         <Text style={styles.menuItemRegion}>
           {wine.region}, {wine.country}
         </Text>
@@ -187,7 +192,7 @@ export default function CustomerMenuScreen() {
       )}
       {wine.featured && (
         <View style={styles.featuredBadge}>
-          <Star size={10} color={Colors.secondary} fill={Colors.secondary} />
+          <Star size={10} color={colors.secondary} fill={colors.secondary} />
           <Text style={styles.featuredBadgeText}>Staff Pick</Text>
         </View>
       )}
@@ -244,7 +249,7 @@ export default function CustomerMenuScreen() {
           <Text style={styles.menuItemName}>{cocktail.name}</Text>
           {cocktail.isSignature && (
             <View style={styles.signatureBadge}>
-              <Flame size={10} color={Colors.error} />
+              <Flame size={10} color={colors.error} />
             </View>
           )}
         </View>
@@ -268,7 +273,7 @@ export default function CustomerMenuScreen() {
         <View style={styles.menuItemMain}>
           <Text style={styles.menuItemName}>{item.name}</Text>
           <View style={styles.naIconBadge}>
-            <Leaf size={10} color={Colors.success} />
+            <Leaf size={10} color={colors.success} />
           </View>
         </View>
         <Text style={styles.bottlePrice}>${item.price}</Text>
@@ -314,9 +319,9 @@ export default function CustomerMenuScreen() {
             </View>
           </View>
           {isExpanded ? (
-            <ChevronUp size={20} color={Colors.textMuted} />
+            <ChevronUp size={20} color={colors.textMuted} />
           ) : (
-            <ChevronDown size={20} color={Colors.textMuted} />
+            <ChevronDown size={20} color={colors.textMuted} />
           )}
         </TouchableOpacity>
         
@@ -334,13 +339,13 @@ export default function CustomerMenuScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-            <X size={24} color={Colors.text} />
+            <X size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Loading Menu</Text>
           <View style={styles.placeholder} />
         </View>
         <View style={styles.stateContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.stateText}>Loading menu…</Text>
         </View>
       </SafeAreaView>
@@ -352,7 +357,7 @@ export default function CustomerMenuScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-            <X size={24} color={Colors.text} />
+            <X size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Menu</Text>
           <View style={styles.placeholder} />
@@ -373,9 +378,10 @@ export default function CustomerMenuScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-          <X size={24} color={Colors.text} />
+          <X size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{scannedSlug ? 'Menu' : 'Menu Preview'}</Text>
         <View style={styles.placeholder} />
@@ -430,7 +436,7 @@ export default function CustomerMenuScreen() {
         {activeCategory === 'all' && featuredItems.length > 0 && (
           <View style={styles.featuredSection}>
             <View style={styles.featuredHeader}>
-              <Star size={18} color={Colors.secondary} fill={Colors.secondary} />
+              <Star size={18} color={colors.secondary} fill={colors.secondary} />
               <Text style={styles.featuredTitle}>Staff Picks</Text>
             </View>
             <ScrollView 
@@ -444,13 +450,13 @@ export default function CustomerMenuScreen() {
                     styles.featuredCardIcon, 
                     { backgroundColor: ('type' in item && wineTypeColors[item.type]) 
                       ? wineTypeColors[item.type] + '20' 
-                      : Colors.primary + '20' 
+                      : colors.primary + '20' 
                     }
                   ]}>
                     {'grape' in item ? (
-                      <Wine size={24} color={wineTypeColors[item.type] || Colors.primary} />
+                      <Wine size={24} color={wineTypeColors[item.type] || colors.primary} />
                     ) : (
-                      <Martini size={24} color={Colors.primary} />
+                      <Martini size={24} color={colors.primary} />
                     )}
                   </View>
                   <Text style={styles.featuredCardName} numberOfLines={2}>{item.name}</Text>
@@ -461,11 +467,11 @@ export default function CustomerMenuScreen() {
           </View>
         )}
 
-        {renderSection('wine', 'Wines', inStockWines, renderWineItem, Wine, Colors.wineRed)}
-        {renderSection('beer', 'Beers', inStockBeers, renderBeerItem, Beer, '#D4A84B')}
-        {renderSection('spirit', 'Spirits & Liquors', inStockSpirits, renderSpiritItem, GlassWater, Colors.accent)}
-        {renderSection('cocktail', 'Cocktails', availableCocktails, renderCocktailItem, Martini, Colors.primary)}
-        {renderSection('non-alcoholic', 'Non-Alcoholic', inStockNA, renderNonAlcoholicItem, Coffee, Colors.success)}
+        {renderSection('wine', 'Wines', inStockWines, renderWineItem, Wine, colors.wineRed)}
+        {renderSection('beer', 'Beers', inStockBeers, renderBeerItem, Beer, colors.warning)}
+        {renderSection('spirit', 'Spirits & Liquors', inStockSpirits, renderSpiritItem, GlassWater, colors.accent)}
+        {renderSection('cocktail', 'Cocktails', availableCocktails, renderCocktailItem, Martini, colors.primary)}
+        {renderSection('non-alcoholic', 'Non-Alcoholic', inStockNA, renderNonAlcoholicItem, Coffee, colors.success)}
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Prices subject to change</Text>
@@ -480,10 +486,13 @@ export default function CustomerMenuScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+// A style map rather than logic — splitting it to satisfy the line limit would
+// scatter related styles for no readability gain. Length debt tracked in #20.
+// eslint-disable-next-line max-lines-per-function
+const createStyles = (c: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: c.background,
   },
   // On tablets, keep the menu a centered, readable column instead of stretching
   // edge-to-edge across the wide screen.
@@ -500,16 +509,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   stateEmoji: { fontSize: 44, marginBottom: 4 },
-  stateTitle: { fontSize: 20, fontWeight: '700' as const, color: Colors.text },
-  stateText: { fontSize: 15, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  stateTitle: { fontSize: 20, fontWeight: '700' as const, color: c.text },
+  stateText: { fontSize: 15, color: c.textSecondary, textAlign: 'center', lineHeight: 22 },
   stateButton: {
     marginTop: 12,
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     paddingVertical: 13,
     paddingHorizontal: 32,
     borderRadius: 12,
   },
-  stateButtonText: { color: '#fff', fontSize: 15, fontWeight: '600' as const },
+  stateButtonText: { color: c.white, fontSize: 15, fontWeight: '600' as const },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -517,7 +526,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    borderBottomColor: c.borderLight,
   },
   closeButton: {
     width: 40,
@@ -528,14 +537,14 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: c.text,
   },
   placeholder: {
     width: 40,
   },
   hero: {
     height: 180,
-    backgroundColor: Colors.primary,
+    backgroundColor: c.primary,
     position: 'relative',
   },
   heroImage: {
@@ -559,7 +568,7 @@ const styles = StyleSheet.create({
   restaurantName: {
     fontSize: 30,
     fontFamily: fontFamily.displayBold,
-    color: Colors.white,
+    color: c.white,
     letterSpacing: 0.2,
     marginBottom: 4,
   },
@@ -568,18 +577,18 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
   },
   customerBanner: {
-    backgroundColor: Colors.secondary + '15',
+    backgroundColor: c.secondary + '15',
     paddingVertical: 10,
     paddingHorizontal: 16,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.secondary + '30',
+    borderColor: c.secondary + '30',
   },
   customerBannerText: {
     fontSize: 13,
-    color: Colors.secondary,
+    color: c.secondary,
     textAlign: 'center',
     fontWeight: '500' as const,
   },
@@ -594,22 +603,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: c.borderLight,
     gap: 6,
   },
   categoryTabActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: c.primary,
+    borderColor: c.primary,
   },
   categoryTabText: {
     fontSize: 13,
     fontWeight: '500' as const,
-    color: Colors.text,
+    color: c.text,
   },
   categoryTabTextActive: {
-    color: Colors.white,
+    color: c.white,
   },
   featuredSection: {
     paddingTop: 8,
@@ -625,7 +634,7 @@ const styles = StyleSheet.create({
   featuredTitle: {
     fontSize: 20,
     fontFamily: fontFamily.displaySemibold,
-    color: Colors.text,
+    color: c.text,
   },
   featuredList: {
     paddingHorizontal: 16,
@@ -633,13 +642,13 @@ const styles = StyleSheet.create({
   },
   featuredCard: {
     width: 130,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderRadius: 16,
     padding: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.borderLight,
-    shadowColor: Colors.cardShadow,
+    borderColor: c.borderLight,
+    shadowColor: c.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 8,
@@ -656,7 +665,7 @@ const styles = StyleSheet.create({
   featuredCardName: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: c.text,
     textAlign: 'center',
     marginBottom: 6,
     lineHeight: 18,
@@ -664,7 +673,7 @@ const styles = StyleSheet.create({
   featuredCardPrice: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: c.primary,
   },
   section: {
     marginBottom: 8,
@@ -675,10 +684,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: Colors.surface,
+    backgroundColor: c.surface,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: c.borderLight,
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -695,10 +704,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: fontFamily.displaySemibold,
-    color: Colors.text,
+    color: c.text,
   },
   itemCount: {
-    backgroundColor: Colors.borderLight,
+    backgroundColor: c.borderLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
@@ -706,7 +715,7 @@ const styles = StyleSheet.create({
   itemCountText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
   },
   sectionContent: {
     paddingHorizontal: 16,
@@ -715,7 +724,7 @@ const styles = StyleSheet.create({
   menuItem: {
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
+    borderBottomColor: c.borderLight,
   },
   menuItemHeader: {
     flexDirection: 'row',
@@ -733,17 +742,17 @@ const styles = StyleSheet.create({
   menuItemName: {
     fontSize: 17,
     fontFamily: fontFamily.displaySemibold,
-    color: Colors.text,
+    color: c.text,
   },
   menuItemVintage: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     fontWeight: '500' as const,
   },
   abvBadge: {
     fontSize: 11,
-    color: Colors.textMuted,
-    backgroundColor: Colors.borderLight,
+    color: c.textMuted,
+    backgroundColor: c.borderLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
@@ -754,22 +763,22 @@ const styles = StyleSheet.create({
   },
   glassPrice: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: 2,
   },
   bottlePrice: {
     fontSize: 17,
     fontFamily: fontFamily.displaySemibold,
-    color: Colors.primary,
+    color: c.primary,
   },
   menuItemProducer: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     marginBottom: 4,
   },
   menuItemStyle: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: c.textMuted,
     marginBottom: 4,
   },
   menuItemDetails: {
@@ -780,29 +789,29 @@ const styles = StyleSheet.create({
   },
   menuItemRegion: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: c.textMuted,
   },
   menuItemGrape: {
     fontSize: 13,
-    color: Colors.textMuted,
+    color: c.textMuted,
   },
   menuItemNotes: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: c.textSecondary,
     fontStyle: 'italic',
     lineHeight: 18,
     marginTop: 4,
   },
   ingredientsList: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: c.textMuted,
     marginTop: 6,
   },
   featuredBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.secondary + '15',
+    backgroundColor: c.secondary + '15',
     alignSelf: 'flex-start',
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -812,13 +821,13 @@ const styles = StyleSheet.create({
   featuredBadgeText: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: Colors.secondary,
+    color: c.secondary,
   },
   signatureBadge: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: Colors.error + '15',
+    backgroundColor: c.error + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -826,7 +835,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: Colors.success + '15',
+    backgroundColor: c.success + '15',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -838,12 +847,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: Colors.textMuted,
+    color: c.textMuted,
     fontStyle: 'italic',
   },
   poweredBy: {
     fontSize: 11,
-    color: Colors.textMuted,
+    color: c.textMuted,
     letterSpacing: 0.6,
     marginTop: 10,
   },
