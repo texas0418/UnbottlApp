@@ -35,6 +35,7 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useRecentMenus } from '@/contexts/RecentMenusContext';
 import { useRecommendations } from '@/contexts/RecommendationsContext';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
+import { padGridRow, isGridSpacer, GridSpacer } from '@/utils/gridRows';
 import WineCard from '@/components/WineCard';
 import BeverageCard from '@/components/BeverageCard';
 import SearchBar from '@/components/SearchBar';
@@ -474,22 +475,33 @@ export default function DiscoverScreen() {
     </View>
   );
 
-  const renderItem = ({ item }: { item: CatalogItem }) => (
-    <View style={styles.cardContainer}>
-      {item.category === 'wine' ? (
-        <WineCard wine={item.data as WineType} onPress={() => handleItemPress(item)} quickSave />
-      ) : (
-        <BeverageCard beverage={item.data} category={item.category} onPress={() => handleItemPress(item)} quickSave />
-      )}
-    </View>
+  // Keeps the last row's cards the same width as every other row's (#6).
+  const gridData = useMemo(
+    () => padGridRow(filteredItems, gridColumns),
+    [filteredItems, gridColumns],
   );
+
+  const renderItem = ({ item }: { item: CatalogItem | GridSpacer }) => {
+    if (isGridSpacer(item)) return <View style={styles.cardContainer} />;
+    return (
+      <View style={styles.cardContainer}>
+        {item.category === 'wine' ? (
+          <WineCard wine={item.data as WineType} onPress={() => handleItemPress(item)} quickSave />
+        ) : (
+          <BeverageCard beverage={item.data} category={item.category} onPress={() => handleItemPress(item)} quickSave />
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <AgeVerificationModal />
       <FlatList
-        data={filteredItems}
-        keyExtractor={(item) => `${item.category}-${item.id}`}
+        data={gridData}
+        keyExtractor={(item) =>
+          isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
+        }
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={

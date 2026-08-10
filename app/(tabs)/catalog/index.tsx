@@ -15,6 +15,7 @@ import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { useResponsive } from '@/hooks/useResponsive';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
+import { padGridRow, isGridSpacer, GridSpacer } from '@/utils/gridRows';
 import WineCard from '@/components/WineCard';
 import BeverageCard from '@/components/BeverageCard';
 import SearchBar from '@/components/SearchBar';
@@ -439,7 +440,16 @@ export default function CatalogScreen() {
     </View>
   );
 
-  const renderItem = ({ item }: { item: CatalogItem }) => {
+  // Keeps the last row's cards the same width as every other row's (#6).
+  const gridData = useMemo(
+    () => padGridRow(filteredItems, gridColumns),
+    [filteredItems, gridColumns],
+  );
+
+  const renderItem = ({ item }: { item: CatalogItem | GridSpacer }) => {
+    if (isGridSpacer(item)) {
+      return <View style={styles.cardContainer} />;
+    }
     if (item.category === 'wine') {
       return (
         <View style={styles.cardContainer}>
@@ -477,8 +487,10 @@ export default function CatalogScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
-        data={filteredItems}
-        keyExtractor={(item) => `${item.category}-${item.id}`}
+        data={gridData}
+        keyExtractor={(item) =>
+          isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
+        }
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
