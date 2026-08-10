@@ -4,6 +4,7 @@ import {
   Text,
   View,
   ScrollView,
+  SectionList,
   TouchableOpacity,
   Animated,
   ActivityIndicator,
@@ -288,34 +289,62 @@ export default function CustomerMenuScreen() {
     </View>
   );
 
-  const renderSection = (
-    category: BeverageCategory,
-    title: string,
-    items: any[],
-    renderItem: (item: any) => React.ReactNode,
-    icon: React.ElementType,
-    color: string
-  ) => {
-    if (items.length === 0) return null;
-    if (activeCategory !== 'all' && activeCategory !== category) return null;
+  // One entry per category. `data` is emptied when a section is collapsed so
+  // the header stays put and SectionList mounts none of its rows; `count` is
+  // captured beforehand so the badge still shows the true total.
+  const sections = useMemo(() => {
+    const all = [
+      { key: 'wine' as const, title: 'Wines', icon: Wine, color: colors.wineRed, items: inStockWines },
+      { key: 'beer' as const, title: 'Beers', icon: Beer, color: colors.warning, items: inStockBeers },
+      { key: 'spirit' as const, title: 'Spirits & Liquors', icon: GlassWater, color: colors.accent, items: inStockSpirits },
+      { key: 'cocktail' as const, title: 'Cocktails', icon: Martini, color: colors.primary, items: availableCocktails },
+      { key: 'non-alcoholic' as const, title: 'Non-Alcoholic', icon: Coffee, color: colors.success, items: inStockNA },
+    ];
+    return all
+      .filter((s) => s.items.length > 0)
+      .filter((s) => activeCategory === 'all' || activeCategory === s.key)
+      .map((s) => ({
+        key: s.key,
+        title: s.title,
+        icon: s.icon,
+        color: s.color,
+        count: s.items.length,
+        data: expandedSections[s.key] ? (s.items as any[]) : [],
+      }));
+  }, [
+    colors, activeCategory, expandedSections,
+    inStockWines, inStockBeers, inStockSpirits, availableCocktails, inStockNA,
+  ]);
 
-    const Icon = icon;
-    const isExpanded = expandedSections[category];
+  const sectionRenderers: Record<string, (item: any) => React.ReactNode> = {
+    wine: renderWineItem,
+    beer: renderBeerItem,
+    spirit: renderSpiritItem,
+    cocktail: renderCocktailItem,
+    'non-alcoholic': renderNonAlcoholicItem,
+  };
+
+  const renderSectionHeader = (section: (typeof sections)[number]) => {
+    const Icon = section.icon;
+    const isExpanded = expandedSections[section.key];
 
     return (
-      <View key={category} style={styles.section}>
-        <TouchableOpacity 
+      <View style={styles.section}>
+        <TouchableOpacity
           style={styles.sectionHeader}
-          onPress={() => toggleSection(category)}
+          onPress={() => toggleSection(section.key)}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: isExpanded }}
+          accessibilityLabel={`${section.title}, ${section.count} items`}
         >
           <View style={styles.sectionTitleRow}>
-            <View style={[styles.sectionIcon, { backgroundColor: color + '15' }]}>
-              <Icon size={18} color={color} />
+            <View style={[styles.sectionIcon, { backgroundColor: section.color + '15' }]}>
+              <Icon size={18} color={section.color} />
             </View>
-            <Text style={styles.sectionTitle}>{title}</Text>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
             <View style={styles.itemCount}>
-              <Text style={styles.itemCountText}>{items.length}</Text>
+              <Text style={styles.itemCountText}>{section.count}</Text>
             </View>
           </View>
           {isExpanded ? (
@@ -324,12 +353,6 @@ export default function CustomerMenuScreen() {
             <ChevronDown size={20} color={colors.textMuted} />
           )}
         </TouchableOpacity>
-        
-        {isExpanded && (
-          <View style={styles.sectionContent}>
-            {items.map(renderItem)}
-          </View>
-        )}
       </View>
     );
   };
@@ -387,10 +410,16 @@ export default function CustomerMenuScreen() {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, section }) => <>{sectionRenderers[section.key](item)}</>}
+        renderSectionHeader={({ section }) => renderSectionHeader(section)}
+        stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={isTablet ? styles.tabletContent : undefined}
-      >
+        ListHeaderComponent={
+        <>
         <View style={[styles.hero, { backgroundColor: brandColor }]}>
           {restaurant?.coverImageUrl && (
             <Image
@@ -466,13 +495,10 @@ export default function CustomerMenuScreen() {
             </ScrollView>
           </View>
         )}
-
-        {renderSection('wine', 'Wines', inStockWines, renderWineItem, Wine, colors.wineRed)}
-        {renderSection('beer', 'Beers', inStockBeers, renderBeerItem, Beer, colors.warning)}
-        {renderSection('spirit', 'Spirits & Liquors', inStockSpirits, renderSpiritItem, GlassWater, colors.accent)}
-        {renderSection('cocktail', 'Cocktails', availableCocktails, renderCocktailItem, Martini, colors.primary)}
-        {renderSection('non-alcoholic', 'Non-Alcoholic', inStockNA, renderNonAlcoholicItem, Coffee, colors.success)}
-
+        </>
+        }
+        ListFooterComponent={
+        <>
         <View style={styles.footer}>
           <Text style={styles.footerText}>Prices subject to change</Text>
           <Text style={styles.footerText}>Please inform your server of any allergies</Text>
@@ -481,7 +507,9 @@ export default function CustomerMenuScreen() {
         </View>
 
         <View style={styles.bottomPadding} />
-      </ScrollView>
+        </>
+        }
+      />
     </SafeAreaView>
   );
 }
