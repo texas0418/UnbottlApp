@@ -28,6 +28,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
+import { useAppMode } from '@/hooks/useAppMode';
 import { useWines } from '@/contexts/WineContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
@@ -37,6 +38,7 @@ import Button from '@/components/Button';
 
 // eslint-disable-next-line complexity -- tracked in #2
 export default function WineDetailScreen() {
+  const { isRestaurantAccount } = useAppMode();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { getWineById, deleteWine, toggleStock } = useWines();
@@ -121,7 +123,10 @@ export default function WineDetailScreen() {
     { icon: Grape, label: 'Grape', value: wine.grape },
     { icon: Percent, label: 'Alcohol', value: `${wine.alcoholContent}%` },
     { icon: Calendar, label: 'Vintage', value: wine.vintage?.toString() || 'NV' },
-    { icon: Package, label: 'Quantity', value: `${wine.quantity} bottles` },
+    // Remaining stock is the venue's data, not the guest's.
+    ...(isRestaurantAccount
+      ? [{ icon: Package, label: 'Quantity', value: `${wine.quantity} bottles` }]
+      : []),
   ];
 
   return (

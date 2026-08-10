@@ -13,10 +13,16 @@ interface WineCardProps {
   onPress: () => void;
   compact?: boolean;
   quickSave?: boolean;
+  /**
+   * Show the remaining bottle count. Owner and staff surfaces only — it is the
+   * venue's inventory, not something to publish to guests. Defaults to false so
+   * a new screen leaks nothing by forgetting to think about it.
+   */
+  showStock?: boolean;
 }
 
 // eslint-disable-next-line complexity -- tracked in #2
-export default function WineCard({ wine, onPress, compact = false, quickSave = false }: WineCardProps) {
+export default function WineCard({ wine, onPress, compact = false, quickSave = false, showStock = false }: WineCardProps) {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFav = isFavorite(wine.id);
@@ -144,12 +150,14 @@ export default function WineCard({ wine, onPress, compact = false, quickSave = f
                 <Text style={styles.glassPrice}>${wine.glassPrice}/glass</Text>
               )}
             </View>
-            <View style={styles.stockIndicator}>
-              <Droplets size={14} color={wine.inStock ? Colors.success : Colors.textMuted} />
-              <Text style={[styles.stockText, !wine.inStock && styles.outOfStock]}>
-                {wine.inStock ? `${wine.quantity} btl` : 'Out'}
-              </Text>
-            </View>
+            {(showStock || !wine.inStock) && (
+              <View style={styles.stockIndicator}>
+                <Droplets size={14} color={wine.inStock ? Colors.success : Colors.textMuted} />
+                <Text style={[styles.stockText, !wine.inStock && styles.outOfStock]}>
+                  {!wine.inStock ? 'Out' : `${wine.quantity} btl`}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       </Animated.View>

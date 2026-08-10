@@ -22,6 +22,11 @@ interface BeverageCardProps {
   onPress: () => void;
   compact?: boolean;
   quickSave?: boolean;
+  /**
+   * Show the remaining stock count. Owner and staff surfaces only — see
+   * WineCard. Defaults to false.
+   */
+  showStock?: boolean;
 }
 
 const getCategoryIcon = (category: BeverageCategory, size: number, color: string) => {
@@ -160,7 +165,7 @@ const getBeverageDetails = (beverage: BeverageItem, category: BeverageCategory) 
 };
 
 // eslint-disable-next-line complexity -- tracked in #2
-export default function BeverageCard({ beverage, category, onPress, compact = false, quickSave = false }: BeverageCardProps) {
+export default function BeverageCard({ beverage, category, onPress, compact = false, quickSave = false, showStock = false }: BeverageCardProps) {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const details = getBeverageDetails(beverage, category);
   const typeColor = getTypeColor(category, details.type);
@@ -295,11 +300,11 @@ export default function BeverageCard({ beverage, category, onPress, compact = fa
                 <Text style={styles.glassPrice}>{details.secondaryLabel}</Text>
               )}
             </View>
-            {details.quantity !== null && (
+            {details.quantity !== null && (showStock || !details.inStock) && (
               <View style={styles.stockIndicator}>
                 <Droplets size={14} color={details.inStock ? Colors.success : Colors.textMuted} />
                 <Text style={[styles.stockText, !details.inStock && styles.outOfStock]}>
-                  {details.inStock ? details.quantity : 'Out'}
+                  {!details.inStock ? 'Out' : details.quantity}
                 </Text>
               </View>
             )}
