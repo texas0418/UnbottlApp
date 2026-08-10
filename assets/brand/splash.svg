@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1284" height="2778" viewBox="0 0 100 216">
+  <defs>
+    <linearGradient id="wine" x1="0" y1="0.55" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C3039"/><stop offset="55%" stop-color="#61242C"/>
+      <stop offset="100%" stop-color="#45161C"/>
+    </linearGradient>
+    <linearGradient id="surface" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B4666F" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#B4666F" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="body"><path d="M0 132 Q50 152 100 132 V216 H0 Z"/></clipPath>
+  </defs>
+  <rect width="100" height="216" fill="#FAF8F5"/>
+  <path d="M0 132 Q50 152 100 132 V216 H0 Z" fill="url(#wine)"/>
+  <g clip-path="url(#body)"><path d="M0 132 Q50 152 100 132 V142 Q50 162 0 142 Z" fill="url(#surface)"/></g>
+  <path d="M0 132 Q50 152 100 132" fill="none" stroke="#A85C66" stroke-width="0.55" opacity="0.7"/>
+</svg>
