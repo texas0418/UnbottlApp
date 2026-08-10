@@ -16,6 +16,8 @@ export interface PublicRestaurant {
   cuisineType: string | null;
   logoUrl: string | null;
   coverImageUrl: string | null;
+  /** Venue's own accent colour as #RRGGBB. Null means fall back to Unbottl's. */
+  brandColor: string | null;
   city: string | null;
 }
 
@@ -55,17 +57,49 @@ export function parseMenuSlug(scanned: string): string | null {
  * them. Until that migration is applied the queries error and this returns
  * `null`, so the UI shows a graceful "menu unavailable" state.
  */
-export async function fetchPublicMenu(slugOrId: string): Promise<PublicMenu | null> {
-  const id = parseMenuSlug(slugOrId) ?? slugOrId;
-  if (!id) return null;
+interface PublicRestaurantRow {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+  cover_image_url?: string | null;
+  brand_color?: string | null;
+  cuisine_type?: string | null;
+}
 
-  const { data: restaurantRow } = await supabase
+/**
+ * Read the venue row, preferring the branding columns.
+ *
+ * db/venue-branding.sql widens `public_menu_restaurants` to carry logo, cover,
+ * brand colour and cuisine. Until that migration is applied those columns don't
+ * exist and PostgREST rejects the whole select — which would take the guest menu
+ * down. So we ask for the wide row and fall back to the original id + name,
+ * letting an un-migrated project keep working with Unbottl's default styling.
+ */
+async function fetchPublicRestaurantRow(id: string): Promise<PublicRestaurantRow | null> {
+  const wide = await supabase
+    .from('public_menu_restaurants')
+    .select('id, name, logo_url, cover_image_url, brand_color, cuisine_type')
+    .eq('id', id)
+    .limit(1)
+    .maybeSingle();
+
+  if (!wide.error) return (wide.data as PublicRestaurantRow) ?? null;
+
+  const { data } = await supabase
     .from('public_menu_restaurants')
     .select('id, name')
     .eq('id', id)
     .limit(1)
     .maybeSingle();
 
+  return (data as PublicRestaurantRow) ?? null;
+}
+
+export async function fetchPublicMenu(slugOrId: string): Promise<PublicMenu | null> {
+  const id = parseMenuSlug(slugOrId) ?? slugOrId;
+  if (!id) return null;
+
+  const restaurantRow = await fetchPublicRestaurantRow(id);
   if (!restaurantRow) return null;
 
   const { data: bevRows } = await supabase
@@ -86,13 +120,12 @@ export async function fetchPublicMenu(slugOrId: string): Promise<PublicMenu | nu
     restaurant: {
       id: restaurantRow.id,
       name: restaurantRow.name,
-      // The public restaurants view intentionally exposes only id + name.
-      // Richer fields can be added to the view + this mapping later if the
-      // restaurants table gains cuisine/logo/cover columns.
+      logoUrl: restaurantRow.logo_url ?? null,
+      coverImageUrl: restaurantRow.cover_image_url ?? null,
+      brandColor: restaurantRow.brand_color ?? null,
+      cuisineType: restaurantRow.cuisine_type ?? null,
+      // Not exposed by the view — nothing renders them, so they stay private.
       description: null,
-      cuisineType: null,
-      logoUrl: null,
-      coverImageUrl: null,
       city: null,
     },
     wines,

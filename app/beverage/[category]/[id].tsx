@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
+import { useAppMode } from '@/hooks/useAppMode';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
@@ -42,6 +43,7 @@ const getCategoryIcon = (category: BeverageCategory, size: number, color: string
 
 // eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
 export default function BeverageDetailScreen() {
+  const { isRestaurantAccount } = useAppMode();
   const router = useRouter();
   const { category, id } = useLocalSearchParams<{ category: string; id: string }>();
   const { 
@@ -236,11 +238,13 @@ export default function BeverageDetailScreen() {
               <Text style={styles.statLabel}>IBU</Text>
             </View>
           )}
-          <View style={styles.statItem}>
-            <Droplets size={18} color={Colors.primary} />
-            <Text style={styles.statValue}>{beer.quantity}</Text>
-            <Text style={styles.statLabel}>In Stock</Text>
-          </View>
+          {isRestaurantAccount && (
+            <View style={styles.statItem}>
+              <Droplets size={18} color={Colors.primary} />
+              <Text style={styles.statValue}>{beer.quantity}</Text>
+              <Text style={styles.statLabel}>In Stock</Text>
+            </View>
+          )}
         </View>
         {beer.style && (
           <View style={styles.infoRow}>
@@ -285,11 +289,13 @@ export default function BeverageDetailScreen() {
               <Text style={styles.statLabel}>Age</Text>
             </View>
           )}
-          <View style={styles.statItem}>
-            <Droplets size={18} color={Colors.primary} />
-            <Text style={styles.statValue}>{spirit.quantity}</Text>
-            <Text style={styles.statLabel}>Bottles</Text>
-          </View>
+          {isRestaurantAccount && (
+            <View style={styles.statItem}>
+              <Droplets size={18} color={Colors.primary} />
+              <Text style={styles.statValue}>{spirit.quantity}</Text>
+              <Text style={styles.statLabel}>Bottles</Text>
+            </View>
+          )}
         </View>
         {spirit.shotPrice && (
           <View style={styles.infoRow}>
@@ -359,11 +365,13 @@ export default function BeverageDetailScreen() {
               <Text style={styles.statLabel}>Calories</Text>
             </View>
           )}
-          <View style={styles.statItem}>
-            <Droplets size={18} color={Colors.primary} />
-            <Text style={styles.statValue}>{na.quantity}</Text>
-            <Text style={styles.statLabel}>In Stock</Text>
-          </View>
+          {isRestaurantAccount && (
+            <View style={styles.statItem}>
+              <Droplets size={18} color={Colors.primary} />
+              <Text style={styles.statValue}>{na.quantity}</Text>
+              <Text style={styles.statLabel}>In Stock</Text>
+            </View>
+          )}
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Serving Size</Text>

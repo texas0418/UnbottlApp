@@ -126,9 +126,9 @@ export default function InventoryScreen() {
   const renderItem = ({ item }: { item: Item }) => (
     <View style={styles.cardContainer}>
       {item.category === 'wine' ? (
-        <WineCard wine={item.data as WineType} onPress={() => openItem(item)} />
+        <WineCard wine={item.data as WineType} onPress={() => openItem(item)} showStock />
       ) : (
-        <BeverageCard beverage={item.data} category={item.category} onPress={() => openItem(item)} />
+        <BeverageCard beverage={item.data} category={item.category} onPress={() => openItem(item)} showStock />
       )}
     </View>
   );
