@@ -64,6 +64,3 @@ android/
 
 # Created by `deno check` when verifying edge functions locally
 deno.lock
-
-# Local session handoff scratch
-HANDOFF-PROMPT.txt
