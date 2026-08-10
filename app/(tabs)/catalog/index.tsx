@@ -15,6 +15,8 @@ import Colors from '@/constants/colors';
 import { useBeverages } from '@/contexts/BeverageContext';
 import { useResponsive } from '@/hooks/useResponsive';
 import { BeverageCategory, Wine as WineType, DietaryTag, dietaryTagColors } from '@/types';
+import { padGridRow, isGridSpacer, GridSpacer } from '@/utils/gridRows';
+import { dietaryFilters } from '@/constants/dietaryFilters';
 import WineCard from '@/components/WineCard';
 import BeverageCard from '@/components/BeverageCard';
 import SearchBar from '@/components/SearchBar';
@@ -78,15 +80,6 @@ const priceRangeFilters: { label: string; value: PriceRange; min: number; max: n
   { label: '$', value: '$', min: 0, max: 10 },
   { label: '$$', value: '$$', min: 10, max: 20 },
   { label: '$$$', value: '$$$', min: 20, max: null },
-];
-
-const dietaryFilters: { label: string; value: DietaryTag; icon: string }[] = [
-  { label: 'Vegan', value: 'vegan', icon: '🌱' },
-  { label: 'Organic', value: 'organic', icon: '🍃' },
-  { label: 'Low Sulfite', value: 'low-sulfite', icon: '🧪' },
-  { label: 'Gluten-Free', value: 'gluten-free', icon: '🌾' },
-  { label: 'Natural', value: 'natural', icon: '🍇' },
-  { label: 'Biodynamic', value: 'biodynamic', icon: '🌿' },
 ];
 
 type CatalogItem = {
@@ -352,6 +345,7 @@ export default function CatalogScreen() {
       >
         {dietaryFilters.map((filter) => {
           const isSelected = selectedDietaryTags.includes(filter.value);
+          const Icon = filter.icon;
           return (
             <TouchableOpacity
               key={filter.value}
@@ -361,7 +355,7 @@ export default function CatalogScreen() {
               ]}
               onPress={() => toggleDietaryTag(filter.value)}
             >
-              <Text style={styles.dietaryChipIcon}>{filter.icon}</Text>
+              <Icon size={14} color={isSelected ? Colors.white : dietaryTagColors[filter.value]} />
               <Text style={[
                 styles.dietaryChipText,
                 isSelected && styles.dietaryChipTextSelected,
@@ -439,7 +433,16 @@ export default function CatalogScreen() {
     </View>
   );
 
-  const renderItem = ({ item }: { item: CatalogItem }) => {
+  // Keeps the last row's cards the same width as every other row's (#6).
+  const gridData = useMemo(
+    () => padGridRow(filteredItems, gridColumns),
+    [filteredItems, gridColumns],
+  );
+
+  const renderItem = ({ item }: { item: CatalogItem | GridSpacer }) => {
+    if (isGridSpacer(item)) {
+      return <View style={styles.cardContainer} />;
+    }
     if (item.category === 'wine') {
       return (
         <View style={styles.cardContainer}>
@@ -477,8 +480,10 @@ export default function CatalogScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <FlatList
-        data={filteredItems}
-        keyExtractor={(item) => `${item.category}-${item.id}`}
+        data={gridData}
+        keyExtractor={(item) =>
+          isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
+        }
         renderItem={renderItem}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
@@ -647,9 +652,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginRight: 8,
     gap: 4,
-  },
-  dietaryChipIcon: {
-    fontSize: 14,
   },
   dietaryChipText: {
     fontSize: 13,
