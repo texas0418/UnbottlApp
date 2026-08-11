@@ -32,6 +32,7 @@ import {
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useRestaurant } from '@/contexts/RestaurantContext';
+import { menuUrlFor } from '@/constants/menuUrl';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
 import AuthGuard from '@/components/AuthGuard';
@@ -49,7 +50,7 @@ export default function QRMenuScreen() {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
   const menuSlug = restaurant?.menuSlug || restaurant?.id || 'menu';
-  const menuUrl = `https://unbottl.app/m/${menuSlug}`;
+  const menuUrl = menuUrlFor(menuSlug);
 
   const qrSizes = { small: 200, medium: 280, large: 360 };
 

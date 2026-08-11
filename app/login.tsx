@@ -19,6 +19,7 @@ import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAppMode } from '@/hooks/useAppMode';
 import { supabase } from '@/lib/supabase';
+import { describeAuthError } from '@/utils/authErrors';
 import Button from '@/components/Button';
 
 // eslint-disable-next-line complexity, max-lines-per-function -- tracked in #2
@@ -138,10 +139,14 @@ export default function LoginScreen() {
         }
       }
     } catch (error) {
-      Alert.alert(
-        'Error',
-        isSignUp ? registerError || 'Registration failed' : loginError || 'Login failed'
+      // "Login failed" reads as "wrong password", which sent people to reset a
+      // password that was fine when the real problem was no network.
+      const { title, message } = describeAuthError(
+        error,
+        isSignUp ? registerError : loginError,
+        isSignUp,
       );
+      Alert.alert(title, message);
     }
   };
 

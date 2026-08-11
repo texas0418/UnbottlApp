@@ -485,7 +485,12 @@ export default function CatalogScreen() {
           isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
         }
         renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
+        // Element, not the function. Passed a function, VirtualizedList renders
+        // <renderHeader /> — a component whose identity is new on every render,
+        // so React unmounts and remounts the whole header on each keystroke and
+        // the search TextInput loses focus and the keyboard. Passing the
+        // element keeps the tree's types stable, so it re-renders in place.
+        ListHeaderComponent={renderHeader()}
         ListEmptyComponent={
           <View style={styles.emptySearch}>
             <Text style={styles.emptySearchTitle}>No drinks found</Text>

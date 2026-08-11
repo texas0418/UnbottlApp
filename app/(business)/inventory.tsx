@@ -151,7 +151,9 @@ export default function InventoryScreen() {
           isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
         }
         renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
+        // Element, not the function — see (tabs)/catalog/index.tsx. Same
+        // remount-on-every-keystroke problem with the search field.
+        ListHeaderComponent={renderHeader()}
         numColumns={GRID_COLUMNS}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}

@@ -21,6 +21,8 @@ import { useBeverages } from '@/contexts/BeverageContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
+import MediaPicker from '@/components/MediaPicker';
+import { uploadBeveragePhoto } from '@/services/venueMedia';
 import { BeverageCategory } from '@/types';
 import { 
   beerTypeColors, beerTypeLabels,
@@ -163,6 +165,38 @@ export default function BeverageDetailScreen() {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to update stock status');
+    }
+  };
+
+  /**
+   * Set or clear this drink's photograph.
+   *
+   * Only reachable on a saved drink, and deliberately so: the storage path is
+   * keyed on the beverage id, which does not exist while the add form is still
+   * open. Allowing it during creation would mean minting a throwaway id and
+   * orphaning every upload someone abandoned.
+   */
+  const handlePhotoChange = async (url: string | null) => {
+    try {
+      // No 'wine' branch: wines route to app/wine/[id].tsx, so this screen
+      // never sees one and updateWine is not in scope here.
+      const updates = { imageUrl: url } as any;
+      switch (beverageCategory) {
+        case 'beer':
+          await updateBeer({ id, updates });
+          break;
+        case 'spirit':
+          await updateSpirit({ id, updates });
+          break;
+        case 'cocktail':
+          await updateCocktail({ id, updates });
+          break;
+        case 'non-alcoholic':
+          await updateNonAlcoholic({ id, updates });
+          break;
+      }
+    } catch {
+      Alert.alert('Could not save the photo', 'The image uploaded but the drink was not updated. Please try again.');
     }
   };
 
@@ -516,6 +550,21 @@ export default function BeverageDetailScreen() {
 
           {renderCategoryDetails()}
 
+          {/* Owner only. A guest is reading a menu, not editing one. */}
+          {isRestaurantAccount && restaurant?.id && (
+            <View style={styles.photoSection}>
+              <MediaPicker
+                label="Photo"
+                hint="Shown on this drink's card and at the top of its page."
+                value={(beverage as any).imageUrl || null}
+                onChange={handlePhotoChange}
+                aspect={[4, 3]}
+                wide
+                upload={(uri) => uploadBeveragePhoto(restaurant.id, id, uri)}
+              />
+            </View>
+          )}
+
           <View style={styles.actionsSection}>
             <TouchableOpacity
               style={[styles.actionButton, isInStock && styles.actionButtonActive]}
@@ -584,6 +633,14 @@ const styles = StyleSheet.create({
   tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: { backgroundColor: Colors.primary + '15', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   tagText: { fontSize: 14, fontWeight: '500' as const, color: Colors.primary },
+  photoSection: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 16,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+  },
   actionsSection: { paddingHorizontal: 20, gap: 12 },
   actionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.primary },
   actionButtonActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },

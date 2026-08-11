@@ -81,8 +81,11 @@ export default function AgeVerificationModal({ onConfirm, onDeny }: AgeVerificat
     );
   };
 
-  if (!visible) return null;
-
+  // Deliberately NOT `if (!visible) return null`. Unmounting a React Native
+  // Modal in the same commit that dismisses it can leave the native container
+  // attached, and that container keeps swallowing touches after the card has
+  // gone. Always render the Modal and let its own `visible` prop drive the
+  // presentation, which is what it is for.
   return (
     <Modal
       visible={visible}

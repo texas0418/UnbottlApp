@@ -14,6 +14,7 @@ import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
 import { WineType, FlavorProfile } from '@/types';
 import { CustomerPreferences, useRecommendations } from '@/contexts/RecommendationsContext';
+import FlavorLevelSlider from '@/components/FlavorLevelSlider';
 
 const WINE_TYPES: { type: WineType; label: string; color: string }[] = [
   { type: 'red', label: 'Red', color: '#722F37' },
@@ -122,34 +123,23 @@ export default function PreferencesSetup({
   }, [selectedTypes, priceRange, flavorProfile, avoidHighTannins, selectedOccasions, savePreferences, onClose]);
 
   const renderFlavorSlider = (
-    label: string, 
-    value: number, 
+    label: string,
+    value: number,
     key: keyof FlavorProfile,
     leftLabel: string,
-    rightLabel: string
+    rightLabel: string,
   ) => (
-    <View style={styles.sliderContainer}>
-      <Text style={styles.sliderLabel}>{label}</Text>
-      <View style={styles.sliderTrack}>
-        {[1, 2, 3, 4, 5].map(n => (
-          <TouchableOpacity
-            key={n}
-            style={[
-              styles.sliderDot,
-              value >= n && styles.sliderDotActive,
-            ]}
-            onPress={() => {
-              triggerHaptic();
-              setFlavorProfile(prev => ({ ...prev, [key]: n }));
-            }}
-          />
-        ))}
-      </View>
-      <View style={styles.sliderLabels}>
-        <Text style={styles.sliderMinMax}>{leftLabel}</Text>
-        <Text style={styles.sliderMinMax}>{rightLabel}</Text>
-      </View>
-    </View>
+    <FlavorLevelSlider
+      key={key}
+      label={label}
+      value={value}
+      leftLabel={leftLabel}
+      rightLabel={rightLabel}
+      onChange={(n) => {
+        triggerHaptic();
+        setFlavorProfile((prev) => ({ ...prev, [key]: n }));
+      }}
+    />
   );
 
   const renderStep = () => {
@@ -297,7 +287,13 @@ export default function PreferencesSetup({
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close preferences"
+          >
             <X size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Your Preferences</Text>
@@ -508,44 +504,6 @@ const styles = StyleSheet.create({
   slidersContainer: {
     gap: 24,
     marginBottom: 24,
-  },
-  sliderContainer: {
-    gap: 8,
-  },
-  sliderLabel: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  sliderTrack: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: 32,
-    backgroundColor: Colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 8,
-  },
-  sliderDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 2,
-    borderColor: Colors.border,
-  },
-  sliderDotActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  sliderLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  sliderMinMax: {
-    fontSize: 12,
-    color: Colors.textSecondary,
   },
   toggleOption: {
     flexDirection: 'row',
