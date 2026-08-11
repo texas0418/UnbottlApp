@@ -313,8 +313,14 @@ export default function DiscoverScreen() {
             <Sparkles size={22} color={Colors.secondary} />
           </View>
           <View style={styles.setupTextWrap}>
-            <Text style={styles.setupTitle}>Get personalized picks</Text>
-            <Text style={styles.setupSubtitle}>Tell us your taste and we&apos;ll suggest drinks you&apos;ll love</Text>
+            <Text style={styles.setupTitle}>Build your taste profile</Text>
+            {/* Says when the payoff arrives. Recommendations are scored against
+                the scanned venue's list, so answering these before scanning
+                produces nothing on screen — worth being straight about rather
+                than implying picks appear immediately. */}
+            <Text style={styles.setupSubtitle}>
+              Four quick questions, and we&apos;ll have picks ready the moment you scan a menu
+            </Text>
           </View>
           <ArrowRight size={18} color={Colors.primary} />
         </TouchableOpacity>
@@ -515,10 +521,15 @@ export default function DiscoverScreen() {
         ListHeaderComponent={renderHeader()}
         ListEmptyComponent={
           allItems.length === 0 ? (
+            // Not an error state. Nobody who scanned a code ever reaches this —
+            // they land straight on customer-menu. This is what someone sees
+            // who opened the app without a venue, so it explains what Unbottl
+            // is for rather than reporting an absence. "No drinks yet" read
+            // like something had failed.
             <EmptyState
               icon={QrCode}
-              title="No drinks yet"
-              description="Scan a restaurant's Unbottl QR code to browse its menu, save drinks you love, and build your taste profile."
+              title="Scan to see a menu"
+              description="Unbottl shows you the drinks list of the place you are sitting in. Scan the code on your table to see what they pour, by the glass and by the bottle."
               actionLabel="Scan a menu"
               onAction={() => router.push('/scan-menu')}
             />
