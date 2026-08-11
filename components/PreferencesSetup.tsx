@@ -14,6 +14,7 @@ import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
 import { WineType, FlavorProfile } from '@/types';
 import { CustomerPreferences, useRecommendations } from '@/contexts/RecommendationsContext';
+import FlavorLevelSlider from '@/components/FlavorLevelSlider';
 
 const WINE_TYPES: { type: WineType; label: string; color: string }[] = [
   { type: 'red', label: 'Red', color: '#722F37' },
@@ -122,45 +123,23 @@ export default function PreferencesSetup({
   }, [selectedTypes, priceRange, flavorProfile, avoidHighTannins, selectedOccasions, savePreferences, onClose]);
 
   const renderFlavorSlider = (
-    label: string, 
-    value: number, 
+    label: string,
+    value: number,
     key: keyof FlavorProfile,
     leftLabel: string,
-    rightLabel: string
+    rightLabel: string,
   ) => (
-    <View style={styles.sliderContainer}>
-      <Text style={styles.sliderLabel}>{label}</Text>
-      <View style={styles.sliderTrack}>
-        {[1, 2, 3, 4, 5].map(n => (
-          <TouchableOpacity
-            key={n}
-            style={[
-              styles.sliderDot,
-              value >= n && styles.sliderDotActive,
-            ]}
-            onPress={() => {
-              triggerHaptic();
-              setFlavorProfile(prev => ({ ...prev, [key]: n }));
-            }}
-            // The dot is 24pt inside a 32pt track. Apple's minimum touch target
-            // is 44, so roughly half of every near-miss landed on the track
-            // instead of the dot and nothing happened — the "dots don't always
-            // turn on or off on first touch" report. The dots are laid out
-            // space-between across the sheet, so the widened regions have room
-            // and do not overlap each other.
-            hitSlop={{ top: 10, bottom: 10, left: 14, right: 14 }}
-            accessibilityRole="adjustable"
-            accessibilityLabel={`${label}, ${leftLabel} to ${rightLabel}`}
-            accessibilityValue={{ min: 1, max: 5, now: value }}
-            accessibilityHint={`Sets ${label.toLowerCase()} to ${n} of 5`}
-          />
-        ))}
-      </View>
-      <View style={styles.sliderLabels}>
-        <Text style={styles.sliderMinMax}>{leftLabel}</Text>
-        <Text style={styles.sliderMinMax}>{rightLabel}</Text>
-      </View>
-    </View>
+    <FlavorLevelSlider
+      key={key}
+      label={label}
+      value={value}
+      leftLabel={leftLabel}
+      rightLabel={rightLabel}
+      onChange={(n) => {
+        triggerHaptic();
+        setFlavorProfile((prev) => ({ ...prev, [key]: n }));
+      }}
+    />
   );
 
   const renderStep = () => {
@@ -308,7 +287,13 @@ export default function PreferencesSetup({
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close preferences"
+          >
             <X size={24} color={Colors.textSecondary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Your Preferences</Text>
@@ -519,44 +504,6 @@ const styles = StyleSheet.create({
   slidersContainer: {
     gap: 24,
     marginBottom: 24,
-  },
-  sliderContainer: {
-    gap: 8,
-  },
-  sliderLabel: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  sliderTrack: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: 32,
-    backgroundColor: Colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 8,
-  },
-  sliderDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    borderWidth: 2,
-    borderColor: Colors.border,
-  },
-  sliderDotActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  sliderLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  sliderMinMax: {
-    fontSize: 12,
-    color: Colors.textSecondary,
   },
   toggleOption: {
     flexDirection: 'row',

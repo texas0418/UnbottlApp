@@ -262,8 +262,16 @@ export default function DiscoverScreen() {
           </View>
           <Text style={styles.forYouTitle}>For You</Text>
         </View>
-        <TouchableOpacity style={styles.prefsButton} onPress={() => setShowPreferences(true)}>
+        <TouchableOpacity
+          style={styles.prefsButton}
+          onPress={() => setShowPreferences(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Taste preferences"
+          accessibilityHint="Opens the questions that tailor your recommendations"
+        >
           <Settings2 size={18} color={Colors.primary} />
+          <Text style={styles.prefsButtonLabel}>Preferences</Text>
         </TouchableOpacity>
       </View>
 
@@ -305,8 +313,14 @@ export default function DiscoverScreen() {
             <Sparkles size={22} color={Colors.secondary} />
           </View>
           <View style={styles.setupTextWrap}>
-            <Text style={styles.setupTitle}>Get personalized picks</Text>
-            <Text style={styles.setupSubtitle}>Tell us your taste and we&apos;ll suggest drinks you&apos;ll love</Text>
+            <Text style={styles.setupTitle}>Build your taste profile</Text>
+            {/* Says when the payoff arrives. Recommendations are scored against
+                the scanned venue's list, so answering these before scanning
+                produces nothing on screen — worth being straight about rather
+                than implying picks appear immediately. */}
+            <Text style={styles.setupSubtitle}>
+              Four quick questions, and we&apos;ll have picks ready the moment you scan a menu
+            </Text>
           </View>
           <ArrowRight size={18} color={Colors.primary} />
         </TouchableOpacity>
@@ -350,6 +364,16 @@ export default function DiscoverScreen() {
             ))}
           </ScrollView>
         </>
+      )}
+
+      {allItems.length === 0 && (
+        <EmptyState
+          icon={QrCode}
+          title="Scan to see a menu"
+          description="Unbottl shows you the drinks list of the place you are sitting in. Scan the code on your table to see what they pour, by the glass and by the bottle."
+          actionLabel="Scan a menu"
+          onAction={() => router.push('/scan-menu')}
+        />
       )}
 
       {/* Browse — hidden when the catalog is empty so the first-run
@@ -487,26 +511,28 @@ export default function DiscoverScreen() {
     );
   };
 
+  // No AgeVerificationModal here. It is mounted once in (tabs)/_layout.tsx,
+  // which is correctly gated and wired to confirmAge/denyAge. A second copy
+  // lived on this screen and self-managed its own visibility from AsyncStorage,
+  // so on a fresh install BOTH presented. iOS presents one modal per view
+  // controller, so the loser stayed mounted as an invisible view that swallowed
+  // every touch — the dead first launch.
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <AgeVerificationModal />
       <FlatList
         data={gridData}
         keyExtractor={(item) =>
           isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
         }
         renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
+        // Element, not the function — see catalog/index.tsx. A function
+        // identity changes each render and remounts the header, killing search
+        // focus on every keystroke.
+        ListHeaderComponent={renderHeader()}
         ListEmptyComponent={
-          allItems.length === 0 ? (
-            <EmptyState
-              icon={QrCode}
-              title="No drinks yet"
-              description="Scan a restaurant's Unbottl QR code to browse its menu, save drinks you love, and build your taste profile."
-              actionLabel="Scan a menu"
-              onAction={() => router.push('/scan-menu')}
-            />
-          ) : (
+          // With no venue the header already carries the scan prompt and the
+          // glossary, so there is nothing to add down here.
+          allItems.length === 0 ? null : (
             <EmptyState
               icon={Filter}
               title="No drinks found"
@@ -591,13 +617,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   forYouTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.text },
+  // Was a bare 36pt icon square. Going to 44 met Apple's minimum and still read
+  // as tiny on an 11-inch screen — a lone glyph in a lot of white space, with
+  // nothing saying what it does. A labelled pill is both a bigger target and a
+  // legible one; there is no shortage of width up here.
   prefsButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: 'rgba(114, 47, 55, 0.08)',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    backgroundColor: 'rgba(114, 47, 55, 0.08)',
+  },
+  prefsButtonLabel: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
   forYouList: { paddingHorizontal: 20, gap: 14, paddingRight: 20 },
   recCard: {

@@ -29,7 +29,8 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
 import { useAppMode } from '@/hooks/useAppMode';
-import { useWines } from '@/contexts/WineContext';
+import { useBeverages } from '@/contexts/BeverageContext';
+import GlossaryText from '@/components/GlossaryText';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
@@ -41,12 +42,17 @@ export default function WineDetailScreen() {
   const { isRestaurantAccount } = useAppMode();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getWineById, deleteWine, toggleStock } = useWines();
+  // Read the venue's catalogue, not WineContext. WineContext queries the
+  // `wines` table, which schema.sql marks LEGACY and device-scoped — nothing
+  // writes to it, so it is empty and every wine resolved to undefined, which is
+  // why tapping a wine showed "Wine not found" while beers, spirits and
+  // cocktails (which route through beverage/[category]/[id]) opened fine.
+  const { wines, deleteWine, updateWine } = useBeverages();
   const { isInWishlist, addToWishlist, removeByBeverageId, isAdding } = useWishlist();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { restaurant } = useRestaurant();
 
-  const wine = getWineById(id || '');
+  const wine = wines.find((w) => w.id === id);
   const isWishlisted = wine ? isInWishlist(wine.id) : false;
   const isFav = wine ? isFavorite(wine.id) : false;
 
@@ -93,7 +99,9 @@ export default function WineDetailScreen() {
   };
 
   const handleToggleStock = async () => {
-    await toggleStock(wine.id);
+    // BeverageContext has no toggleStock helper; flipping in_stock through the
+    // normal update path keeps this on the same table as everything else.
+    await updateWine({ id: wine.id, updates: { inStock: !wine.inStock } });
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
@@ -229,7 +237,9 @@ export default function WineDetailScreen() {
                     <item.icon size={18} color={Colors.primary} />
                   </View>
                   <Text style={styles.detailLabel}>{item.label}</Text>
-                  <Text style={styles.detailValue}>{item.value}</Text>
+                  {/* Grape names are the line people most often do not
+                      recognise, and until now they were dead text. */}
+                  <GlossaryText style={styles.detailValue} text={item.value} />
                 </View>
                 {index < detailItems.length - 1 && <View style={styles.detailDivider} />}
               </View>
@@ -240,7 +250,7 @@ export default function WineDetailScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Tasting Notes</Text>
               <View style={styles.notesCard}>
-                <Text style={styles.notesText}>{wine.tastingNotes}</Text>
+                <GlossaryText style={styles.notesText} text={wine.tastingNotes} />
               </View>
             </View>
           )}
