@@ -30,6 +30,7 @@ import { Platform } from 'react-native';
 import Colors from '@/constants/colors';
 import { useAppMode } from '@/hooks/useAppMode';
 import { useBeverages } from '@/contexts/BeverageContext';
+import GlossaryText from '@/components/GlossaryText';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
@@ -236,7 +237,9 @@ export default function WineDetailScreen() {
                     <item.icon size={18} color={Colors.primary} />
                   </View>
                   <Text style={styles.detailLabel}>{item.label}</Text>
-                  <Text style={styles.detailValue}>{item.value}</Text>
+                  {/* Grape names are the line people most often do not
+                      recognise, and until now they were dead text. */}
+                  <GlossaryText style={styles.detailValue} text={item.value} />
                 </View>
                 {index < detailItems.length - 1 && <View style={styles.detailDivider} />}
               </View>
@@ -247,7 +250,7 @@ export default function WineDetailScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Tasting Notes</Text>
               <View style={styles.notesCard}>
-                <Text style={styles.notesText}>{wine.tastingNotes}</Text>
+                <GlossaryText style={styles.notesText} text={wine.tastingNotes} />
               </View>
             </View>
           )}
