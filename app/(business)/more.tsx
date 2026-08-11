@@ -32,7 +32,6 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
-import { useAppMode } from '@/hooks/useAppMode';
 import BusinessAuthPrompt from '@/components/BusinessAuthPrompt';
 
 const PRIVACY_POLICY_URL = 'https://unbottl.com/privacy-policy.html';
@@ -42,7 +41,6 @@ export default function BusinessMoreScreen() {
   const router = useRouter();
   const { isAuthenticated, user, userType, logout, deleteAccount } = useAuth();
   const { restaurant } = useRestaurant();
-  const { setMode } = useAppMode();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const go = (route: string) => {
@@ -59,17 +57,28 @@ export default function BusinessMoreScreen() {
     }
   };
 
-  const handleSwitchToGuest = () => {
-    Alert.alert('Switch to guest mode', 'Browse Unbottl as a drink lover instead of managing a restaurant?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Switch',
-        onPress: async () => {
-          await setMode('consumer');
-          router.replace('/(tabs)/(home)');
-        },
-      },
-    ]);
+  /**
+   * Show the owner exactly what a guest sees when they scan the QR code.
+   *
+   * This used to flip app mode to 'consumer' and drop into the Discover tab —
+   * but the session was still the owner's, so the "guest" experience was
+   * scoped to their own venue and showed their own catalogue. It looked like
+   * the mode switch had done nothing.
+   *
+   * Passing `?r=<restaurant id>` sends customer-menu down its public branch,
+   * which reads the anonymous public_menu_* views. That is the same code path
+   * and the same data a scanning guest gets, so it is a real preview rather
+   * than the owner's own data wearing a guest costume.
+   */
+  const handlePreviewGuestMenu = () => {
+    if (!restaurant) {
+      Alert.alert(
+        'No menu yet',
+        'Set your restaurant up first, then you can preview what a guest sees.',
+      );
+      return;
+    }
+    router.push({ pathname: '/customer-menu', params: { r: restaurant.id } });
   };
 
   const handleLogout = () => {
@@ -177,14 +186,14 @@ export default function BusinessMoreScreen() {
           ))}
         </View>
 
-        {/* Switch mode */}
-        <TouchableOpacity style={styles.switchCard} onPress={handleSwitchToGuest}>
+        {/* Preview the public menu */}
+        <TouchableOpacity style={styles.switchCard} onPress={handlePreviewGuestMenu}>
           <View style={[styles.itemIcon, { backgroundColor: Colors.secondary + '20' }]}>
             <Compass size={18} color={Colors.secondary} />
           </View>
           <View style={styles.itemContent}>
-            <Text style={styles.itemLabel}>Switch to Guest Mode</Text>
-            <Text style={styles.itemDesc}>Browse and save drinks as a guest</Text>
+            <Text style={styles.itemLabel}>Preview guest menu</Text>
+            <Text style={styles.itemDesc}>See exactly what a guest sees when they scan</Text>
           </View>
           <ChevronRight size={18} color={Colors.textMuted} />
         </TouchableOpacity>

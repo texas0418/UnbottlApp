@@ -57,7 +57,7 @@ export default function SettingsScreen() {
   const { user, isAuthenticated, logout, userType, deleteAccount } = useAuth();
   const { wishlistCount } = useWishlist();
   const { unreadCount } = useNotifications();
-  const { setMode } = useAppMode();
+  const { setMode, isRestaurantAccount } = useAppMode();
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handleSwitchToRestaurant = () => {
@@ -256,20 +256,10 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
-            <View style={styles.switchModeIcon}>
-              <Building2 size={22} color={Colors.primary} />
-            </View>
-            <View style={styles.switchModeContent}>
-              <Text style={styles.switchModeTitle}>Switch to Restaurant</Text>
-              <Text style={styles.switchModeDesc}>
-                Manage inventory, QR menus & analytics
-              </Text>
-            </View>
-            <ChevronRight size={20} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
+        {/* No "Switch to Restaurant" for a signed-out guest. It used to be
+            offered to everyone, so tapping it dropped you into a dashboard for
+            an account that owns no venue. Venues arrive through sign-up, not
+            through a mode toggle. */}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Support</Text>
@@ -392,20 +382,27 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
-          <View style={styles.switchModeIcon}>
-            <Building2 size={22} color={Colors.primary} />
-          </View>
-          <View style={styles.switchModeContent}>
-            <Text style={styles.switchModeTitle}>Switch to Restaurant</Text>
-            <Text style={styles.switchModeDesc}>
-              Manage inventory, QR menus & analytics
-            </Text>
-          </View>
-          <ChevronRight size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
+      {/* Only an account that actually owns a venue is offered the restaurant
+          side, and for them this is the way back after previewing the guest
+          view — not a mode a drink lover can wander into. Previously it showed
+          to everyone, so a consumer account landed on a dashboard with no
+          restaurant behind it. */}
+      {isRestaurantAccount && (
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.switchModeCard} onPress={handleSwitchToRestaurant}>
+            <View style={styles.switchModeIcon}>
+              <Building2 size={22} color={Colors.primary} />
+            </View>
+            <View style={styles.switchModeContent}>
+              <Text style={styles.switchModeTitle}>Back to my restaurant</Text>
+              <Text style={styles.switchModeDesc}>
+                Manage inventory, QR menus & analytics
+              </Text>
+            </View>
+            <ChevronRight size={20} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Support</Text>
