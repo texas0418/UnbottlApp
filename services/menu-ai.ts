@@ -83,9 +83,17 @@ export async function analyzeMenuImage(
   } else if (googleAIKey) {
     return analyzeWithGemini(base64Data || '', googleAIKey);
   } else {
-    // Use mock implementation for development/demo
-    console.log('No AI API key found, using mock implementation');
-    return mockAnalyzeMenu(imageUri);
+    // No key. The mock returns a hardcoded list of drinks that were never on
+    // the menu, after a two-second pause that makes it look like real work —
+    // so a venue importing their list would be handed invented beverages and
+    // could save them. Only ever acceptable in development.
+    if (__DEV__) {
+      console.log('No AI API key found, using mock implementation');
+      return mockAnalyzeMenu(imageUri);
+    }
+    throw new Error(
+      'Menu import is not available here yet. You can add drinks by hand, or import a CSV.',
+    );
   }
 }
 
