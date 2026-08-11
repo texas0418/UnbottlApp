@@ -270,7 +270,8 @@ export default function DiscoverScreen() {
           accessibilityLabel="Taste preferences"
           accessibilityHint="Opens the questions that tailor your recommendations"
         >
-          <Settings2 size={20} color={Colors.primary} />
+          <Settings2 size={18} color={Colors.primary} />
+          <Text style={styles.prefsButtonLabel}>Preferences</Text>
         </TouchableOpacity>
       </View>
 
@@ -606,15 +607,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   forYouTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.text },
+  // Was a bare 36pt icon square. Going to 44 met Apple's minimum and still read
+  // as tiny on an 11-inch screen — a lone glyph in a lot of white space, with
+  // nothing saying what it does. A labelled pill is both a bigger target and a
+  // legible one; there is no shortage of width up here.
   prefsButton: {
-    // Was 36. Apple's minimum touch target is 44, and this is an icon-only
-    // control with no label to aim at, so it read as fiddly.
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: 'rgba(114, 47, 55, 0.08)',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    backgroundColor: 'rgba(114, 47, 55, 0.08)',
+  },
+  prefsButtonLabel: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
   forYouList: { paddingHorizontal: 20, gap: 14, paddingRight: 20 },
   recCard: {
