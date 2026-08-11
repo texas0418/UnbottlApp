@@ -4,40 +4,61 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { ImagePlus, Trash2 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { uploadVenueLogo } from '@/services/venueMedia';
+import { UploadResult } from '@/services/venueMedia';
 
-interface VenueLogoPickerProps {
-  /** Null before the venue is saved — uploads need an id to key the path on. */
-  restaurantId: string | null;
-  /** Current logo URL, if any. */
+export interface MediaPickerProps {
+  label: string;
+  hint: string;
+  /** Current image URL, if any. */
   value: string | null;
   onChange: (url: string | null) => void;
+  /**
+   * Runs the upload. Null disables the control — used when the thing being
+   * illustrated has no id yet, because the storage path is keyed on that id.
+   */
+  upload: ((uri: string) => Promise<UploadResult>) | null;
+  /** Shown when `upload` is null, so the reason is stated rather than implied. */
+  disabledReason?: { title: string; message: string };
+  /** Crop ratio. Square for a logo, wide for a cover. */
+  aspect?: [number, number];
+  /** Preview shape. A wide preview for a cover would be misleading as a square. */
+  wide?: boolean;
 }
 
 /**
- * Pick, resize and upload a venue's logo.
+ * Pick, resize and upload one image.
  *
- * The guest menu has been able to show a logo since the branding migration.
- * Nothing in the app could put one there, so every venue rendered with the
- * Unbottl default — the exact thing venue branding was meant to stop.
+ * Every picture a venue can supply — logo, cover, a drink's photo — goes
+ * through here, so permission handling, the resize, the busy state and the
+ * failure message are written once. They were not, before: the guest menu could
+ * display all three and the app offered no way to provide any of them.
  */
-export default function VenueLogoPicker({ restaurantId, value, onChange }: VenueLogoPickerProps) {
+export default function MediaPicker({
+  label,
+  hint,
+  value,
+  onChange,
+  upload,
+  disabledReason,
+  aspect = [1, 1],
+  wide = false,
+}: MediaPickerProps) {
   const [busy, setBusy] = useState(false);
 
   const pick = async () => {
-    if (!restaurantId) {
-      Alert.alert('Save your venue first', 'Add your restaurant, then you can upload a logo.');
+    if (!upload) {
+      if (disabledReason) Alert.alert(disabledReason.title, disabledReason.message);
       return;
     }
 
-    // Asking only when the button is pressed. A permission sheet on screen
-    // load, before anyone has said they want to upload anything, is the kind
-    // of thing people deny out of reflex.
+    // Asked on press, not on screen load. A permission sheet that appears
+    // before anyone has said they want to upload anything gets denied by
+    // reflex, and a denial is far harder to undo than a prompt.
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert(
         'Photo access needed',
-        'Unbottl needs access to your photos to upload a logo. You can turn it on in Settings.',
+        `Unbottl needs access to your photos to upload ${label.toLowerCase()}. You can turn it on in Settings.`,
       );
       return;
     }
@@ -45,18 +66,18 @@ export default function VenueLogoPicker({ restaurantId, value, onChange }: Venue
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1, // Compression happens after the resize, not twice.
+      aspect,
+      quality: 1, // Compression happens once, after the resize, in the service.
     });
     if (picked.canceled || !picked.assets?.[0]) return;
 
     setBusy(true);
     try {
-      const { url } = await uploadVenueLogo(restaurantId, picked.assets[0].uri);
+      const { url } = await upload(picked.assets[0].uri);
       onChange(url);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Please try again.';
-      Alert.alert('Could not upload the logo', message);
+      Alert.alert(`Could not upload ${label.toLowerCase()}`, message);
     } finally {
       setBusy(false);
     }
@@ -64,31 +85,31 @@ export default function VenueLogoPicker({ restaurantId, value, onChange }: Venue
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>Logo</Text>
-      <Text style={styles.hint}>
-        Shown at the top of your guest menu. A square image works best.
-      </Text>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.hint}>{hint}</Text>
 
       <View style={styles.row}>
         <TouchableOpacity
-          style={styles.preview}
+          style={[styles.preview, wide && styles.previewWide, !upload && styles.previewDisabled]}
           onPress={pick}
           disabled={busy}
           accessibilityRole="button"
-          accessibilityLabel={value ? 'Replace logo' : 'Upload a logo'}
+          accessibilityLabel={value ? `Replace ${label}` : `Upload ${label}`}
         >
           {busy ? (
             <ActivityIndicator color={Colors.primary} />
           ) : value ? (
             <Image source={{ uri: value }} style={styles.previewImage} contentFit="cover" />
           ) : (
-            <ImagePlus size={26} color={Colors.primary} />
+            <ImagePlus size={26} color={upload ? Colors.primary : Colors.textMuted} />
           )}
         </TouchableOpacity>
 
         <View style={styles.actions}>
           <TouchableOpacity onPress={pick} disabled={busy} style={styles.action}>
-            <Text style={styles.actionText}>{value ? 'Replace' : 'Upload a logo'}</Text>
+            <Text style={[styles.actionText, !upload && styles.actionDisabled]}>
+              {value ? 'Replace' : `Upload ${label.toLowerCase()}`}
+            </Text>
           </TouchableOpacity>
           {value && !busy && (
             <TouchableOpacity
@@ -96,7 +117,7 @@ export default function VenueLogoPicker({ restaurantId, value, onChange }: Venue
               style={styles.action}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityRole="button"
-              accessibilityLabel="Remove logo"
+              accessibilityLabel={`Remove ${label}`}
             >
               <View style={styles.removeRow}>
                 <Trash2 size={14} color={Colors.error} />
@@ -127,10 +148,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
+  previewWide: { width: 148 },
+  previewDisabled: { opacity: 0.5 },
   previewImage: { width: '100%', height: '100%' },
-  actions: { gap: 10 },
+  actions: { gap: 10, flex: 1 },
   action: { minHeight: 44, justifyContent: 'center' },
   actionText: { fontSize: 15, fontWeight: '600' as const, color: Colors.primary },
+  actionDisabled: { color: Colors.textMuted },
   removeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   removeText: { fontSize: 14, color: Colors.error },
 });
