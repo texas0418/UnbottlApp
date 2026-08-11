@@ -43,6 +43,7 @@ import SearchBar from '@/components/SearchBar';
 import PreferencesSetup from '@/components/PreferencesSetup';
 import AgeVerificationModal from '@/components/AgeVerificationModal';
 import EmptyState from '@/components/EmptyState';
+import GlossaryBrowser from '@/components/GlossaryBrowser';
 import { categoryColors } from '@/mocks/beverages';
 
 const categoryTabs: { label: string; value: BeverageCategory | 'all'; icon: React.ReactNode }[] = [
@@ -366,6 +367,28 @@ export default function DiscoverScreen() {
         </>
       )}
 
+      {/* With no venue scanned there are no drinks to show — that is by design,
+          since Unbottl shows one venue's list rather than a global catalogue.
+          But an app that opens on an empty screen looks broken, and App Store
+          review sees exactly this view with no code to scan. The glossary is
+          real content, needs no venue and no network, and is the same set that
+          makes menu terms tappable, so it cannot drift out of step. */}
+      {allItems.length === 0 && (
+        <>
+          {/* Scanning is the primary action, so it leads. It used to render as
+              the list's empty component, which put it below everything in the
+              header — the one thing we want tapped, last on the page. */}
+          <EmptyState
+            icon={QrCode}
+            title="Scan to see a menu"
+            description="Unbottl shows you the drinks list of the place you are sitting in. Scan the code on your table to see what they pour, by the glass and by the bottle."
+            actionLabel="Scan a menu"
+            onAction={() => router.push('/scan-menu')}
+          />
+          <GlossaryBrowser />
+        </>
+      )}
+
       {/* Browse — hidden when the catalog is empty so the first-run
           "Scan a menu" empty state sits up front instead of below a wall
           of filters that have nothing to filter. */}
@@ -520,20 +543,9 @@ export default function DiscoverScreen() {
         // focus on every keystroke.
         ListHeaderComponent={renderHeader()}
         ListEmptyComponent={
-          allItems.length === 0 ? (
-            // Not an error state. Nobody who scanned a code ever reaches this —
-            // they land straight on customer-menu. This is what someone sees
-            // who opened the app without a venue, so it explains what Unbottl
-            // is for rather than reporting an absence. "No drinks yet" read
-            // like something had failed.
-            <EmptyState
-              icon={QrCode}
-              title="Scan to see a menu"
-              description="Unbottl shows you the drinks list of the place you are sitting in. Scan the code on your table to see what they pour, by the glass and by the bottle."
-              actionLabel="Scan a menu"
-              onAction={() => router.push('/scan-menu')}
-            />
-          ) : (
+          // With no venue the header already carries the scan prompt and the
+          // glossary, so there is nothing to add down here.
+          allItems.length === 0 ? null : (
             <EmptyState
               icon={Filter}
               title="No drinks found"

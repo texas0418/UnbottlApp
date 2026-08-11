@@ -1,12 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextStyle, View } from 'react-native';
+import { StyleSheet, Text, TextStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
-import { X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
-import { fontFamily } from '@/constants/theme';
 import { GlossaryEntry } from '@/constants/glossary';
 import { segmentByGlossary } from '@/utils/glossaryMatch';
+import GlossaryDefinition from '@/components/GlossaryDefinition';
 
 interface GlossaryTextProps {
   /** Whatever the venue typed — "Cabernet Sauvignon, Merlot". */
@@ -60,34 +59,7 @@ export default function GlossaryText({ text, style, numberOfLines }: GlossaryTex
         )}
       </Text>
 
-      <Modal
-        visible={open !== null}
-        animationType="fade"
-        transparent
-        statusBarTranslucent
-        onRequestClose={() => setOpen(null)}
-      >
-        <Pressable style={styles.overlay} onPress={() => setOpen(null)}>
-          {/* Stops a tap inside the card closing it. */}
-          <Pressable style={styles.card} onPress={() => {}}>
-            <View style={styles.cardHeader}>
-              <View style={styles.cardHeaderText}>
-                <Text style={styles.cardTerm}>{open?.term}</Text>
-                <Text style={styles.cardCategory}>{open?.category}</Text>
-              </View>
-              <Pressable
-                onPress={() => setOpen(null)}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Close definition"
-              >
-                <X size={22} color={Colors.textSecondary} />
-              </Pressable>
-            </View>
-            <Text style={styles.cardDefinition}>{open?.definition}</Text>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <GlossaryDefinition entry={open} onClose={() => setOpen(null)} />
     </>
   );
 }
@@ -99,46 +71,5 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textDecorationLine: 'underline',
     textDecorationStyle: 'dotted',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: Colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    gap: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  cardHeaderText: {
-    flex: 1,
-    gap: 2,
-  },
-  cardTerm: {
-    fontFamily: fontFamily.displaySemibold,
-    fontSize: 24,
-    color: Colors.text,
-  },
-  cardCategory: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    color: Colors.textMuted,
-  },
-  cardDefinition: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: Colors.textSecondary,
   },
 });
