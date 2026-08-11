@@ -3,7 +3,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Wine, WineType, FlavorProfile } from '@/types';
-import { useWines } from './WineContext';
+import { useBeverages } from './BeverageContext';
 import { useFavorites } from './FavoritesContext';
 import { useJournal } from './JournalContext';
 
@@ -38,7 +38,16 @@ interface RecommendedWine extends Wine {
 
 export const [RecommendationsProvider, useRecommendations] = createContextHook(() => {
   const queryClient = useQueryClient();
-  const { wines, inStockWines } = useWines();
+  // Read the venue's catalogue, not WineContext. WineContext queries the
+  // `wines` table, which schema.sql marks LEGACY and device-scoped: nothing in
+  // the app writes to it, so it is empty in practice. Every drink the venue
+  // actually has lives in `beverages`, which is what every other screen reads.
+  // Sourcing recommendations from the empty table meant `topPicks` was always
+  // [], `hasRecommendations` was always false, and Discover re-rendered the
+  // "Get personalized picks" card after a guest had just filled it in — the
+  // "Get Recommendations does nothing" report.
+  const { wines } = useBeverages();
+  const inStockWines = useMemo(() => wines.filter((w) => w.inStock), [wines]);
   const { favoriteIds, isFavorite } = useFavorites();
   const { entries } = useJournal();
   const [preferences, setPreferences] = useState<CustomerPreferences>(defaultPreferences);

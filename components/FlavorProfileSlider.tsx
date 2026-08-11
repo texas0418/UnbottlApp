@@ -107,23 +107,39 @@ function RangeSlider({
   const leftPanResponder = useRef(createPanResponder(true)).current;
   const rightPanResponder = useRef(createPanResponder(false)).current;
 
+  /**
+   * Move a thumb to the tapped dot.
+   *
+   * The previous version fell through to a bare `return` whenever the tap
+   * landed on an existing endpoint or the two thumbs were equidistant, so a
+   * tap on the first or last lit dot did nothing at all. Deciding by position
+   * rather than by distance leaves no silent case:
+   *
+   *   outside the range  → the near end extends to meet the tap
+   *   inside the range   → the nearer end contracts to the tap
+   *   already an endpoint→ nothing to do, and nothing is expected
+   */
   const handleDotPress = (dotValue: number) => {
+    const [low, high] = localValue;
+    if (dotValue === low || dotValue === high) return;
+
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    
-    const leftDist = Math.abs(dotValue - localValue[0]);
-    const rightDist = Math.abs(dotValue - localValue[1]);
-    
+
     let newValue: [number, number];
-    if (leftDist <= rightDist && dotValue < localValue[1]) {
-      newValue = [dotValue, localValue[1]];
-    } else if (dotValue > localValue[0]) {
-      newValue = [localValue[0], dotValue];
+    if (dotValue < low) {
+      newValue = [dotValue, high];
+    } else if (dotValue > high) {
+      newValue = [low, dotValue];
     } else {
-      return;
+      // Strictly inside. Ties go to the left thumb, which keeps repeated taps
+      // on the same dot deterministic instead of alternating.
+      newValue = dotValue - low <= high - dotValue
+        ? [dotValue, high]
+        : [low, dotValue];
     }
-    
+
     setLocalValue(newValue);
     leftPos.setValue((newValue[0] - 1) / 4);
     rightPos.setValue((newValue[1] - 1) / 4);
@@ -169,6 +185,14 @@ function RangeSlider({
               ]}
               onPress={() => handleDotPress(dot)}
               activeOpacity={0.7}
+              // The dot is drawn at 12pt but has to be *hit* at 44, Apple's
+              // minimum. Without this the target was a third of that, which is
+              // what made it feel like it ignored the first touch. Dots sit 25%
+              // of the track apart, so the enlarged regions never overlap each
+              // other or the 24pt thumbs.
+              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+              accessibilityRole="button"
+              accessibilityLabel={`Set ${leftLabel} to ${rightLabel} range point ${dot} of 5`}
             />
           );
         })}
