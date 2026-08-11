@@ -142,6 +142,17 @@ export default function PreferencesSetup({
               triggerHaptic();
               setFlavorProfile(prev => ({ ...prev, [key]: n }));
             }}
+            // The dot is 24pt inside a 32pt track. Apple's minimum touch target
+            // is 44, so roughly half of every near-miss landed on the track
+            // instead of the dot and nothing happened — the "dots don't always
+            // turn on or off on first touch" report. The dots are laid out
+            // space-between across the sheet, so the widened regions have room
+            // and do not overlap each other.
+            hitSlop={{ top: 10, bottom: 10, left: 14, right: 14 }}
+            accessibilityRole="adjustable"
+            accessibilityLabel={`${label}, ${leftLabel} to ${rightLabel}`}
+            accessibilityValue={{ min: 1, max: 5, now: value }}
+            accessibilityHint={`Sets ${label.toLowerCase()} to ${n} of 5`}
           />
         ))}
       </View>
