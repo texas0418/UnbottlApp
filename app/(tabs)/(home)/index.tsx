@@ -262,8 +262,15 @@ export default function DiscoverScreen() {
           </View>
           <Text style={styles.forYouTitle}>For You</Text>
         </View>
-        <TouchableOpacity style={styles.prefsButton} onPress={() => setShowPreferences(true)}>
-          <Settings2 size={18} color={Colors.primary} />
+        <TouchableOpacity
+          style={styles.prefsButton}
+          onPress={() => setShowPreferences(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel="Taste preferences"
+          accessibilityHint="Opens the questions that tailor your recommendations"
+        >
+          <Settings2 size={20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -487,16 +494,24 @@ export default function DiscoverScreen() {
     );
   };
 
+  // No AgeVerificationModal here. It is mounted once in (tabs)/_layout.tsx,
+  // which is correctly gated and wired to confirmAge/denyAge. A second copy
+  // lived on this screen and self-managed its own visibility from AsyncStorage,
+  // so on a fresh install BOTH presented. iOS presents one modal per view
+  // controller, so the loser stayed mounted as an invisible view that swallowed
+  // every touch — the dead first launch.
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <AgeVerificationModal />
       <FlatList
         data={gridData}
         keyExtractor={(item) =>
           isGridSpacer(item) ? item.key : `${item.category}-${item.id}`
         }
         renderItem={renderItem}
-        ListHeaderComponent={renderHeader}
+        // Element, not the function — see catalog/index.tsx. A function
+        // identity changes each render and remounts the header, killing search
+        // focus on every keystroke.
+        ListHeaderComponent={renderHeader()}
         ListEmptyComponent={
           allItems.length === 0 ? (
             <EmptyState
@@ -592,8 +607,10 @@ const styles = StyleSheet.create({
   },
   forYouTitle: { fontSize: 18, fontWeight: '700' as const, color: Colors.text },
   prefsButton: {
-    width: 36,
-    height: 36,
+    // Was 36. Apple's minimum touch target is 44, and this is an icon-only
+    // control with no label to aim at, so it read as fiddly.
+    width: 44,
+    height: 44,
     borderRadius: 10,
     backgroundColor: 'rgba(114, 47, 55, 0.08)',
     justifyContent: 'center',
