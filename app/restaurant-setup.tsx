@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Building2, Mail, Phone, MapPin, Plus, Check, ChevronRight, X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import VenueLogoPicker from '@/components/VenueLogoPicker';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRestaurant } from '@/contexts/RestaurantContext';
@@ -49,6 +50,7 @@ export default function RestaurantSetupScreen() {
     phone: '',
     address: '',
     brandColor: '' as string,
+    logoUrl: null as string | null,
   });
 
   // New restaurant form (separate from edit form)
@@ -77,6 +79,7 @@ export default function RestaurantSetupScreen() {
         phone: restaurant.phone || '',
         address: '',
         brandColor: restaurant.brand_color || '',
+        logoUrl: restaurant.logo_url || null,
       });
       setHasPreFilled(true);
     }
@@ -93,11 +96,13 @@ export default function RestaurantSetupScreen() {
         phone: found.phone || '',
         address: '',
         brandColor: found.brand_color || '',
+        logoUrl: found.logo_url || null,
       });
     }
   };
 
-  const handleChange = (field: string, value: string) => {
+  // Nullable because removing a logo clears the column rather than writing "".
+  const handleChange = (field: string, value: string | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -125,6 +130,7 @@ export default function RestaurantSetupScreen() {
           email: formData.email.trim() || null,
           phone: formData.phone.trim() || null,
           brand_color: formData.brandColor || null,
+          logo_url: formData.logoUrl,
         });
 
         if (error) throw error;
@@ -216,6 +222,7 @@ export default function RestaurantSetupScreen() {
         phone: newRestaurantData.phone.trim(),
         address: '',
         brandColor: '',
+        logoUrl: null,
       });
 
       setNewRestaurantData({ name: '', email: '', phone: '', address: '' });
@@ -354,6 +361,16 @@ export default function RestaurantSetupScreen() {
                     placeholder="Address (optional)"
                     placeholderTextColor={Colors.textMuted}
                     autoCapitalize="words"
+                  />
+                </View>
+              )}
+
+              {isEditing && (
+                <View style={styles.brandSection}>
+                  <VenueLogoPicker
+                    restaurantId={restaurant?.id ?? null}
+                    value={formData.logoUrl}
+                    onChange={(url) => handleChange('logoUrl', url)}
                   />
                 </View>
               )}
