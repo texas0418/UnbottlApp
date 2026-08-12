@@ -65,7 +65,7 @@
   .nav a.signin em { font-style: normal; }
 
   /* Hero */
-  .hero { padding-top: 84px; padding-bottom: 56px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+  .hero { padding-top: 84px; padding-bottom: 56px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px; align-items: center; }
   .hero .kicker { color: var(--gold); }
   .hero h1 { margin-top: 18px; font-family: "EB Garamond", Georgia, serif; font-size: clamp(46px, 6.4vw, 84px); line-height: 1.02; font-weight: 550; letter-spacing: -0.015em; }
   .hero h1 em { font-style: italic; color: var(--wine); font-weight: 600; }
@@ -161,7 +161,7 @@
 
   /* Demo panel */
   .demo { padding: 120px 0 110px; }
-  .demo-card { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--wine) 0%, var(--wine-dark) 100%); border-radius: 34px; padding: 84px 48px; color: #fff; box-shadow: 0 30px 70px rgba(64,26,31,.4); display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: center; }
+  .demo-card { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--wine) 0%, var(--wine-dark) 100%); border-radius: 34px; padding: 84px 48px; color: #fff; box-shadow: 0 30px 70px rgba(64,26,31,.4); display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 48px; align-items: center; }
   .demo-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(640px 340px at 12% -10%, rgba(232,180,188,.28), transparent 70%); pointer-events: none; }
   .demo-card .kicker { color: var(--rose); position: relative; }
   .demo-card h2 { font-family: "EB Garamond", Georgia, serif; font-size: clamp(32px, 4.4vw, 52px); font-weight: 550; line-height: 1.1; margin-top: 12px; position: relative; }
@@ -192,8 +192,15 @@
     .brand img { width: 44px; height: 44px; border-radius: 11px; }
     .brand span { font-size: 26px; }
     .nav a.signin { font-size: 17px; }
-    .hero { grid-template-columns: 1fr; padding-top: 52px; gap: 52px; }
-    .hero-visual { justify-self: center; padding-left: 40px; padding-right: 46px; }
+    .hero { grid-template-columns: minmax(0, 1fr); padding-top: 52px; gap: 52px; }
+    .hero h1 { font-size: clamp(35px, 9vw, 84px); }
+    .hero p.lede { font-size: 18.5px; }
+    .hero-visual { justify-self: center; padding-left: 26px; padding-right: 10px; }
+    .phone { width: 252px; }
+    .qr-chip { padding: 13px 13px 10px; }
+    .qr-chip svg { width: 124px; height: 124px; }
+    .note { font-size: 14px; padding: 5px 13px; }
+    .demo-qr svg { width: 158px; height: 158px; }
     .note-1 { right: -10px; }
     .note-3 { right: -14px; }
     .stat-grid { grid-template-columns: 1fr; gap: 40px; }
@@ -201,7 +208,7 @@
     .stats .fine { margin-top: 52px; }
     .step-grid { grid-template-columns: 1fr; gap: 38px; }
     .feat-grid { grid-template-columns: 1fr; gap: 0; }
-    .demo-card { grid-template-columns: 1fr; padding: 56px 30px; }
+    .demo-card { grid-template-columns: minmax(0, 1fr); padding: 56px 26px; }
     footer nav a { margin-left: 0; margin-right: 24px; }
   }
 </style>
