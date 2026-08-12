@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unbottl &#x2014; beverage menus that sell what pours best</title>
+<meta name="description" content="Unbottl turns your drink list into a QR menu guests actually read &#x2014; tasting notes, staff picks, and prices that update instantly. No app, no login. Built for restaurants, hotels, and bars.">
+<meta property="og:title" content="Unbottl &#x2014; beverage menus that sell what pours best">
+<meta property="og:description" content="A QR beverage menu guests actually read. Tasting notes, staff picks, instant updates. No app, no login.">
+<meta property="og:image" content="https://unbottl.com/landing-logo.png">
+<meta property="og:url" content="https://unbottl.com/">
+<link rel="icon" type="image/png" href="/landing-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wine: #722F37;
+    --wine-deep: #5A252C;
+    --wine-dark: #401A1F;
+    --rose: #E8B4BC;
+    --rose-soft: rgba(232,180,188,.38);
+    --gold: #8A6A3B;
+    --cream: #F8F4ED;
+    --paper: #FFFFFF;
+    --ink: #221C19;
+    --ink-soft: #57504B;
+    --ink-mute: #9B948E;
+    --hairline: #E5DDD1;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background:
+      radial-gradient(1200px 560px at 88% -120px, var(--rose-soft), transparent 62%),
+      radial-gradient(900px 500px at -10% 30%, rgba(138,106,59,.10), transparent 60%),
+      var(--cream);
+    color: var(--ink);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  /* Paper grain over everything: kills the flat-vector feel. */
+  .grain { position: fixed; inset: 0; z-index: 40; pointer-events: none; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .serif { font-family: "EB Garamond", Georgia, serif; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px; }
+  .kicker { font-size: 13px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; }
+
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .8s ease, transform .8s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+  /* Header */
+  /* header carries class="wrap": a bare `header` selector loses to `.wrap`
+     on specificity and its padding is silently zeroed. Keep it qualified. */
+  header.wrap { padding-top: 60px; padding-bottom: 28px; }
+  .nav { display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 15px; text-decoration: none; color: var(--ink); }
+  .brand img { width: 54px; height: 54px; border-radius: 14px; display: block; box-shadow: 0 5px 16px rgba(114,47,55,.24); }
+  .brand span { font-family: "EB Garamond", Georgia, serif; font-size: 34px; font-weight: 600; }
+  .nav a.signin { font-family: "EB Garamond", Georgia, serif; font-style: italic; color: var(--wine); text-decoration: none; font-weight: 600; font-size: 20px; border-bottom: 1.5px solid rgba(114,47,55,.35); padding-bottom: 2px; transition: border-color .18s ease; }
+  .nav a.signin:hover { border-color: var(--wine); }
+  .nav a.signin em { font-style: normal; }
+
+  /* Hero */
+  .hero { padding-top: 84px; padding-bottom: 56px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+  .hero .kicker { color: var(--gold); }
+  .hero h1 { margin-top: 18px; font-family: "EB Garamond", Georgia, serif; font-size: clamp(46px, 6.4vw, 84px); line-height: 1.02; font-weight: 550; letter-spacing: -0.015em; }
+  .hero h1 em { font-style: italic; color: var(--wine); font-weight: 600; }
+  .hero p.lede { margin-top: 26px; font-size: 20.5px; line-height: 1.62; color: var(--ink-soft); max-width: 27em; }
+  .cta-row { margin-top: 38px; display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+  .btn { display: inline-block; text-decoration: none; font-weight: 600; font-size: 17px; padding: 17px 32px; border-radius: 14px; transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+  .btn-primary { background: var(--wine); color: #fff; box-shadow: 0 12px 28px rgba(114,47,55,.34); }
+  .btn-primary:hover { background: var(--wine-deep); transform: translateY(-2px); }
+  a.textlink { font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 20px; font-weight: 600; color: var(--wine); text-decoration: none; border-bottom: 1.5px solid rgba(114,47,55,.35); padding-bottom: 2px; }
+  a.textlink:hover { border-color: var(--wine); }
+
+  /* Hero visual cluster */
+  .hero-visual { position: relative; justify-self: center; padding: 26px 0 40px 60px; }
+  .phone { width: 296px; background: var(--paper); border-radius: 34px; border: 1px solid var(--hairline); box-shadow: 0 34px 80px rgba(34,28,25,.24); transform: rotate(2.5deg); overflow: hidden; animation: drift 7s ease-in-out infinite alternate; }
+  @keyframes drift { from { transform: rotate(2.5deg) translateY(0); } to { transform: rotate(2.2deg) translateY(-10px); } }
+  @media (prefers-reduced-motion: reduce) { .phone { animation: none; } }
+  .phone-top { height: 22px; display: flex; justify-content: center; align-items: flex-end; }
+  .phone-top i { width: 110px; height: 9px; background: var(--cream); border-radius: 6px; }
+  .phone-head { padding: 16px 20px 14px; border-bottom: 1px solid var(--hairline); display: flex; align-items: center; gap: 11px; }
+  .venue-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--gold); color: #fff; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .phone-head b { font-size: 16px; display: block; line-height: 1.2; }
+  .phone-head small { color: var(--ink-mute); font-size: 12.5px; }
+  .m-item { padding: 13px 20px; display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--hairline); }
+  .m-item:last-of-type { border-bottom: 0; }
+  .m-item b { font-size: 14.5px; display: block; line-height: 1.3; }
+  .m-item em { font-style: normal; color: var(--ink-mute); font-size: 12.5px; }
+  .m-item span { font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .pick { display: inline-block; margin-top: 4px; background: rgba(138,106,59,.13); color: var(--gold); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .phone-fade { height: 26px; background: linear-gradient(rgba(255,255,255,0), #fff); margin-top: -26px; position: relative; }
+  .qr-chip { position: absolute; left: 0; bottom: 0; background: var(--paper); border: 1px solid var(--hairline); border-radius: 20px; padding: 17px 17px 13px; text-align: center; box-shadow: 0 20px 48px rgba(34,28,25,.22); }
+  .qr-chip svg { width: 164px; height: 164px; display: block; margin: 0 auto; }
+  .qr-chip .qr-label { margin-top: 9px; font-size: 12.5px; line-height: 1.45; color: var(--ink-soft); }
+  .qr-chip .qr-label strong { color: var(--ink); display: block; }
+  .note { position: absolute; font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 17px; color: var(--wine); background: var(--paper); border: 1px solid var(--hairline); border-radius: 999px; padding: 7px 18px; box-shadow: 0 10px 26px rgba(34,28,25,.14); white-space: nowrap; }
+  .note-1 { top: -6px; right: -34px; transform: rotate(3deg); }
+  .note-2 { top: 96px; left: -12px; transform: rotate(-4deg); color: var(--gold); }
+  .note-3 { bottom: 148px; right: -48px; transform: rotate(2deg); }
+
+  /* Marquee */
+  .marquee { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); overflow: hidden; padding: 17px 0; background: rgba(255,255,255,.45); }
+  .marquee-track { display: flex; width: max-content; animation: slide 36s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+  .marquee span { font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 21px; color: var(--wine-deep); white-space: nowrap; padding-right: 18px; }
+  .marquee b { color: var(--gold); font-weight: 600; padding-right: 18px; }
+  @keyframes slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* Wave divider */
+  .wave { display: block; width: 100%; height: 92px; margin-bottom: -1px; }
+
+  /* Stats band */
+  .stats { position: relative; background: linear-gradient(175deg, var(--wine) 0%, var(--wine-dark) 100%); color: #fff; padding: 34px 0 96px; }
+  .stats .kicker { color: var(--rose); }
+  .stats h2 { font-family: "EB Garamond", Georgia, serif; font-size: clamp(30px, 4vw, 46px); font-weight: 550; margin-top: 12px; max-width: 20em; line-height: 1.14; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; margin-top: 64px; }
+  .stat { border-top: 3px solid var(--rose); padding-top: 24px; }
+  .stat:nth-child(2) { transform: translateY(30px); border-top-color: var(--gold); }
+  .stat:nth-child(3) { transform: translateY(60px); }
+  .stat .num { font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: clamp(64px, 7.4vw, 104px); font-weight: 600; line-height: .95; letter-spacing: -0.02em; }
+  .stat .what { margin-top: 16px; font-size: 16.5px; line-height: 1.62; color: rgba(255,255,255,.88); }
+  .stats .fine { margin-top: 110px; font-size: 13px; color: rgba(255,255,255,.5); max-width: 62em; }
+
+  /* Argument: editorial pull-quote with drop cap */
+  .argument { padding: 110px 0 20px; }
+  .argument .wrap { max-width: 840px; }
+  .argument .rule { width: 72px; border: 0; border-top: 4px solid var(--gold); margin-bottom: 34px; }
+  .argument h2 { font-family: "EB Garamond", Georgia, serif; font-size: clamp(32px, 4.4vw, 50px); font-weight: 550; line-height: 1.14; }
+  .argument h2 em { font-style: italic; color: var(--wine); }
+  .argument p { margin-top: 24px; font-size: 19.5px; line-height: 1.72; color: var(--ink-soft); }
+  .argument p strong { color: var(--ink); }
+  .argument p.first::first-letter { font-family: "EB Garamond", Georgia, serif; font-size: 74px; line-height: .8; float: left; padding: 8px 12px 0 0; color: var(--wine); font-weight: 600; }
+
+  /* Steps: ghost numerals */
+  .steps { padding: 104px 0 10px; }
+  .sec-head { max-width: 680px; }
+  .sec-head .kicker { color: var(--gold); }
+  .sec-head h2 { font-family: "EB Garamond", Georgia, serif; font-size: clamp(32px, 4.2vw, 48px); font-weight: 550; margin-top: 12px; line-height: 1.12; }
+  .step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 64px; }
+  .step { position: relative; padding: 58px 6px 0 6px; border-top: 1px solid var(--hairline); }
+  .step .ghost { position: absolute; top: 8px; right: 2px; font-family: "EB Garamond", Georgia, serif; font-style: italic; font-size: 120px; line-height: .8; color: rgba(114,47,55,.10); font-weight: 600; user-select: none; }
+  .step h3 { font-family: "EB Garamond", Georgia, serif; font-size: 26px; font-weight: 600; }
+  .step p { margin-top: 12px; font-size: 16.5px; color: var(--ink-soft); }
+
+  /* Features: two editorial columns */
+  .features { padding: 110px 0 10px; }
+  .feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 72px; margin-top: 28px; }
+  .feat { display: flex; gap: 22px; padding: 34px 0; border-bottom: 1px solid var(--hairline); }
+  .feat .ic { flex: none; width: 52px; height: 52px; border-radius: 15px; background: rgba(232,180,188,.34); display: flex; align-items: center; justify-content: center; }
+  .feat:nth-child(even) .ic { background: rgba(138,106,59,.14); }
+  .feat:nth-child(even) .ic svg { stroke: var(--gold); }
+  .feat .ic svg { width: 25px; height: 25px; stroke: var(--wine); fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .feat h3 { font-family: "EB Garamond", Georgia, serif; font-size: 23px; font-weight: 600; }
+  .feat p { margin-top: 7px; font-size: 16px; color: var(--ink-soft); }
+
+  /* Demo panel */
+  .demo { padding: 120px 0 110px; }
+  .demo-card { position: relative; overflow: hidden; background: linear-gradient(160deg, var(--wine) 0%, var(--wine-dark) 100%); border-radius: 34px; padding: 84px 48px; color: #fff; box-shadow: 0 30px 70px rgba(64,26,31,.4); display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+  .demo-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(640px 340px at 12% -10%, rgba(232,180,188,.28), transparent 70%); pointer-events: none; }
+  .demo-card .kicker { color: var(--rose); position: relative; }
+  .demo-card h2 { font-family: "EB Garamond", Georgia, serif; font-size: clamp(32px, 4.4vw, 52px); font-weight: 550; line-height: 1.1; margin-top: 12px; position: relative; }
+  .demo-card h2 em { font-style: italic; }
+  .demo-card p { color: rgba(255,255,255,.85); margin-top: 18px; font-size: 18.5px; max-width: 30em; position: relative; }
+  .demo-card .cta-row { position: relative; }
+  .demo-card .btn-primary { background: #fff; color: var(--wine); box-shadow: 0 12px 30px rgba(0,0,0,.28); }
+  .demo-card .btn-primary:hover { background: var(--cream); }
+  .demo-card a.textlink { color: #fff; border-color: rgba(255,255,255,.5); }
+  .demo-card a.textlink:hover { border-color: #fff; }
+  .demo-qr { position: relative; justify-self: center; background: #fff; border-radius: 24px; padding: 26px 26px 20px; text-align: center; box-shadow: 0 24px 56px rgba(0,0,0,.32); transform: rotate(-2deg); }
+  .demo-qr svg { width: 190px; height: 190px; display: block; }
+  .demo-qr .qr-label { margin-top: 12px; font-size: 13px; color: var(--ink-soft); }
+  .demo-qr .qr-label strong { color: var(--ink); display: block; }
+
+  /* Footer */
+  footer { background: var(--wine-dark); color: rgba(255,255,255,.8); padding: 56px 0; }
+  footer .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  footer .fbrand { display: flex; align-items: center; gap: 13px; }
+  footer .fbrand img { width: 38px; height: 38px; border-radius: 10px; }
+  footer .fbrand span { font-family: "EB Garamond", Georgia, serif; font-size: 25px; color: #fff; }
+  footer nav a { color: rgba(255,255,255,.85); text-decoration: none; margin-left: 28px; font-size: 15.5px; }
+  footer nav a:hover { color: #fff; }
+  footer .tag { width: 100%; font-size: 13.5px; color: rgba(255,255,255,.5); }
+
+  @media (max-width: 900px) {
+    header.wrap { padding-top: 34px; padding-bottom: 16px; }
+    .brand img { width: 44px; height: 44px; border-radius: 11px; }
+    .brand span { font-size: 26px; }
+    .nav a.signin { font-size: 17px; }
+    .hero { grid-template-columns: minmax(0, 1fr); padding-top: 52px; gap: 52px; }
+    .hero h1 { font-size: clamp(35px, 9vw, 84px); }
+    .hero p.lede { font-size: 18.5px; }
+    .hero-visual { justify-self: center; padding-left: 26px; padding-right: 10px; }
+    .phone { width: 252px; }
+    .qr-chip { padding: 13px 13px 10px; }
+    .qr-chip svg { width: 124px; height: 124px; }
+    .note { font-size: 14px; padding: 5px 13px; }
+    .demo-qr svg { width: 158px; height: 158px; }
+    .note-1 { right: -10px; }
+    .note-3 { right: -14px; }
+    .stat-grid { grid-template-columns: 1fr; gap: 40px; }
+    .stat:nth-child(2), .stat:nth-child(3) { transform: none; }
+    .stats .fine { margin-top: 52px; }
+    .step-grid { grid-template-columns: 1fr; gap: 38px; }
+    .feat-grid { grid-template-columns: 1fr; gap: 0; }
+    .demo-card { grid-template-columns: minmax(0, 1fr); padding: 56px 26px; }
+    footer nav a { margin-left: 0; margin-right: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="wrap">
+  <div class="nav">
+    <a class="brand" href="/">
+      <img src="/landing-logo.png" alt="Unbottl logo" width="54" height="54">
+      <span>unbottl</span>
+    </a>
+    <a class="signin" href="/login">Restaurant sign in &#x2192;</a>
+  </div>
+</header>
+
+<section class="hero wrap">
+  <div class="hero-copy reveal in">
+    <div class="kicker">QR beverage menus</div>
+    <h1>The most profitable page in your restaurant is the <em>drink list.</em></h1>
+    <p class="lede">Unbottl turns it into a menu guests actually read &#x2014; tasting notes, staff picks, photos, and prices that update the moment you change them. No app to install, no account to create.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/m/a0a36d9c-2769-4bcc-9450-22c434c20e5c">See a live menu</a>
+      <a class="textlink" href="/login">I run a restaurant &#x2192;</a>
+    </div>
+  </div>
+  <div class="hero-visual reveal in">
+    <div class="phone">
+      <div class="phone-top"><i></i></div>
+      <div class="phone-head">
+        <div class="venue-mark">V</div>
+        <div><b>The Velvet Cork</b><small>Wine Bar &amp; Kitchen</small></div>
+      </div>
+      <div class="m-item">
+        <div><b>Ch&#xE2;teau Margaux 2018</b><em>Margaux, Bordeaux &middot; Cab Sauv, Merlot</em></div>
+        <span>$850</span>
+      </div>
+      <div class="m-item">
+        <div><b>Cloudy Bay Sauvignon Blanc</b><em>Marlborough, NZ</em><br><span class="pick">Staff pick</span></div>
+        <span>$45</span>
+      </div>
+      <div class="m-item">
+        <div><b>Smoke &amp; Mirrors</b><em>Mezcal, amaro, smoked salt</em></div>
+        <span>$18</span>
+      </div>
+      <div class="m-item">
+        <div><b>Whispering Angel 2023</b><em>Provence &middot; Grenache, Cinsault</em></div>
+        <span>$35</span>
+      </div>
+      <div class="phone-fade"></div>
+    </div>
+    <div class="note note-1">blackcurrant &middot; violet &middot; oak</div>
+    <div class="note note-2">Staff pick &#x2605;</div>
+    <div class="note note-3">silky tannins</div>
+    <div class="qr-chip">
+      <svg role="img" aria-label="QR code linking to a live demo menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path stroke="#722F37" d="M2 2.5h7m6 0h1m2 0h1m1 0h2m1 0h3m2 0h7M2 3.5h1m5 0h1m2 0h2m2 0h6m1 0h2m2 0h1m1 0h1m5 0h1M2 4.5h1m1 0h3m1 0h1m1 0h3m2 0h1m1 0h1m4 0h2m4 0h1m1 0h3m1 0h1M2 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m1 0h4m6 0h1m1 0h3m1 0h1M2 6.5h1m1 0h3m1 0h1m1 0h5m2 0h1m1 0h1m1 0h3m1 0h2m1 0h1m1 0h3m1 0h1M2 7.5h1m5 0h1m1 0h1m2 0h1m1 0h1m1 0h3m3 0h2m3 0h1m5 0h1M2 8.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 9.5h1m1 0h1m3 0h2m4 0h2M2 10.5h1m1 0h5m2 0h1m3 0h1m1 0h3m4 0h1m3 0h5M3 11.5h1m2 0h2m1 0h3m8 0h3m2 0h1m2 0h2m1 0h4M4 12.5h1m2 0h2m4 0h1m3 0h1m1 0h2m1 0h3m5 0h1m1 0h1M2 13.5h1m4 0h1m1 0h1m2 0h2m2 0h3m1 0h6m1 0h2m1 0h5M2 14.5h2m1 0h2m1 0h1m1 0h3m4 0h1m1 0h4m2 0h1m1 0h1m1 0h3m1 0h1M3 15.5h2m2 0h1m1 0h10m2 0h1m2 0h3m1 0h1m2 0h4M3 16.5h1m2 0h3m2 0h1m2 0h1m1 0h1m3 0h1m1 0h3m1 0h5m2 0h1M2 17.5h2m6 0h3m1 0h1m3 0h1m2 0h1m1 0h1m3 0h3m2 0h1M3 18.5h1m3 0h3m1 0h1m2 0h3m2 0h2m5 0h2m1 0h3m2 0h1M2 19.5h3m2 0h1m3 0h1m2 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h3m1 0h4M4 20.5h1m3 0h4m2 0h4m2 0h1m1 0h1m3 0h1m2 0h2m1 0h1M3 21.5h5m3 0h2m2 0h2m1 0h1m1 0h1m1 0h2m1 0h8m1 0h1M2 22.5h1m3 0h1m1 0h2m2 0h3m1 0h2m1 0h1m1 0h2m6 0h3M2 23.5h2m1 0h1m4 0h1m1 0h3m2 0h1m2 0h2m2 0h3m1 0h1m5 0h1M2 24.5h1m3 0h1m1 0h4m1 0h2m2 0h2m1 0h1m3 0h1m2 0h1m1 0h1m1 0h3M2 25.5h1m1 0h2m3 0h3m1 0h1m1 0h2m3 0h1m1 0h2m2 0h2m4 0h1m1 0h1M2 26.5h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h3m4 0h7m3 0h1M10 27.5h1m4 0h1m4 0h4m2 0h1m3 0h1m1 0h3M2 28.5h7m2 0h1m2 0h1m1 0h3m3 0h1m2 0h2m1 0h1m1 0h1m1 0h1M2 29.5h1m5 0h1m1 0h2m1 0h1m1 0h1m5 0h3m1 0h2m3 0h4M2 30.5h1m1 0h3m1 0h1m1 0h6m1 0h1m1 0h4m1 0h1m1 0h6m1 0h2M2 31.5h1m1 0h3m1 0h1m1 0h3m5 0h1m2 0h1m1 0h1m3 0h1m2 0h2m1 0h2M2 32.5h1m1 0h3m1 0h1m1 0h2m4 0h3m1 0h1m1 0h1m2 0h1m2 0h2m1 0h2M2 33.5h1m5 0h1m5 0h5m2 0h1m1 0h3m1 0h2m1 0h1m1 0h1M2 34.5h7m1 0h1m2 0h2m2 0h4m3 0h1m1 0h2m1 0h1m1 0h1m1 0h1"/></svg>
+      <div class="qr-label"><strong>Scan it &#x2014; you're the guest.</strong>A real menu, live right now.</div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Tasting notes sell</span><b>&#x2726;</b><span>80&cent; of every drink dollar is margin</span><b>&#x2726;</b><span>No app, no login</span><b>&#x2726;</b><span>Every table updates at once</span><b>&#x2726;</b><span>Your staff picks, always up front</span><b>&#x2726;</b>
+    <span>Tasting notes sell</span><b>&#x2726;</b><span>80&cent; of every drink dollar is margin</span><b>&#x2726;</b><span>No app, no login</span><b>&#x2726;</b><span>Every table updates at once</span><b>&#x2726;</b><span>Your staff picks, always up front</span><b>&#x2726;</b>
+  </div>
+</div>
+
+<svg class="wave" viewBox="0 0 1440 92" preserveAspectRatio="none" aria-hidden="true"><path d="M0,56 C300,102 560,12 820,28 C1060,43 1280,78 1440,46 L1440,92 L0,92 Z" fill="#722F37"/></svg>
+<section class="stats">
+  <div class="wrap">
+    <div class="kicker">The economics</div>
+    <h2 class="reveal">Drinks carry the margin. The menu should carry the drinks.</h2>
+    <div class="stat-grid">
+      <div class="stat reveal">
+        <div class="num">18&#x2013;24%</div>
+        <div class="what">Industry-standard pour cost &#x2014; roughly 80&cent; of every beverage dollar comes back as gross margin, far ahead of food.</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num">75&#x2013;85%</div>
+        <div class="what">Typical gross margin on spirits and cocktails. Wine runs 70&#x2013;80%, draft beer 74&#x2013;80%. Every extra pour is high-margin revenue.</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num">+27%</div>
+        <div class="what">Sales lift measured on menu items given descriptive labels in published menu-psychology research. Descriptions sell.</div>
+      </div>
+    </div>
+    <p class="fine">Sources: industry pour-cost and margin benchmarks (Restaurant365, 7shifts, Provi); Wansink, Painter &amp; van&nbsp;Ittersum, descriptive-menu-label research, Cornell University / UIUC.</p>
+  </div>
+</section>
+
+<section class="argument">
+  <div class="wrap">
+    <hr class="rule">
+    <h2 class="reveal">Most drink lists are a name and a price &#x2014; the two facts <em>least likely</em> to sell a better bottle.</h2>
+    <p class="first reveal">Beverages are the highest-margin thing a restaurant sells, and the menu is where nearly every drink decision happens. Yet the wine a guest has never heard of stays unordered, because nothing on the page says what it tastes like.</p>
+    <p class="reveal">The research keeps finding the same thing: <strong>guests who can read tasting notes try unfamiliar pours and trade up to better bottles.</strong> Your servers can't stand at every table reciting grape varieties. The menu can &#x2014; if it's more than a laminated list.</p>
+    <p class="reveal">That's Unbottl: every bottle gets its region, grapes, and tasting notes; unfamiliar terms explain themselves with a tap; your staff picks sit where eyes land first. The guest orders like someone walked them through the list &#x2014; because something did.</p>
+  </div>
+</section>
+
+<section class="steps">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">How it works</div>
+      <h2 class="reveal">Up and running in an afternoon</h2>
+    </div>
+    <div class="step-grid">
+      <div class="step reveal">
+        <div class="ghost">01</div>
+        <h3>Build your list</h3>
+        <p>Add wines, beers, spirits, cocktails, and zero-proof options. Photos, tasting notes, and a built-in drinks glossary do the describing for you.</p>
+      </div>
+      <div class="step reveal">
+        <div class="ghost">02</div>
+        <h3>Print one QR code</h3>
+        <p>Download your code as an image or a print-ready sign, straight from the app. Table tents, menu corners, the bar top &#x2014; one code covers them all.</p>
+      </div>
+      <div class="step reveal">
+        <div class="ghost">03</div>
+        <h3>Guests scan and browse</h3>
+        <p>The menu opens instantly in their phone's browser. No app, no login. Change a price or 86 a bottle, and every table is already up to date.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">What's in it</div>
+      <h2 class="reveal">Built to sell the good stuff</h2>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 3h10l-1.2 7a4.5 4.5 0 0 1-3.8 3.7V19h3.5v2h-9v-2H10v-5.3A4.5 4.5 0 0 1 6.2 10L7 3Z"/><path d="M6.6 7.5h10.8"/></svg></div>
+        <div>
+          <h3>Tasting notes that sell</h3>
+          <p>Region, grapes, and notes on every bottle. Tappable terms explain themselves, so guests never have to ask what Rolle is.</p>
+        </div>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.5 5.2 5.7.7-4.2 4 1.1 5.6-5.1-2.8-5.1 2.8 1.1-5.6-4.2-4 5.7-.7L12 3.5Z"/></svg></div>
+        <div>
+          <h3>Staff picks up front</h3>
+          <p>Flag the pours you want moving and they lead the menu &#x2014; the digital version of your bartender's quiet nod.</p>
+        </div>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3v5h-5"/></svg></div>
+        <div>
+          <h3>Updates in real time</h3>
+          <p>Out of stock disappears from every table at once. New arrivals show up the moment you add them. No reprints, ever.</p>
+        </div>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a12.8 12.8 0 0 1 0 17M12 3.5a12.8 12.8 0 0 0 0 17M3.8 9.5h16.4M3.8 14.5h16.4"/></svg></div>
+        <div>
+          <h3>Your brand, not ours</h3>
+          <p>Your name, your colors, your cover photo. The menu reads as yours; we stay in the footer.</p>
+        </div>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg></div>
+        <div>
+          <h3>Works on any phone</h3>
+          <p>It's a link, not a download. Anything with a camera and a browser gets the full menu in seconds.</p>
+        </div>
+      </div>
+      <div class="feat reveal">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg></div>
+        <div>
+          <h3>Your whole cellar, organized</h3>
+          <p>Wines, beers, spirits, cocktails, and non-alcoholic &#x2014; inventory and availability in one place, managed from the bar or the back office.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="demo">
+  <div class="wrap">
+    <div class="demo-card reveal">
+      <div>
+        <div class="kicker">The proof</div>
+        <h2>See it the way <em>your guests</em> would</h2>
+        <p>This is a live menu, served from Unbottl right now &#x2014; not a screenshot. Open it, tap a wine, read the notes.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/m/a0a36d9c-2769-4bcc-9450-22c434c20e5c">Open the live menu</a>
+          <a class="textlink" href="/login">Set up my restaurant &#x2192;</a>
+        </div>
+      </div>
+      <div class="demo-qr">
+        <svg role="img" aria-label="QR code linking to a live demo menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path stroke="#722F37" d="M2 2.5h7m6 0h1m2 0h1m1 0h2m1 0h3m2 0h7M2 3.5h1m5 0h1m2 0h2m2 0h6m1 0h2m2 0h1m1 0h1m5 0h1M2 4.5h1m1 0h3m1 0h1m1 0h3m2 0h1m1 0h1m4 0h2m4 0h1m1 0h3m1 0h1M2 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m1 0h4m6 0h1m1 0h3m1 0h1M2 6.5h1m1 0h3m1 0h1m1 0h5m2 0h1m1 0h1m1 0h3m1 0h2m1 0h1m1 0h3m1 0h1M2 7.5h1m5 0h1m1 0h1m2 0h1m1 0h1m1 0h3m3 0h2m3 0h1m5 0h1M2 8.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 9.5h1m1 0h1m3 0h2m4 0h2M2 10.5h1m1 0h5m2 0h1m3 0h1m1 0h3m4 0h1m3 0h5M3 11.5h1m2 0h2m1 0h3m8 0h3m2 0h1m2 0h2m1 0h4M4 12.5h1m2 0h2m4 0h1m3 0h1m1 0h2m1 0h3m5 0h1m1 0h1M2 13.5h1m4 0h1m1 0h1m2 0h2m2 0h3m1 0h6m1 0h2m1 0h5M2 14.5h2m1 0h2m1 0h1m1 0h3m4 0h1m1 0h4m2 0h1m1 0h1m1 0h3m1 0h1M3 15.5h2m2 0h1m1 0h10m2 0h1m2 0h3m1 0h1m2 0h4M3 16.5h1m2 0h3m2 0h1m2 0h1m1 0h1m3 0h1m1 0h3m1 0h5m2 0h1M2 17.5h2m6 0h3m1 0h1m3 0h1m2 0h1m1 0h1m3 0h3m2 0h1M3 18.5h1m3 0h3m1 0h1m2 0h3m2 0h2m5 0h2m1 0h3m2 0h1M2 19.5h3m2 0h1m3 0h1m2 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h3m1 0h4M4 20.5h1m3 0h4m2 0h4m2 0h1m1 0h1m3 0h1m2 0h2m1 0h1M3 21.5h5m3 0h2m2 0h2m1 0h1m1 0h1m1 0h2m1 0h8m1 0h1M2 22.5h1m3 0h1m1 0h2m2 0h3m1 0h2m1 0h1m1 0h2m6 0h3M2 23.5h2m1 0h1m4 0h1m1 0h3m2 0h1m2 0h2m2 0h3m1 0h1m5 0h1M2 24.5h1m3 0h1m1 0h4m1 0h2m2 0h2m1 0h1m3 0h1m2 0h1m1 0h1m1 0h3M2 25.5h1m1 0h2m3 0h3m1 0h1m1 0h2m3 0h1m1 0h2m2 0h2m4 0h1m1 0h1M2 26.5h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h3m4 0h7m3 0h1M10 27.5h1m4 0h1m4 0h4m2 0h1m3 0h1m1 0h3M2 28.5h7m2 0h1m2 0h1m1 0h3m3 0h1m2 0h2m1 0h1m1 0h1m1 0h1M2 29.5h1m5 0h1m1 0h2m1 0h1m1 0h1m5 0h3m1 0h2m3 0h4M2 30.5h1m1 0h3m1 0h1m1 0h6m1 0h1m1 0h4m1 0h1m1 0h6m1 0h2M2 31.5h1m1 0h3m1 0h1m1 0h3m5 0h1m2 0h1m1 0h1m3 0h1m2 0h2m1 0h2M2 32.5h1m1 0h3m1 0h1m1 0h2m4 0h3m1 0h1m1 0h1m2 0h1m2 0h2m1 0h2M2 33.5h1m5 0h1m5 0h5m2 0h1m1 0h3m1 0h2m1 0h1m1 0h1M2 34.5h7m1 0h1m2 0h2m2 0h4m3 0h1m1 0h2m1 0h1m1 0h1m1 0h1"/></svg>
+        <div class="qr-label"><strong>Or point your camera here.</strong>The Velvet Cork, live.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fbrand">
+      <img src="/landing-logo.png" alt="" width="38" height="38">
+      <span>unbottl</span>
+    </div>
+    <nav>
+      <a href="/m/a0a36d9c-2769-4bcc-9450-22c434c20e5c">Live menu</a>
+      <a href="/login">Restaurant sign in</a>
+    </nav>
+    <div class="tag">Beverage menus for restaurants, hotels &amp; bars. &copy; 2026 Unbottl.</div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    if (!('IntersectionObserver' in window)) {
+      document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  })();
+</script>
+</body>
+</html>

@@ -6,6 +6,11 @@
 # QR code would get. Everything that is not a real file is handed to index.html
 # so the client router can take over.
 
+# The bare domain serves the marketing page (landing.html); every real app
+# route — /m/<venue>, /login, and friends — still lands on the SPA's
+# index.html via the fallback rewrite below, which names index.html explicitly.
+DirectoryIndex landing.html index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -28,7 +33,8 @@
 
   # index.html must not be cached, or a deploy will not reach anyone still
   # holding the old one — and it is the file that names the current bundle.
-  <FilesMatch "^index\.html$">
+  # landing.html gets the same treatment so copy edits go out immediately.
+  <FilesMatch "^(index|landing)\.html$">
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
 

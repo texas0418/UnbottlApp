@@ -63,7 +63,7 @@ export default function CustomerMenuScreen() {
   const isDark = useIsDark();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const categoryConfig = useMemo(() => categoryConfigFor(colors), [colors]);
-  const { isTablet } = useResponsive();
+  const { isWide } = useResponsive();
   const params = useLocalSearchParams<{ r?: string }>();
   const scannedSlug = typeof params.r === 'string' && params.r.length > 0 ? params.r : undefined;
 
@@ -417,7 +417,7 @@ export default function CustomerMenuScreen() {
         renderSectionHeader={({ section }) => renderSectionHeader(section)}
         stickySectionHeadersEnabled={false}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={isTablet ? styles.tabletContent : undefined}
+        contentContainerStyle={isWide ? styles.tabletContent : undefined}
         ListHeaderComponent={
         <>
         <View style={[styles.hero, { backgroundColor: brandColor }]}>
@@ -522,8 +522,8 @@ const createStyles = (c: ThemeColors) => StyleSheet.create({
     flex: 1,
     backgroundColor: c.background,
   },
-  // On tablets, keep the menu a centered, readable column instead of stretching
-  // edge-to-edge across the wide screen.
+  // On any wide window — iPad or desktop browser — keep the menu a centered,
+  // readable column instead of stretching edge-to-edge.
   tabletContent: {
     width: '100%',
     maxWidth: 760,

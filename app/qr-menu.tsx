@@ -12,14 +12,15 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
+import QRCode from 'react-native-qrcode-svg';
 import * as Haptics from 'expo-haptics';
 import {
   X,
   QrCode,
   Share2,
   Copy,
-  ExternalLink,
+  Download,
+  Printer,
   Smartphone,
   Wine,
   Beer,
@@ -27,7 +28,6 @@ import {
   Coffee,
   GlassWater,
   Eye,
-  RefreshCw,
   Check,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
@@ -36,8 +36,15 @@ import { menuUrlFor } from '@/constants/menuUrl';
 import { useWines } from '@/contexts/WineContext';
 import { useBeverages } from '@/contexts/BeverageContext';
 import AuthGuard from '@/components/AuthGuard';
-
-const QR_API_BASE = 'https://api.qrserver.com/v1/create-qr-code/';
+import {
+  QR_EXPORT_PX,
+  QR_EXPORT_QUIET_ZONE,
+  downloadPngWeb,
+  exportFileName,
+  exportQrPdf,
+  qrRefToPngBase64,
+  sharePngFromBase64,
+} from '@/utils/qrExport';
 
 export default function QRMenuScreen() {
   const router = useRouter();
@@ -48,17 +55,13 @@ export default function QRMenuScreen() {
   const [copied, setCopied] = useState(false);
   const [qrSize, setQrSize] = useState<'small' | 'medium' | 'large'>('medium');
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const exportQrRef = React.useRef<{ toDataURL: (cb: (data: string) => void) => void } | null>(null);
 
   const menuSlug = restaurant?.menuSlug || restaurant?.id || 'menu';
   const menuUrl = menuUrlFor(menuSlug);
+  const venueName = restaurant?.name || 'Your Restaurant';
 
   const qrSizes = { small: 200, medium: 280, large: 360 };
-
-  const qrCodeUrl = useMemo(() => {
-    const size = qrSizes[qrSize];
-    const encodedUrl = encodeURIComponent(menuUrl);
-    return `${QR_API_BASE}?data=${encodedUrl}&size=${size}x${size}&format=png&color=722F37&bgcolor=FFFFFF&margin=2`;
-  }, [menuUrl, qrSize]);
 
   const menuStats = useMemo(() => {
     const inStockWines = wines.filter(w => w.inStock).length;
@@ -115,6 +118,39 @@ export default function QRMenuScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     router.push('/customer-menu');
+  };
+
+  const handleSaveImage = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    try {
+      if (Platform.OS === 'web') {
+        await downloadPngWeb(menuUrl, exportFileName(venueName, 'png'), Colors.primary);
+        return;
+      }
+      const base64 = await qrRefToPngBase64(exportQrRef.current);
+      await sharePngFromBase64(base64, exportFileName(venueName, 'png'));
+    } catch (error) {
+      Alert.alert(
+        'Could not export the QR image',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    try {
+      await exportQrPdf({ venueName, menuUrl, accent: Colors.primary });
+    } catch (error) {
+      Alert.alert(
+        'Could not create the PDF',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
   };
 
   const handleQrPress = () => {
@@ -174,11 +210,13 @@ export default function QRMenuScreen() {
                 <Text style={styles.qrHint}>Scan to view menu</Text>
               </View>
               <View style={styles.qrContainer}>
-                <Image
-                  source={{ uri: qrCodeUrl }}
-                  style={[styles.qrImage, { width: qrSizes[qrSize], height: qrSizes[qrSize] }]}
-                  contentFit="contain"
-                  transition={300}
+                <QRCode
+                  value={menuUrl}
+                  size={qrSizes[qrSize]}
+                  quietZone={8}
+                  color={Colors.primary}
+                  backgroundColor={Colors.white}
+                  ecl="M"
                 />
               </View>
               <View style={styles.qrFooter}>
@@ -240,6 +278,18 @@ export default function QRMenuScreen() {
               <Text style={styles.previewButtonText}>Preview Customer View</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.shareFullButton} onPress={handleSaveImage}>
+              <Download size={20} color={Colors.primary} />
+              <Text style={styles.shareButtonText}>Save QR Image</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.shareFullButton} onPress={handleDownloadPdf}>
+              <Printer size={20} color={Colors.primary} />
+              <Text style={styles.shareButtonText}>
+                {Platform.OS === 'web' ? 'Print QR Sign' : 'Print-Ready PDF Sign'}
+              </Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.shareFullButton} onPress={handleShare}>
               <Share2 size={20} color={Colors.primary} />
               <Text style={styles.shareButtonText}>Share Menu Link</Text>
@@ -270,6 +320,22 @@ export default function QRMenuScreen() {
 
           <View style={styles.bottomPadding} />
         </ScrollView>
+
+        {Platform.OS !== 'web' && (
+          <View style={styles.exportQrOffscreen} pointerEvents="none">
+            <QRCode
+              value={menuUrl}
+              size={QR_EXPORT_PX}
+              quietZone={QR_EXPORT_QUIET_ZONE}
+              color={Colors.primary}
+              backgroundColor={Colors.white}
+              ecl="M"
+              getRef={(c) => {
+                exportQrRef.current = c;
+              }}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </AuthGuard>
   );
@@ -292,7 +358,8 @@ const styles = StyleSheet.create({
   restaurantName: { fontSize: 18, fontWeight: '700' as const, color: Colors.primary, marginBottom: 4 },
   qrHint: { fontSize: 13, color: Colors.textMuted },
   qrContainer: { backgroundColor: Colors.white, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: Colors.borderLight },
-  qrImage: { borderRadius: 8 },
+  // Mounted at full export resolution so toDataURL rasterizes 1024px, not screen size.
+  exportQrOffscreen: { position: 'absolute', top: 0, left: -QR_EXPORT_PX * 2, opacity: 0 },
   qrFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 20, paddingTop: 16, borderTopWidth: 1, borderTopColor: Colors.borderLight },
   qrFooterText: { fontSize: 13, color: Colors.textMuted },
   sizeSelector: { paddingHorizontal: 20, marginBottom: 24 },
