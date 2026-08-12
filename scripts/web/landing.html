@@ -83,9 +83,9 @@
   .m-item span { font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; }
   .pick { display: inline-block; margin-top: 4px; background: rgba(114,47,55,.09); color: var(--wine); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; letter-spacing: .02em; }
   .phone-fade { height: 26px; background: linear-gradient(rgba(255,255,255,0), #fff); margin-top: -26px; position: relative; }
-  .qr-chip { position: absolute; left: -66px; bottom: 0; background: var(--paper); border: 1px solid var(--hairline); border-radius: 20px; padding: 18px 18px 14px; text-align: center; box-shadow: 0 18px 44px rgba(31,26,23,.2); transform: rotate(-3.5deg); transition: transform .2s ease; }
-  .qr-chip:hover { transform: rotate(-3.5deg) scale(1.04); }
-  .qr-chip svg { width: 128px; height: 128px; display: block; margin: 0 auto; }
+  .qr-chip { position: absolute; left: -66px; bottom: 0; background: var(--paper); border: 1px solid var(--hairline); border-radius: 20px; padding: 18px 18px 14px; text-align: center; box-shadow: 0 18px 44px rgba(31,26,23,.2); transition: transform .2s ease; }
+  .qr-chip:hover { transform: scale(1.04); }
+  .qr-chip svg { width: 168px; height: 168px; display: block; margin: 0 auto; }
   .qr-chip .qr-label { margin-top: 10px; font-size: 12.5px; line-height: 1.45; color: var(--ink-soft); }
   .qr-chip .qr-label strong { color: var(--ink); display: block; }
 
@@ -158,6 +158,9 @@
 
   @media (max-width: 860px) {
     header { padding: 28px 0 12px; }
+    .brand img { width: 42px; height: 42px; border-radius: 11px; }
+    .brand span { font-size: 25px; }
+    .nav a.signin { font-size: 14px; padding: 9px 14px; white-space: nowrap; }
     .hero { grid-template-columns: 1fr; padding-top: 48px; gap: 44px; }
     .hero-visual { justify-self: center; padding-left: 66px; }
     .stat-grid, .step-grid, .feat-grid { grid-template-columns: 1fr; }
@@ -213,7 +216,7 @@
       <div class="phone-fade"></div>
     </div>
     <div class="qr-chip">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges" role="img" aria-label="QR code linking to a live demo menu"><path stroke="#722F37" d="M2 2.5h7m6 0h1m2 0h1m1 0h2m1 0h3m2 0h7M2 3.5h1m5 0h1m2 0h2m2 0h6m1 0h2m2 0h1m1 0h1m5 0h1M2 4.5h1m1 0h3m1 0h1m1 0h3m2 0h1m1 0h1m4 0h2m4 0h1m1 0h3m1 0h1M2 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m1 0h4m6 0h1m1 0h3m1 0h1M2 6.5h1m1 0h3m1 0h1m1 0h5m2 0h1m1 0h1m1 0h3m1 0h2m1 0h1m1 0h3m1 0h1M2 7.5h1m5 0h1m1 0h1m2 0h1m1 0h1m1 0h3m3 0h2m3 0h1m5 0h1M2 8.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 9.5h1m1 0h1m3 0h2m4 0h2M2 10.5h1m1 0h5m2 0h1m3 0h1m1 0h3m4 0h1m3 0h5M3 11.5h1m2 0h1m3 0h1m3 0h2m1 0h1m2 0h1m1 0h3m1 0h2m1 0h1m1 0h1m1 0h1M4 12.5h1m2 0h3m3 0h3m2 0h2m1 0h1m1 0h1m2 0h2m2 0h1m1 0h2M3 13.5h3m1 0h1m2 0h1m1 0h1m2 0h2m2 0h1m2 0h1m1 0h2m2 0h1m3 0h1m1 0h1M2 14.5h1m1 0h1m2 0h2m1 0h3m1 0h2m1 0h4m2 0h1m2 0h1m1 0h5M2 15.5h1m1 0h1m1 0h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h1M2 16.5h2m1 0h4m1 0h3m1 0h1m2 0h1m2 0h3m2 0h1m2 0h1m2 0h3M2 17.5h1m1 0h2m4 0h1m2 0h1m1 0h2m1 0h1m1 0h2m1 0h2m1 0h1m2 0h1m2 0h1M2 18.5h2m1 0h1m1 0h2m1 0h2m2 0h1m1 0h2m2 0h1m1 0h1m1 0h2m1 0h5M2 19.5h1m2 0h2m3 0h2m2 0h1m1 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m2 0h2M2 20.5h1m2 0h1m1 0h3m1 0h1m1 0h5m1 0h3m1 0h2m1 0h1m1 0h1m2 0h1M3 21.5h3m1 0h1m1 0h2m1 0h1m2 0h1m2 0h1m3 0h1m4 0h2m1 0h1m1 0h2M2 22.5h1m2 0h1m2 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h2m1 0h3m1 0h1m1 0h1m1 0h1M2 23.5h2m1 0h1m5 0h1m1 0h1m2 0h1m1 0h1m1 0h1m2 0h1m2 0h2m4 0h1M2 24.5h3m1 0h1m1 0h4m1 0h2m1 0h4m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2M3 25.5h2m2 0h1m1 0h1m3 0h1m1 0h1m1 0h2m1 0h1m2 0h2m2 0h1m1 0h1m2 0h1M2 26.5h1m1 0h1m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1m2 0h1m1 0h1m1 0h7m1 0h1M10 27.5h2m2 0h1m1 0h2m2 0h1m1 0h1m2 0h1m3 0h1m1 0h2M2 28.5h7m2 0h2m1 0h2m1 0h3m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1M2 29.5h1m5 0h1m1 0h2m1 0h1m4 0h1m1 0h1m1 0h1m2 0h1m3 0h1m2 0h2M2 30.5h1m1 0h3m1 0h1m1 0h1m2 0h3m1 0h5m1 0h1m1 0h6m1 0h1M2 31.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m3 0h2m1 0h2m1 0h2m1 0h1M2 32.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h1m2 0h5m1 0h1m2 0h1m1 0h1m1 0h2M2 33.5h1m5 0h1m1 0h1m2 0h4m3 0h1m1 0h2m1 0h1m1 0h2m2 0h1M2 34.5h7m3 0h1m1 0h1m2 0h4m2 0h2m2 0h2m1 0h1m1 0h1"/></svg>
+      <svg role="img" aria-label="QR code linking to a live demo menu" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path stroke="#722F37" d="M2 2.5h7m6 0h1m2 0h1m1 0h2m1 0h3m2 0h7M2 3.5h1m5 0h1m2 0h2m2 0h6m1 0h2m2 0h1m1 0h1m5 0h1M2 4.5h1m1 0h3m1 0h1m1 0h3m2 0h1m1 0h1m4 0h2m4 0h1m1 0h3m1 0h1M2 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m1 0h4m6 0h1m1 0h3m1 0h1M2 6.5h1m1 0h3m1 0h1m1 0h5m2 0h1m1 0h1m1 0h3m1 0h2m1 0h1m1 0h3m1 0h1M2 7.5h1m5 0h1m1 0h1m2 0h1m1 0h1m1 0h3m3 0h2m3 0h1m5 0h1M2 8.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 9.5h1m1 0h1m3 0h2m4 0h2M2 10.5h1m1 0h5m2 0h1m3 0h1m1 0h3m4 0h1m3 0h5M3 11.5h1m2 0h2m1 0h3m8 0h3m2 0h1m2 0h2m1 0h4M4 12.5h1m2 0h2m4 0h1m3 0h1m1 0h2m1 0h3m5 0h1m1 0h1M2 13.5h1m4 0h1m1 0h1m2 0h2m2 0h3m1 0h6m1 0h2m1 0h5M2 14.5h2m1 0h2m1 0h1m1 0h3m4 0h1m1 0h4m2 0h1m1 0h1m1 0h3m1 0h1M3 15.5h2m2 0h1m1 0h10m2 0h1m2 0h3m1 0h1m2 0h4M3 16.5h1m2 0h3m2 0h1m2 0h1m1 0h1m3 0h1m1 0h3m1 0h5m2 0h1M2 17.5h2m6 0h3m1 0h1m3 0h1m2 0h1m1 0h1m3 0h3m2 0h1M3 18.5h1m3 0h3m1 0h1m2 0h3m2 0h2m5 0h2m1 0h3m2 0h1M2 19.5h3m2 0h1m3 0h1m2 0h1m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h3m1 0h4M4 20.5h1m3 0h4m2 0h4m2 0h1m1 0h1m3 0h1m2 0h2m1 0h1M3 21.5h5m3 0h2m2 0h2m1 0h1m1 0h1m1 0h2m1 0h8m1 0h1M2 22.5h1m3 0h1m1 0h2m2 0h3m1 0h2m1 0h1m1 0h2m6 0h3M2 23.5h2m1 0h1m4 0h1m1 0h3m2 0h1m2 0h2m2 0h3m1 0h1m5 0h1M2 24.5h1m3 0h1m1 0h4m1 0h2m2 0h2m1 0h1m3 0h1m2 0h1m1 0h1m1 0h3M2 25.5h1m1 0h2m3 0h3m1 0h1m1 0h2m3 0h1m1 0h2m2 0h2m4 0h1m1 0h1M2 26.5h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h3m4 0h7m3 0h1M10 27.5h1m4 0h1m4 0h4m2 0h1m3 0h1m1 0h3M2 28.5h7m2 0h1m2 0h1m1 0h3m3 0h1m2 0h2m1 0h1m1 0h1m1 0h1M2 29.5h1m5 0h1m1 0h2m1 0h1m1 0h1m5 0h3m1 0h2m3 0h4M2 30.5h1m1 0h3m1 0h1m1 0h6m1 0h1m1 0h4m1 0h1m1 0h6m1 0h2M2 31.5h1m1 0h3m1 0h1m1 0h3m5 0h1m2 0h1m1 0h1m3 0h1m2 0h2m1 0h2M2 32.5h1m1 0h3m1 0h1m1 0h2m4 0h3m1 0h1m1 0h1m2 0h1m2 0h2m1 0h2M2 33.5h1m5 0h1m5 0h5m2 0h1m1 0h3m1 0h2m1 0h1m1 0h1M2 34.5h7m1 0h1m2 0h2m2 0h4m3 0h1m1 0h2m1 0h1m1 0h1m1 0h1"/></svg>
       <div class="qr-label"><strong>Scan it — you're the guest.</strong>A real menu, live right now.</div>
     </div>
   </div>
