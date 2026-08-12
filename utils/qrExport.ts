@@ -73,7 +73,8 @@ export function qrPdfHtml(opts: {
     text-align: center;
   }
   .venue { font-size: 30pt; font-weight: 700; margin: 0 0.75in 10pt; }
-  .rule { width: 1.2in; height: 3pt; background: ${accent}; border: 0; margin: 0 auto 22pt; }
+  /* border, not background — WKWebView drops background fills when printing */
+  .rule { width: 1.2in; border: 0; border-top: 3pt solid ${accent}; margin: 0 auto 22pt; }
   .lead { font-size: 15pt; color: #55504C; margin: 0 0 28pt; }
   .qr svg { width: 3.2in; height: 3.2in; }
   .url { font-family: Menlo, monospace; font-size: 12pt; margin: 24pt 0 0; }
